@@ -1,0 +1,17 @@
+#!/bin/sh
+
+today="`date +%Y-%m-%d`"
+log="$today.log"
+
+cd /home/git
+
+# TODO cleanup old logs
+
+git_conv >> $log 2>&1
+
+if [ $? != 0 ]; then
+    echo "Error during git_conv" >&2
+    tail $log
+    exit 1
+fi
+

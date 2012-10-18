@@ -1,0 +1,104 @@
+# vi:ft=perl:
+create repository freebsd.git
+end repository
+
+match /head/
+  repository freebsd.git
+  branch master
+end match
+
+# ignore this stuff
+match /ROADMAP.txt
+end match
+match /projects/GUIDELINES.txt
+end match
+match /user/GUIDELINES.txt
+end match
+match /vendor/atf/(README.txt|FREEBSD-Xlist)
+end match
+
+match /svnadmin/.*
+end match
+
+match /(cvs2svn)/([^/]+)/([^/]+)/
+  repository freebsd.git
+  branch \1/\2/\3
+end match
+
+match /(stable|releng|release)/([0-9.]+)/
+  repository freebsd.git
+  branch \1/\2
+end match
+
+match /(releng)/ALPHA_2_0/
+  repository freebsd.git
+  branch \1/2.0a
+end match
+
+match /(releng)/BETA_2_0/
+  repository freebsd.git
+  branch \1/2.0b
+end match
+
+# special nesting for these
+match /(projects)/(graid|ofed)/([^/]+)/
+  repository freebsd.git
+  branch \1/\2/\3
+end match
+
+match /(projects)/([^/]+)/
+  repository freebsd.git
+  branch \1/\2
+end match
+
+# /user/piso was created wrong
+match /(user)/(piso)/
+  repository freebsd.git
+  branch \1/\2/ipfw_old
+  min revision 186541
+  max revision 190858
+end match
+match /(user)/(piso)/([^/]+)/
+  repository freebsd.git
+  branch \1/\2/\3
+  min revision 190859
+end match
+# ignore stuff, no branch for these
+match /user/gad/README.txt
+end match
+match /user/des/Makefile.inc
+end match
+match /user/simon/test.txt
+end match
+match /user/peter/foo.txt
+end match
+match /vendor/(bzip2|flex)/FREEBSD-(Xlist|upgrade)
+end match
+match /vendor/v4l/README
+end match
+
+# fixup trailing dot
+match /vendor/(clang|llvm)/(clang|llvm)-(r73070)\./
+  repository freebsd.git
+  branch vendor/\1/\2-\3
+end match
+
+# wrong tag, ignore r210074 and r210075
+match /vendor/(clang|llvm)-(r108243)/
+end match
+
+# unknown vendor is one level short
+match /(vendor)/(unknown)/
+  repository freebsd.git
+  branch \1/\2
+end match
+
+# XXX drop the different vendor-* prefixes?
+match /(user|vendor|vendor-sys|vendor-cddl|vendor-crypto)/([^/]+)/([^/]+)/
+  repository freebsd.git
+  branch \1/\2/\3
+end match
+
+# ignore the rest, XXX temp only
+#match .*
+#end match

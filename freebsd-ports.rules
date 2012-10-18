@@ -1,0 +1,21 @@
+# vi:ft=perl:
+create repository freebsd-ports.git
+end repository
+
+match /head/
+  repository freebsd-ports.git
+  branch master
+end match
+
+# ignore this stuff
+match /svnadmin/.*
+end match
+
+match /(branches|tags)/([A-Z0-9_]+)/
+  repository freebsd-ports.git
+  branch \1/\2
+end match
+
+# ignore the rest, XXX temp only
+#match .*
+#end match

@@ -1,0 +1,94 @@
+#!/bin/sh
+#
+# Repository creation and setup
+#
+# Simple for svn2git repos, need to run against local paths, using rules files in ~uqs/svn2git
+# - First svn2git run will create target git repo
+# - git remote add github github.com:freebsd/freebsd.git
+# - git config --add remote.github.push '+refs/heads/master:refs/heads/master'
+# - git config --add remote.github.push '+refs/heads/stable/*:refs/heads/stable/*'
+# - git config --add remote.github.push '+refs/heads/projects/*:refs/heads/projects/*'
+# - git config --add remote.github.push '+refs/notes/*:refs/notes/*'
+# - etc.
+# - touch freebsd.git/git-daemon-export-ok
+# - ~uqs/svn2git/svn-all-fast-export --rules ~uqs/svn2git/freebsd.rules --add-metadata-notes --identity-domain FreeBSD.org /home/svn/base
+# - git push github
+# done. Analog steps needed for doc and ports.
+#
+# For git-svn it's a bit more involved. We use separate working dirs, but push to the same destination repo.
+# - git svn init -Thead -rewrite-root=svn+ssh://svn.freebsd.org/base file:///home/svn/base src-head.git
+# - cd src-head.git
+# - git svn fetch -r 0:1000
+# - git remote add github github.com:freebsd/freebsd.git
+# - git config --add remote.github.push '+refs/remotes/trunk:refs/heads/svn_head'
+# - git svn rebase
+# - git push github
+
+LOCK=/tmp/gitconv.lock
+RULES=/home/uqs/svn2git
+SVN2GIT=/home/uqs/svn2git/svn-all-fast-export
+BASE=/home/git
+
+trap 'rm -f ${LOCK} ; exit 1' 1 2 3 15
+if ! shlock -p $$ -f ${LOCK}; then
+    echo "Locked by `cat ${LOCK}`, running too long? Please fix ..." >&2
+    exit 1
+fi
+
+svn2git()
+{
+    local rules source target dest
+    rules=$1; shift
+    source=$1; shift
+    dest="$@"
+
+    # FIXME: error prone, yuck
+    target=${rules%.rules}.git
+    target=`basename $target`
+
+    echo "Converting $source to $target using svn2git"
+    cd $BASE
+    $SVN2GIT --add-metadata-notes --identity-domain FreeBSD.org \
+	--rules $rules $source
+    if [ $? != 0 ]; then
+	echo "Error in svn2git conversion of $source" >&2
+	exit 1
+    fi
+
+    echo "Pushing $target to $dest"
+    cd $target && for d in $dest; do git push $d || break; done
+    if [ $? != 0 ]; then
+	echo "Error in pushing to $dest" >&2
+	exit 1
+    fi
+}
+
+gitsvn()
+{
+    local target dest
+    target=$1; shift
+    dest="$@"
+
+    echo "Converting $target using git-svn"
+    cd $BASE/$target
+    git svn rebase
+    if [ $? != 0 ]; then
+	echo "Error in git-svn conversion of $target" >&2
+	exit 1
+    fi
+
+    echo "Pushing $target to $dest"
+    for d in $dest; do git push $d || break; done
+    if [ $? != 0 ]; then
+	echo "Error in pushing to $dest" >&2
+	exit 1
+    fi
+}
+
+svn2git $RULES/freebsd.rules /home/svn/base github
+svn2git $RULES/freebsd-doc.rules /home/svn/doc github
+svn2git $RULES/freebsd-ports.rules /home/svn/ports github
+
+gitsvn src-head.git github
+gitsvn doc-head.git github
+gitsvn ports-head.git github

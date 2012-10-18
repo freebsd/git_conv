@@ -1,0 +1,49 @@
+# vi:ft=perl:
+create repository freebsd-doc.git
+end repository
+
+match /head/
+  repository freebsd-doc.git
+  branch master
+end match
+
+# ignore this stuff
+match /svnadmin/.*
+end match
+match /doc-branch-policy.txt
+end match
+
+# Used during cvs2svn conversion
+match /(branches)/([A-Z0-9_]+)/
+  repository freebsd-doc.git
+  branch \1/\2
+end match
+
+match /(stable|releng|release)/([A-Z0-9.]+)/
+  repository freebsd-doc.git
+  branch \1/\2
+end match
+
+match /(www)/
+  repository freebsd-doc.git
+  branch \1
+end match
+
+match /(projects|release)/([^/]+)/
+  repository freebsd-doc.git
+  branch \1/\2
+end match
+
+match /(translations)/
+  repository freebsd-doc.git
+  branch \1
+end match
+
+match /(user)/([^/]+)/([^/]+)/
+  repository freebsd-doc.git
+  branch \1/\2/\3
+end match
+
+# ignore the rest, XXX temp only
+#match .*
+#end match
