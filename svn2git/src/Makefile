@@ -10,7 +10,7 @@
 
 CC            = gcc
 CXX           = g++
-DEFINES       = -DVER="\"b5c3d3aa55621c44db439e4a73884e0d0bf9612c\"" -DQT_NO_DEBUG -DQT_CORE_LIB -DQT_SHARED
+DEFINES       = -DVER="\"e29719690762be6add7d550cab9180766746f4e0\"" -DQT_NO_DEBUG -DQT_CORE_LIB -DQT_SHARED
 CFLAGS        = -pipe -O2 -Wall -W $(DEFINES)
 CXXFLAGS      = -pipe -O2 -Wall -W $(DEFINES)
 INCPATH       = -I/usr/local/share/qt4/mkspecs/freebsd-g++ -I. -I/usr/local/include/qt4/QtCore -I/usr/local/include/qt4 -I. -I/usr/include/subversion-1 -I/usr/local/include/subversion-1 -I/usr/include/apr-1.0 -I/usr/include/apr-1 -I/usr/local/include/apr-1 -I. -I/usr/local/include/qt4 -I/usr/local/include
