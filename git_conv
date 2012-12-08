@@ -2,16 +2,16 @@
 #
 # Repository creation and setup
 #
-# Simple for svn2git repos, need to run against local paths, using rules files in ~uqs/svn2git
-# - First svn2git run will create target git repo
+# Simple for svn2git repos, need to run against local paths, using rules files in ~git/*.rules
+# - First svn2git run will create target git repo, then
 # - git remote add github github.com:freebsd/freebsd.git
 # - git config --add remote.github.push '+refs/heads/master:refs/heads/master'
 # - git config --add remote.github.push '+refs/heads/stable/*:refs/heads/stable/*'
 # - git config --add remote.github.push '+refs/heads/projects/*:refs/heads/projects/*'
 # - git config --add remote.github.push '+refs/notes/*:refs/notes/*'
 # - etc.
-# - touch freebsd.git/git-daemon-export-ok
-# - ~uqs/svn2git/svn-all-fast-export --rules ~uqs/svn2git/freebsd.rules --add-metadata-notes --identity-domain FreeBSD.org /home/svn/base
+# - touch freebsd-base.git/git-daemon-export-ok
+# - svn2git/svn-all-fast-export --rules ~git/freebsd-base.rules --add-metadata-notes --identity-domain FreeBSD.org /home/svn/base
 # - git push github
 # done. Analog steps needed for doc and ports.
 #
@@ -25,9 +25,14 @@
 # - git push github
 
 LOCK=/tmp/gitconv.lock
-RULES=/home/uqs/svn2git
-SVN2GIT=/home/uqs/svn2git/svn-all-fast-export
-BASE=/home/git
+
+: ${BASE=/home/git}
+: ${RULES_DIR=${BASE}}
+: ${SVN2GIT=${BASE}/svn2git/svn-all-fast-export}
+
+: ${SRC_REPO=/home/svn/base}
+: ${DOC_REPO=/home/svn/doc}
+: ${PORTS_REPO=/home/svn/ports}
 
 trap 'rm -f ${LOCK} ; exit 1' 1 2 3 15
 if ! shlock -p $$ -f ${LOCK}; then
@@ -46,8 +51,11 @@ svn2git()
     target=${rules%.rules}.git
     target=`basename $target`
 
-    echo "Converting $source to $target using svn2git"
+    test -d "$BASE" || { echo "$BASE is not a directory, exiting ..." >&2; exit 1; }
+    test -f "$rules" || { echo "$rules do not exist, exiting ..." >&2; exit 1; }
+
     cd $BASE
+    echo "Converting $source to $target using svn2git"
     $SVN2GIT --add-metadata-notes --identity-domain FreeBSD.org \
 	--rules $rules $source
     if [ $? != 0 ]; then
@@ -69,8 +77,9 @@ gitsvn()
     target=$1; shift
     dest="$@"
 
-    echo "Converting $target using git-svn"
+    test -d "$BASE/$target/.git" || { echo "$BASE/$target is not a git repo, exiting ..." >&2; exit 1; }
     cd $BASE/$target
+    echo "Converting $target using git-svn"
     git svn rebase
     if [ $? != 0 ]; then
 	echo "Error in git-svn conversion of $target" >&2
@@ -85,10 +94,10 @@ gitsvn()
     fi
 }
 
-svn2git $RULES/freebsd.rules /home/svn/base github
-svn2git $RULES/freebsd-doc.rules /home/svn/doc github
-svn2git $RULES/freebsd-ports.rules /home/svn/ports github
-
 gitsvn src-head.git github
 gitsvn doc-head.git github
 gitsvn ports-head.git github
+
+svn2git $RULES_DIR/freebsd.rules ${SRC_REPO} github
+svn2git $RULES_DIR/freebsd-doc.rules ${DOC_REPO} github
+svn2git $RULES_DIR/freebsd-ports.rules ${PORTS_REPO} github
