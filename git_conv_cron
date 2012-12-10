@@ -7,11 +7,11 @@ cd /home/git
 
 # TODO cleanup old logs
 
-git_conv >> $log 2>&1
+./git_conv >> $log 2>&1
 
 if [ $? != 0 ]; then
     echo "Error during git_conv" >&2
-    tail $log
+    tail -30 $log
     exit 1
 fi
 
