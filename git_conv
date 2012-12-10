@@ -42,7 +42,7 @@ fi
 
 svn2git()
 {
-    local rules source target dest
+    local rules source target dest d
     rules=$1; shift
     source=$1; shift
     dest="$@"
@@ -64,16 +64,14 @@ svn2git()
     fi
 
     echo "Pushing $target to $dest"
-    cd $target && for d in $dest; do git push $d || break; done
-    if [ $? != 0 ]; then
-	echo "Error in pushing to $dest" >&2
-	exit 1
-    fi
+    cd $target && for d in $dest; do
+	git push $d || { echo "Error in pushing to $dest" >&2; exit 1; }
+    done
 }
 
 gitsvn()
 {
-    local target dest
+    local target dest d
     target=$1; shift
     dest="$@"
 
@@ -87,11 +85,9 @@ gitsvn()
     fi
 
     echo "Pushing $target to $dest"
-    for d in $dest; do git push $d || break; done
-    if [ $? != 0 ]; then
-	echo "Error in pushing to $dest" >&2
-	exit 1
-    fi
+    for d in $dest; do
+	git push $d || { echo "Error in pushing to $dest" >&2; exit 1; }
+    done
 }
 
 gitsvn src-head.git github
