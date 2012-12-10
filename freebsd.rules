@@ -72,6 +72,9 @@ match /user/simon/test.txt
 end match
 match /user/peter/foo.txt
 end match
+# Cannot put .git directories into git, makes it unhappy
+match /user/uqs/git_conv
+end match
 match /vendor/(bzip2|flex)/FREEBSD-(Xlist|upgrade)
 end match
 match /vendor/v4l/README
