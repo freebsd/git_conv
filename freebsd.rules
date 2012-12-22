@@ -16,6 +16,15 @@ match /user/GUIDELINES.txt
 end match
 match /vendor/atf/(README.txt|FREEBSD-Xlist)
 end match
+# Skip bogus revision and the backout rev
+match /projects/.*
+min revision 244485
+max revision 244485
+end match
+match /projects/.*
+min revision 244487
+max revision 244487
+end match
 
 match /svnadmin/.*
 end match
