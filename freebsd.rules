@@ -16,6 +16,11 @@ match /user/GUIDELINES.txt
 end match
 match /vendor/atf/(README.txt|FREEBSD-Xlist)
 end match
+# Skip empty test-commit, that I'm unable to svnsync, maybe it's corrupted?
+match /
+min revision 179587
+max revision 179587
+end match
 # Skip bogus revision and the backout rev
 match /projects/.*
 min revision 244485
