@@ -2,11 +2,6 @@
 create repository freebsd.git
 end repository
 
-match /head/
-  repository freebsd.git
-  branch master
-end match
-
 # ignore this stuff
 match /ROADMAP.txt
 end match
@@ -17,7 +12,7 @@ end match
 match /vendor/atf/(README.txt|FREEBSD-Xlist)
 end match
 # Skip empty test-commit, that I'm unable to svnsync, maybe it's corrupted?
-match /
+match /head/.*
 min revision 179587
 max revision 179587
 end match
@@ -30,8 +25,12 @@ match /projects/.*
 min revision 244487
 max revision 244487
 end match
-
 match /svnadmin/.*
+end match
+
+match /head/
+  repository freebsd.git
+  branch master
 end match
 
 match /(cvs2svn)/([^/]+)/([^/]+)/
