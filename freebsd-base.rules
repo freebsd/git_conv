@@ -81,6 +81,8 @@ match /user/gad/README.txt
 end match
 match /user/des/Makefile.inc
 end match
+match /user/rpaulo/asiabsdcon.rb
+end match
 match /user/simon/test.txt
 end match
 match /user/peter/foo.txt
