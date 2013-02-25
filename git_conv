@@ -69,8 +69,6 @@ svn2git()
 
     echo "Pushing $target to $dest"
     cd $target && for d in $dest; do
-        # XXX kludge around this till we can re-gen the whole thing
-	git update-ref -d refs/heads/user/uqs/git_conv >/dev/null 2>&1
 	# XXX freebsd-ports often needs a second try
 	git push $d || git push $d || { echo "Error in pushing to $dest" >&2; exit 1; }
     done
@@ -105,7 +103,6 @@ gitsvn src-head.git github
 gitsvn doc-head.git github
 gitsvn ports-head.git github
 
-svn2git $RULES_DIR/freebsd.rules ${SRC_REPO} github
-svn2git $RULES_DIR/freebsd-base.rules ${SRC_REPO} #github
+svn2git $RULES_DIR/freebsd-base.rules ${SRC_REPO} github
 svn2git $RULES_DIR/freebsd-doc.rules ${DOC_REPO} github
 svn2git $RULES_DIR/freebsd-ports.rules ${PORTS_REPO} github
