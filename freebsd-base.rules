@@ -86,12 +86,12 @@ end match
 match /user/peter/foo.txt
 end match
 # Not a branch, ignore
-match /user/peterj/.*
+match /user/(nwhitehorn|peterj)/.*
 end match
 # Cannot put .git directories into git, makes it unhappy
 match /user/uqs/git_conv
 end match
-match /vendor/(atf|v4l)/README.*
+match /vendor/(atf|ldns-host|v4l)/README.*
 end match
 match /vendor/(apr|apr-util|atf|bzip2|flex|serf|subversion)/FREEBSD-(Xlist|upgrade)
 end match
