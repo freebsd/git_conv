@@ -32,10 +32,26 @@
 : ${DOC_REPO=/home/svn/doc}
 : ${PORTS_REPO=/home/svn/ports}
 
-LOCK=/tmp/gitconv.lock
-trap 'rm -f ${LOCK} ; exit 1' 1 2 3 15
-if ! shlock -p $$ -f ${LOCK}; then
-    echo "Locked by `cat ${LOCK}`, running too long? Please fix ..." >&2
+case "$1" in
+    base)
+	;;
+    ports)
+	;;
+    doc)
+	;;
+    *)
+	echo "Need to specify which repo to convert" >&2
+	exit 1
+	;;
+esac
+
+TYPE=$1
+
+LOCK="/tmp/gitconv_${TYPE}.lock"
+trap 'rm -f "${LOCK}" ; exit 1' 1 2 3 15
+if ! shlock -p $$ -f "${LOCK}"; then
+    echo >&2
+    echo "Locked by ${TYPE} (`cat "${LOCK}"`), running too long? Please fix ..." >&2
     exit 1
 fi
 
@@ -97,10 +113,26 @@ gitsvn()
     done
 }
 
-gitsvn src-head.git github
-gitsvn doc-head.git github
-gitsvn ports-head.git github
+case "$TYPE" in
+    base)
+	gitsvn src-head.git github
+	;;
+    doc)
+	gitsvn doc-head.git github
+	;;
+    ports)
+	gitsvn ports-head.git github
+	;;
+esac
 
-svn2git $RULES_DIR/freebsd-base.rules ${SRC_REPO} github bitbucket googlecode
-svn2git $RULES_DIR/freebsd-doc.rules ${DOC_REPO} github
-svn2git $RULES_DIR/freebsd-ports.rules ${PORTS_REPO} github
+case "$TYPE" in
+    base)
+	svn2git $RULES_DIR/freebsd-base.rules ${SRC_REPO} github bitbucket googlecode
+	;;
+    doc)
+	svn2git $RULES_DIR/freebsd-doc.rules ${DOC_REPO} github
+	;;
+    ports)
+	svn2git $RULES_DIR/freebsd-ports.rules ${PORTS_REPO} github
+	;;
+esac

@@ -1,17 +1,30 @@
 #!/bin/sh
 
-today="`date +%Y-%m-%d`"
-log="$today.log"
+case "$1" in
+    base)
+	;;
+    ports)
+	;;
+    doc)
+	;;
+    *)
+	echo "Need to specify which repo to convert" >&2
+	exit 1
+	;;
+esac
+
+TYPE=$1
+LOG="`date +%Y-%m-%d`_${TYPE}.log"
 
 cd /home/git
 
 # TODO cleanup old logs
 
-./git_conv >> $log 2>&1
+./git_conv "$@" >> $LOG 2>&1
 
 if [ $? != 0 ]; then
     echo "Error during git_conv" >&2
-    tail -30 $log
+    tail -30 $LOG
     exit 1
 fi
 
