@@ -77,6 +77,7 @@ svn2git()
 	echo "Error in svn2git conversion of $source" >&2
 	exit 1
     fi
+    touch $target/git-daemon-export-ok
 
     if [ -z "$dest" ]; then
 	return
