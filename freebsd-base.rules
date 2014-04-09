@@ -108,6 +108,12 @@ end match
 match /vendor/(clang|llvm)-(r108243)/
 end match
 
+# r262569 committed one level short, skip it and use r262573 instead
+match /vendor/device-tree/
+  min revision 262569
+  max revision 262569
+end match
+
 # unknown vendor is one level short
 match /(vendor)/(unknown)/
   repository freebsd-base.git
