@@ -16,6 +16,11 @@ match /(branches|tags)/([A-Z0-9_]+)/
   branch \1/\2
 end match
 
+match /(projects)/([^/]+)/
+  repository freebsd-ports.git
+  branch \1/\2
+end match
+
 # ignore the rest, XXX temp only
 #match .*
 #end match
