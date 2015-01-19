@@ -4,6 +4,7 @@
 #
 # Simple for svn2git repos, need to run against local paths, using rules files in ~git/*.rules
 # - First svn2git run will create target git repo, then
+# - git config --global push.default matching
 # - git remote add github github.com:freebsd/freebsd.git
 # - git config --add remote.github.push '+refs/heads/master:refs/heads/master'
 # - git config --add remote.github.push '+refs/heads/stable/*:refs/heads/stable/*'
@@ -19,6 +20,7 @@
 # - git svn init -Thead -rewrite-root=svn+ssh://svn.freebsd.org/base file:///home/svn/base src-head.git
 # - cd src-head.git
 # - git svn fetch -r 0:1000
+# - git config --global push.default matching
 # - git remote add github github.com:freebsd/freebsd.git
 # - git config --add remote.github.push '+refs/remotes/trunk:refs/heads/svn_head'
 # - git svn rebase
@@ -26,7 +28,7 @@
 
 : ${BASE=/home/git}
 : ${RULES_DIR=${BASE}}
-: ${SVN2GIT=${BASE}/svn2git/svn-all-fast-export}
+: ${SVN2GIT=/usr/local/bin/svn2git}
 
 : ${SRC_REPO=/home/svn/base}
 : ${DOC_REPO=/home/svn/doc}
@@ -128,7 +130,7 @@ esac
 
 case "$TYPE" in
     base)
-	svn2git $RULES_DIR/freebsd-base.rules ${SRC_REPO} github bitbucket googlecode
+	svn2git $RULES_DIR/freebsd-base.rules ${SRC_REPO} github bitbucket #googlecode
 	;;
     doc)
 	svn2git $RULES_DIR/freebsd-doc.rules ${DOC_REPO} github
