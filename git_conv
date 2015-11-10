@@ -34,6 +34,31 @@
 : ${DOC_REPO=/home/svn/doc}
 : ${PORTS_REPO=/home/svn/ports}
 
+usage()
+{
+    exit 1
+}
+
+do_gitsvn=1
+do_svn2git=1
+run_local=
+
+# These options are ass-backwards, but default should be to do both.
+while getopts "gls" OPT; do
+    case "$OPT" in
+	g)
+	    do_svn2git=
+	    ;;
+	l)
+	    run_local=1
+	    ;;
+	s)
+	    do_gitsvn=
+	    ;;
+    esac
+done
+shift $(($OPTIND - 1))
+
 case "$1" in
     base)
 	;;
@@ -81,7 +106,7 @@ svn2git()
     fi
     touch $target/git-daemon-export-ok
 
-    if [ -z "$dest" ]; then
+    if [ -z "$dest" -o -n "$run_local" ]; then
 	return
     fi
 
@@ -106,7 +131,7 @@ gitsvn()
 	exit 1
     fi
 
-    if [ -z "$dest" ]; then
+    if [ -z "$dest" -o -n "$run_local" ]; then
 	return
     fi
 
@@ -116,26 +141,18 @@ gitsvn()
     done
 }
 
-case "$TYPE" in
-    base)
-	gitsvn src-head.git github
-	;;
-    doc)
-	gitsvn doc-head.git github
-	;;
-    ports)
-	gitsvn ports-head.git github
-	;;
-esac
+if [ -n "$do_gitsvn" ]; then
+    case "$TYPE" in
+	base) gitsvn src-head.git github ;;
+	doc) gitsvn doc-head.git github ;;
+	ports) gitsvn ports-head.git github ;;
+    esac
+fi
 
-case "$TYPE" in
-    base)
-	svn2git $RULES_DIR/freebsd-base.rules ${SRC_REPO} github bitbucket #googlecode
-	;;
-    doc)
-	svn2git $RULES_DIR/freebsd-doc.rules ${DOC_REPO} github
-	;;
-    ports)
-	svn2git $RULES_DIR/freebsd-ports.rules ${PORTS_REPO} github
-	;;
-esac
+if [ -n "$do_svn2git" ]; then
+    case "$TYPE" in
+	base) svn2git $RULES_DIR/freebsd-base.rules ${SRC_REPO} github bitbucket ;;
+	doc) svn2git $RULES_DIR/freebsd-doc.rules ${DOC_REPO} github ;;
+	ports) svn2git $RULES_DIR/freebsd-ports.rules ${PORTS_REPO} github ;;
+    esac
+fi
