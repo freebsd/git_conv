@@ -93,7 +93,7 @@ match /user/uqs/git_conv
 end match
 match /vendor/(atf|ldns-host|v4l)/README.*
 end match
-match /vendor/(apr|apr-util|atf|bzip2|flex|serf|subversion)/FREEBSD-(Xlist|upgrade)
+match /vendor/(apr|apr-util|atf|bzip2|flex|ntp|serf|subversion)/FREEBSD-(Xlist|upgrade)
 end match
 match /vendor/libregex/libgnuregex_prep.sh
 end match
