@@ -1,38 +1,75 @@
 #!/bin/sh
 #
-# Repository creation and setup
+# 1. Repository creation and setup
 #
-# Simple for svn2git repos, need to run against local paths, using rules files in ~git/*.rules
-# - First svn2git run will create target git repo, then
+# svnsync mirror with cloned UUID
+# - svnadmin create freebsd-base.svn
+# - svnadmin create freebsd-doc.svn
+# - svnadmin create freebsd-ports.svn
+# - echo '#!/bin/sh' > freebsd-base.svn/hooks/pre-revprop-change
+# - echo '#!/bin/sh' > freebsd-doc.svn/hooks/pre-revprop-change
+# - echo '#!/bin/sh' > freebsd-ports.svn/hooks/pre-revprop-change
+# - chmod +x freebsd-base.svn/hooks/pre-revprop-change freebsd-doc.svn/hooks/pre-revprop-change freebsd-ports.svn/hooks/pre-revprop-change
+#   - svnadmin setuuid freebsd-base.svn ccf9f872-aa2e-dd11-9fc8-001c23d0bc1f
+#   - svnadmin setuuid freebsd-doc.svn c2e8774f-c49f-e111-b436-862b2bbc8956
+#   - svnadmin setuuid freebsd-ports.svn 35697150-7ecd-e111-bb59-0022644237b5
+# - svnsync init file://$PWD/freebsd-base.svn svn://svn.freebsd.org/base
+# - svnsync init file://$PWD/freebsd-doc.svn svn://svn.freebsd.org/doc
+# - svnsync init file://$PWD/freebsd-ports.svn svn://svn.freebsd.org/ports
+# !!! ACHTUNG !!!
+# svnsync doesn't work atomically and can mess up metadata for commits. This
+# has happened already with the mirror as used by the official svn2git
+# conversion as exported in github. This is even worse than you can imagine.
+#
+# DO NOT USE THIS NAIVE SVN SYNC FROM THE LIVE REPO, see dosync.sh instead.
+# - svnsync sync file://$PWD/freebsd-base.svn
+# - svnsync sync file://$PWD/freebsd-doc.svn
+# - svnsync sync file://$PWD/freebsd-ports.svn
+# this will take several days, possibly weeks.
+# !!! ACHTUNG !!!
+#
+# 2. svn2git conversion: need to run against local paths, using rules files in ~git/*.rules
+# - First svn2git run will create the target git repo, then
 # - git config --global push.default matching
-# - git remote add github github.com:freebsd/freebsd.git
+# - git remote add github base.github.com:freebsd/freebsd.git
 # - git config --add remote.github.push '+refs/heads/master:refs/heads/master'
 # - git config --add remote.github.push '+refs/heads/stable/*:refs/heads/stable/*'
 # - git config --add remote.github.push '+refs/heads/projects/*:refs/heads/projects/*'
 # - git config --add remote.github.push '+refs/notes/*:refs/notes/*'
 # - etc.
 # - touch freebsd-base.git/git-daemon-export-ok
-# - svn2git/svn-all-fast-export --rules ~git/freebsd-base.rules --add-metadata-notes --identity-domain FreeBSD.org /home/svn/base
+# - svn2git/svn-all-fast-export --rules freebsd-base.rules --add-metadata-notes --identity-domain FreeBSD.org /home/svn/freebsd-base.svn
 # - git push github
 # done. Analog steps needed for doc and ports.
 #
-# For git-svn it's a bit more involved. We use separate working dirs, but push to the same destination repo.
-# - git svn init -Thead -rewrite-root=svn+ssh://svn.freebsd.org/base file:///home/svn/base src-head.git
-# - cd src-head.git
+# 3. git-svn conversion: we use separate working dirs, but push to the same destination repo.
+# - git svn init -Thead --rewrite-root=svn+ssh://svn.freebsd.org/base file:///home/svn/freebsd-base.svn base-head.git
+# - git svn init -Thead --rewrite-root=svn+ssh://svn.freebsd.org/doc file:///home/svn/freebsd-doc.svn doc-head.git
+# - git svn init -Thead --rewrite-root=svn+ssh://svn.freebsd.org/ports file:///home/svn/freebsd-ports.svn ports-head.git
+# - cd base-head.git
 # - git svn fetch -r 0:1000
 # - git config --global push.default matching
-# - git remote add github github.com:freebsd/freebsd.git
+# - git remote add github base.github.com:freebsd/freebsd.git
 # - git config --add remote.github.push '+refs/remotes/trunk:refs/heads/svn_head'
 # - git svn rebase
 # - git push github
-
+#
+# 4. For using different SSH keys with github, you need to fuzz your .ssh/config like so:
+#
+# Host base.github.com
+#   User git
+#   Hostname github.com
+#   IdentityFile ~/.ssh/github_base
+#
+# And similar for ports and doc.
 : ${BASE=/home/git}
 : ${RULES_DIR=${BASE}}
 : ${SVN2GIT=/usr/local/bin/svn2git}
 
-: ${SRC_REPO=/home/svn/base}
-: ${DOC_REPO=/home/svn/doc}
-: ${PORTS_REPO=/home/svn/ports}
+# xxx_REPO are legacy names, TODO remove them ...
+: ${REPO_base=${SRC_REPO:-/home/svn/base}}
+: ${REPO_doc=${DOC_REPO:-/home/svn/doc}}
+: ${REPO_ports=${PORTS_REPO:-/home/svn/ports}}
 
 usage()
 {
@@ -98,20 +135,59 @@ svn2git()
 
     cd $BASE
     echo "Converting $source to $target using svn2git"
-    $SVN2GIT --add-metadata-notes --identity-domain FreeBSD.org \
-	--rules $rules $source
+    $SVN2GIT --add-metadata-notes --identity-domain FreeBSD.org --rules $rules $source
     if [ $? != 0 ]; then
 	echo "Error in svn2git conversion of $source" >&2
 	exit 1
     fi
     touch $target/git-daemon-export-ok
+    cd $target
+    if ! git config --local --get push.default >/dev/null; then
+	git config --local push.default matching
+    fi
+    if ! git config --local --get remote.github.url >/dev/null; then
+	# We use fake github hosts like ports.github.com, which we fix in our
+	# .ssh/config *and* apply a per-repo ssh key, which is the whole point
+	# of this hack.
+	case "$TYPE" in
+	    base)
+		git remote add github $TYPE.github.com:freebsd/freebsd.git
+		git config --add remote.github.push '+refs/heads/master:refs/heads/master'
+		git config --add remote.github.push '+refs/heads/projects/*:refs/heads/projects/*'
+		git config --add remote.github.push '+refs/heads/release/*:refs/heads/release/*'
+		git config --add remote.github.push '+refs/heads/releng/*:refs/heads/releng/*'
+		git config --add remote.github.push '+refs/heads/stable/*:refs/heads/stable/*'
+		git config --add remote.github.push '+refs/heads/user/*:refs/heads/user/*'
+		git config --add remote.github.push '+refs/notes/*:refs/notes/*'
+
+		git remote add bitbucket ssh://git@bitbucket.org/freebsd/freebsd-$TYPE.git
+		git config --add remote.bitbucket.push '+refs/heads/master:refs/heads/master'
+		git config --add remote.bitbucket.push '+refs/heads/stable/*:refs/heads/stable/*'
+		git config --add remote.bitbucket.push '+refs/notes/*:refs/notes/*'
+		;;
+	    doc)
+		git remote add github $TYPE.github.com:freebsd/freebsd-$TYPE.git
+		git config --add remote.github.push '+refs/heads/master:refs/heads/master'
+		git config --add remote.github.push '+refs/heads/projects/*:refs/heads/projects/*'
+		git config --add remote.github.push '+refs/heads/release/*:refs/heads/release/*'
+		git config --add remote.github.push '+refs/notes/*:refs/notes/*'
+		;;
+	    ports)
+		git remote add github $TYPE.github.com:freebsd/freebsd-$TYPE.git
+		git config --add remote.github.push '+refs/heads/branches/*:refs/heads/branches/*'
+		git config --add remote.github.push '+refs/heads/master:refs/heads/master'
+		git config --add remote.github.push '+refs/heads/projects/*:refs/heads/projects/*'
+		git config --add remote.github.push '+refs/notes/*:refs/notes/*'
+		;;
+	esac
+    fi
 
     if [ -z "$dest" -o -n "$run_local" ]; then
 	return
     fi
 
     echo "Pushing $target to $dest"
-    cd $target && for d in $dest; do
+    for d in $dest; do
 	git push $d || { echo "Error in pushing to $dest" >&2; exit 1; }
     done
 }
@@ -122,7 +198,18 @@ gitsvn()
     target=$1; shift
     dest="$@"
 
-    test -d "$BASE/$target/.git" || { echo "$BASE/$target is not a git repo, exiting ..." >&2; exit 1; }
+    cd $BASE
+    if ! test -d "$BASE/$target/.git"; then
+	echo "$BASE/$target is not a git repo, creating first revisions ..."
+	git svn init -Thead --rewrite-root=svn+ssh://svn.freebsd.org/$TYPE file://`eval echo \\\${REPO_${TYPE}}` $BASE/$target
+	cd $BASE/$target && git svn fetch -r 0:100
+	git config --local push.default matching
+	case "$TYPE" in
+	    base) git remote add github $TYPE.github.com:freebsd/freebsd.git ;;
+	    *) git remote add github $TYPE.github.com:freebsd/freebsd-$TYPE.git ;;
+	esac
+	git config --add remote.github.push '+refs/remotes/trunk:refs/heads/svn_head'
+    fi
     cd $BASE/$target
     echo "Converting $target using git-svn"
     git svn rebase
@@ -143,7 +230,7 @@ gitsvn()
 
 if [ -n "$do_gitsvn" ]; then
     case "$TYPE" in
-	base) gitsvn src-head.git github ;;
+	base) gitsvn base-head.git github ;;
 	doc) gitsvn doc-head.git github ;;
 	ports) gitsvn ports-head.git github ;;
     esac
@@ -151,8 +238,8 @@ fi
 
 if [ -n "$do_svn2git" ]; then
     case "$TYPE" in
-	base) svn2git $RULES_DIR/freebsd-base.rules ${SRC_REPO} github bitbucket ;;
-	doc) svn2git $RULES_DIR/freebsd-doc.rules ${DOC_REPO} github ;;
-	ports) svn2git $RULES_DIR/freebsd-ports.rules ${PORTS_REPO} github ;;
+	base) svn2git $RULES_DIR/freebsd-base.rules ${REPO_base} github bitbucket ;;
+	doc) svn2git $RULES_DIR/freebsd-doc.rules ${REPO_doc} github ;;
+	ports) svn2git $RULES_DIR/freebsd-ports.rules ${REPO_ports} github ;;
     esac
 fi
