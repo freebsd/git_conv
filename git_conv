@@ -49,6 +49,7 @@
 # - cd base-head.git
 # - git svn fetch -r 0:1000
 # - git config --global push.default matching
+# - git config --global core.autocrlf false
 # - git remote add github base.github.com:freebsd/freebsd.git
 # - git config --add remote.github.push '+refs/remotes/trunk:refs/heads/svn_head'
 # - git svn rebase
