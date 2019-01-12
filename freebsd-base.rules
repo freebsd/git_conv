@@ -85,6 +85,8 @@ match /user/simon/test.txt
 end match
 match /user/peter/foo.txt
 end match
+match /vendor/.arcconfig
+end match
 # Not a branch, ignore
 match /user/(nwhitehorn|peterj)/.*
 end match
