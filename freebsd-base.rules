@@ -99,6 +99,8 @@ match /vendor/(apr|apr-util|atf|bzip2|flex|ntp|serf|subversion|tcpdump)/F(REE|re
 end match
 match /vendor/libregex/libgnuregex_prep.sh
 end match
+match /vendor/bearssl/import.sh
+end match
 
 # fixup trailing dot
 match /vendor/(clang|llvm)/(clang|llvm)-(r73070)\./
