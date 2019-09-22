@@ -144,6 +144,7 @@ static const CommandLineOption options[] = {
     {"--empty-dirs", "Add .gitignore-file for empty dirs"},
     {"--svn-ignore", "Import svn-ignore-properties via .gitignore"},
     {"--propcheck", "Check for svn-properties except svn-ignore"},
+    {"--fast-import-timeout SECONDS", "number of seconds to wait before terminating fast-import, 0 to wait forever"},
     {"-h, --help", "show help"},
     {"-v, --version", "show version"},
     CommandLineLastOption
@@ -210,6 +211,8 @@ int main(int argc, char **argv)
         repositories.insert(rule.name, repo);
 
         int repo_next = repo->setupIncremental(cutoff);
+        repo->restoreAnnotatedTags();
+        repo->restoreBranchNotes();
 
         /*
   * cutoff < resume_from => error exit eventually
@@ -281,6 +284,7 @@ int main(int argc, char **argv)
 
     foreach (Repository *repo, repositories) {
         repo->finalizeTags();
+        repo->saveBranchNotes();
         delete repo;
     }
     Stats::instance()->printStats();

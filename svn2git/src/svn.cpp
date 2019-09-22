@@ -42,6 +42,7 @@
 #include <svn_pools.h>
 #include <svn_repos.h>
 #include <svn_types.h>
+#include <svn_version.h>
 
 #include <QFile>
 #include <QDebug>
@@ -50,6 +51,10 @@
 
 #undef SVN_ERR
 #define SVN_ERR(expr) SVN_INT_ERR(expr)
+
+#if SVN_VER_MAJOR == 1 && SVN_VER_MINOR < 9
+#define svn_stream_read_full svn_stream_read
+#endif
 
 typedef QList<Rules::Match> MatchRuleList;
 typedef QHash<QString, Repository *> RepositoryHash;
@@ -63,12 +68,12 @@ class AprAutoPool
 public:
     inline AprAutoPool(apr_pool_t *parent = NULL)
         {
-		pool = svn_pool_create(parent);
-	}
-	inline ~AprAutoPool()
+            pool = svn_pool_create(parent);
+        }
+        inline ~AprAutoPool()
         {
-		svn_pool_destroy(pool);
-	}
+            svn_pool_destroy(pool);
+        }
 
     inline void clear() { svn_pool_clear(pool); }
     inline apr_pool_t *data() const { return pool; }
@@ -174,7 +179,11 @@ int SvnPrivate::openRepository(const QString &pathToRepository)
     QString path = pathToRepository;
     while (path.endsWith('/')) // no trailing slash allowed
         path = path.mid(0, path.length()-1);
+#if SVN_VER_MAJOR == 1 && SVN_VER_MINOR < 9
+    SVN_ERR(svn_repos_open2(&repos, QFile::encodeName(path), NULL, global_pool));
+#else
     SVN_ERR(svn_repos_open3(&repos, QFile::encodeName(path), NULL, global_pool, scratch_pool));
+#endif
     fs = svn_repos_fs(repos);
 
     return EXIT_SUCCESS;
@@ -294,10 +303,32 @@ static int dumpBlob(Repository::Transaction *txn, svn_fs_root_t *fs_root,
     return EXIT_SUCCESS;
 }
 
-static int recursiveDumpDir(Repository::Transaction *txn, svn_fs_root_t *fs_root,
-                            const QByteArray &pathname, const QString &finalPathName,
-                            apr_pool_t *pool)
+static bool wasDir(svn_fs_t *fs, int revnum, const char *pathname, apr_pool_t *pool)
 {
+    AprAutoPool subpool(pool);
+    svn_fs_root_t *fs_root;
+    if (svn_fs_revision_root(&fs_root, fs, revnum, subpool) != SVN_NO_ERROR)
+        return false;
+
+    svn_boolean_t is_dir;
+    if (svn_fs_is_dir(&is_dir, fs_root, pathname, subpool) != SVN_NO_ERROR)
+        return false;
+
+    return is_dir;
+}
+
+static int recursiveDumpDir(Repository::Transaction *txn, svn_fs_t *fs, svn_fs_root_t *fs_root,
+                            const QByteArray &pathname, const QString &finalPathName,
+                            apr_pool_t *pool, svn_revnum_t revnum,
+                            const Rules::Match &rule, const MatchRuleList &matchRules,
+                            bool ruledebug)
+{
+    if (!wasDir(fs, revnum, pathname.data(), pool)) {
+        if (dumpBlob(txn, fs_root, pathname, finalPathName, pool) == EXIT_FAILURE)
+            return EXIT_FAILURE;
+        return EXIT_SUCCESS;
+    }
+
     // get the dir listing
     apr_hash_t *entries;
     SVN_ERR(svn_fs_dir_entries(&entries, fs_root, pathname, pool));
@@ -323,7 +354,19 @@ static int recursiveDumpDir(Repository::Transaction *txn, svn_fs_root_t *fs_root
 
         if (i.value() == svn_node_dir) {
             entryFinalName += '/';
-            if (recursiveDumpDir(txn, fs_root, entryName, entryFinalName, dirpool) == EXIT_FAILURE)
+            QString entryNameQString = entryName + '/';
+
+            MatchRuleList::ConstIterator match = findMatchRule(matchRules, revnum, entryNameQString);
+            if (match == matchRules.constEnd()) continue; // no match of parent repo? (should not happen)
+
+            const Rules::Match &matchedRule = *match;
+            if (matchedRule.action != Rules::Match::Export || matchedRule.repository != rule.repository) {
+                if (ruledebug)
+                    qDebug() << "recursiveDumpDir:" << entryNameQString << "skip entry for different/ignored repository";
+                continue;
+            }
+
+            if (recursiveDumpDir(txn, fs, fs_root, entryName, entryFinalName, dirpool, revnum, rule, matchRules, ruledebug) == EXIT_FAILURE)
                 return EXIT_FAILURE;
         } else if (i.value() == svn_node_file) {
             printf("+");
@@ -334,20 +377,6 @@ static int recursiveDumpDir(Repository::Transaction *txn, svn_fs_root_t *fs_root
     }
 
     return EXIT_SUCCESS;
-}
-
-static bool wasDir(svn_fs_t *fs, int revnum, const char *pathname, apr_pool_t *pool)
-{
-    AprAutoPool subpool(pool);
-    svn_fs_root_t *fs_root;
-    if (svn_fs_revision_root(&fs_root, fs, revnum, subpool) != SVN_NO_ERROR)
-        return false;
-
-    svn_boolean_t is_dir;
-    if (svn_fs_is_dir(&is_dir, fs_root, pathname, subpool) != SVN_NO_ERROR)
-        return false;
-
-    return is_dir;
 }
 
 time_t get_epoch(const char* svn_date)
@@ -573,7 +602,8 @@ int SvnRevision::commit()
         txn->setDateTime(epoch);
         txn->setLog(log);
 
-        txn->commit();
+        if (txn->commit() != EXIT_SUCCESS)
+            return EXIT_FAILURE;
         delete txn;
     }
 
@@ -611,7 +641,7 @@ int SvnRevision::exportEntry(const char *key, const svn_fs_path_change2_t *chang
         //qDebug() << "Adding directory:" << key;
     }
     // svn:ignore-properties
-    else if (is_dir && (change->change_kind == svn_fs_path_change_add || change->change_kind == svn_fs_path_change_modify)
+    else if (is_dir && (change->change_kind == svn_fs_path_change_add || change->change_kind == svn_fs_path_change_modify || change->change_kind == svn_fs_path_change_replace)
              && path_from == NULL && CommandLineParser::instance()->contains("svn-ignore")) {
         needCommit = true;
     }
@@ -818,7 +848,7 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
                 if(ruledebug)
                     qDebug() << "Create a true SVN copy of branch (" << key << "->" << branch << path << ")";
                 txn->deleteFile(path);
-                recursiveDumpDir(txn, fs_root, key, path, pool);
+                recursiveDumpDir(txn, fs, fs_root, key, path, pool, revnum, rule, matchRules, ruledebug);
             }
             if (rule.annotate) {
                 // create an annotated tag
@@ -848,7 +878,7 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
     // branches for the FreeBSD repositories. Never merge into stable or
     // releng, as we only ever cherry-pick changes to those branches.
     // FIXME: Needs to move into the ruleset ...
-    if (path_from != NULL && preveffectiverepository == effectiveRepository && prevbranch != branch &&
+    if (path_from != NULL && prevrepository == repository && prevbranch != branch &&
             (branch.startsWith("master") || branch.startsWith("head") ||
              branch.startsWith("projects") || branch.startsWith("user"))) {
         if(ruledebug)
@@ -874,17 +904,18 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
             qDebug() << "add/change dir (" << key << "->" << branch << path << ")";
 
         // Check unknown svn-properties
-        if (((path_from == NULL && change->prop_mod==1) || (path_from != NULL && change->change_kind == svn_fs_path_change_add))
+        if (((path_from == NULL && change->prop_mod==1) || (path_from != NULL && (change->change_kind == svn_fs_path_change_add || change->change_kind == svn_fs_path_change_replace)))
             && CommandLineParser::instance()->contains("propcheck")) {
             if (fetchUnknownProps(pool, key, fs_root) != EXIT_SUCCESS) {
                 qWarning() << "Error checking svn-properties (" << key << ")";
             }
         }
 
-        int ignoreSet = false;
+        txn->deleteFile(path);
 
         // Add GitIgnore with svn:ignore
-        if (((path_from == NULL && change->prop_mod==1) || (path_from != NULL && change->change_kind == svn_fs_path_change_add))
+        int ignoreSet = false;
+        if (((path_from == NULL && change->prop_mod==1) || (path_from != NULL && (change->change_kind == svn_fs_path_change_add || change->change_kind == svn_fs_path_change_replace)))
             && CommandLineParser::instance()->contains("svn-ignore")) {
             QString svnignore;
             // TODO: Check if svn:ignore or other property was changed, but always set on copy/rename (path_from != NULL)
@@ -900,15 +931,17 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
         if (CommandLineParser::instance()->contains("empty-dirs") && ignoreSet == false) {
             if (addGitIgnore(pool, key, path, fs_root, txn) == EXIT_SUCCESS) {
                 return EXIT_SUCCESS;
-            } else {
-                ignoreSet = true;
             }
         }
 
-        if (ignoreSet == false) {
-            txn->deleteFile(path);
-        }
-        recursiveDumpDir(txn, fs_root, key, path, pool);
+        recursiveDumpDir(txn, fs, fs_root, key, path, pool, revnum, rule, matchRules, ruledebug);
+    }
+
+    if (rule.annotate) {
+        // create an annotated tag
+        fetchRevProps();
+        repo->createAnnotatedTag(branch, svnprefix, revnum, authorident,
+                                 epoch, log);
     }
 
     return EXIT_SUCCESS;
@@ -1008,11 +1041,15 @@ int SvnRevision::addGitIgnore(apr_pool_t *pool, const char *key, QString path,
     QString gitIgnorePath = path + ".gitignore";
     if (content) {
         QIODevice *io = txn->addFile(gitIgnorePath, 33188, strlen(content));
-        io->write(content);
-        io->putChar('\n');
+        if (!CommandLineParser::instance()->contains("dry-run")) {
+            io->write(content);
+            io->putChar('\n');
+        }
     } else {
         QIODevice *io = txn->addFile(gitIgnorePath, 33188, 0);
-        io->putChar('\n');
+        if (!CommandLineParser::instance()->contains("dry-run")) {
+            io->putChar('\n');
+        }
     }
 
     return EXIT_SUCCESS;
@@ -1025,9 +1062,28 @@ int SvnRevision::fetchIgnoreProps(QString *ignore, apr_pool_t *pool, const char 
     SVN_ERR(svn_fs_node_prop(&prop, fs_root, key, "svn:ignore", pool));
     if (prop) {
         *ignore = QString(prop->data);
+        // remove patterns with slashes or backslashes,
+        // they didn't match anything in Subversion but would in Git eventually
+        ignore->remove(QRegExp("^[^\\r\\n]*[\\\\/][^\\r\\n]*(?:[\\r\\n]|$)|[\\r\\n][^\\r\\n]*[\\\\/][^\\r\\n]*(?=[\\r\\n]|$)"));
+        // add a slash in front to have the same meaning in Git of only working on the direct children
+        ignore->replace(QRegExp("(^|[\\r\\n])\\s*(?![\\r\\n]|$)"), "\\1/");
     } else {
         *ignore = QString();
     }
+
+    // Get svn:global-ignores
+    prop = NULL;
+    SVN_ERR(svn_fs_node_prop(&prop, fs_root, key, "svn:global-ignores", pool));
+    if (prop) {
+        QString global_ignore = QString(prop->data);
+        // remove patterns with slashes or backslashes,
+        // they didn't match anything in Subversion but would in Git eventually
+        global_ignore.remove(QRegExp("^[^\\r\\n]*[\\\\/][^\\r\\n]*(?:[\\r\\n]|$)|[\\r\\n][^\\r\\n]*[\\\\/][^\\r\\n]*(?=[\\r\\n]|$)"));
+        ignore->append(global_ignore);
+    }
+
+    // replace multiple asterisks Subversion meaning by Git meaning
+    ignore->replace(QRegExp("\\*+"), "*");
 
     return EXIT_SUCCESS;
 }
@@ -1042,11 +1098,10 @@ int SvnRevision::fetchUnknownProps(apr_pool_t *pool, const char *key, svn_fs_roo
     const void *propKey;
     for (hi = apr_hash_first(pool, table); hi; hi = apr_hash_next(hi)) {
         apr_hash_this(hi, &propKey, NULL, &propVal);
-        if (strcmp((char*)propKey, "svn:ignore")!=0) {
+        if (strcmp((char*)propKey, "svn:ignore")!=0 && strcmp((char*)propKey, "svn:global-ignores")!=0 && strcmp((char*)propKey, "svn:mergeinfo") !=0) {
             qWarning() << "WARN: Unknown svn-property" << (char*)propKey << "set to" << ((svn_string_t*)propVal)->data << "for" << key;
         }
     }
 
     return EXIT_SUCCESS;
 }
-
