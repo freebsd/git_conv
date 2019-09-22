@@ -65,12 +65,11 @@
 # And similar for ports and doc.
 : ${BASE=/home/git}
 : ${RULES_DIR=${BASE}}
-: ${SVN2GIT=/usr/local/bin/svn2git}
+: ${SVN2GIT=${BASE}/svn2git/svn-all-fast-export}
 
-# xxx_REPO are legacy names, TODO remove them ...
-: ${REPO_base=${SRC_REPO:-/home/svn/base}}
-: ${REPO_doc=${DOC_REPO:-/home/svn/doc}}
-: ${REPO_ports=${PORTS_REPO:-/home/svn/ports}}
+: ${REPO_base=/home/svn/base}
+: ${REPO_doc=/home/svn/doc}
+: ${REPO_ports=/home/svn/ports}
 
 usage()
 {
@@ -136,7 +135,7 @@ svn2git()
 
     cd $BASE
     echo "Converting $source to $target using svn2git"
-    $SVN2GIT --add-metadata-notes --identity-domain FreeBSD.org --rules $rules $source
+    $SVN2GIT --fast-import-timeout 3600 --add-metadata-notes --identity-domain FreeBSD.org --rules $rules $source
     if [ $? != 0 ]; then
 	echo "Error in svn2git conversion of $source" >&2
 	exit 1
