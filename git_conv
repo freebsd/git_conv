@@ -161,11 +161,6 @@ svn2git()
 		    git config --add remote.github.push '+refs/heads/stable/*:refs/heads/stable/*'
 		    git config --add remote.github.push '+refs/heads/user/*:refs/heads/user/*'
 		    git config --add remote.github.push '+refs/notes/*:refs/notes/*'
-
-		    git remote add bitbucket ssh://git@bitbucket.org/freebsd/freebsd-$TYPE.git
-		    git config --add remote.bitbucket.push '+refs/heads/master:refs/heads/master'
-		    git config --add remote.bitbucket.push '+refs/heads/stable/*:refs/heads/stable/*'
-		    git config --add remote.bitbucket.push '+refs/notes/*:refs/notes/*'
 		    ;;
 		doc)
 		    git remote add github $TYPE.github.com:freebsd/freebsd-$TYPE.git
@@ -255,7 +250,7 @@ fi
 
 if [ -n "$do_svn2git" ]; then
     case "$TYPE" in
-	base) svn2git $RULES_DIR/freebsd-base.rules ${REPO_base} github bitbucket ;;
+	base) svn2git $RULES_DIR/freebsd-base.rules ${REPO_base} github ;;
 	doc) svn2git $RULES_DIR/freebsd-doc.rules ${REPO_doc} github ;;
 	ports) svn2git $RULES_DIR/freebsd-ports.rules ${REPO_ports} github ;;
     esac
