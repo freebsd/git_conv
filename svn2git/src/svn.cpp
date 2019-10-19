@@ -877,10 +877,13 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
     // NOTE(uqs): HACK ALERT! Only merge between head, projects, and user
     // branches for the FreeBSD repositories. Never merge into stable or
     // releng, as we only ever cherry-pick changes to those branches.
+    // Also, never merge from stable, like was done in SVN r306097, as it pulls
+    // in all history.
     // FIXME: Needs to move into the ruleset ...
-    if (path_from != NULL && prevrepository == repository && prevbranch != branch &&
-            (branch.startsWith("master") || branch.startsWith("head") ||
-             branch.startsWith("projects") || branch.startsWith("user"))) {
+    if (path_from != NULL && prevrepository == repository && prevbranch != branch
+            && (branch.startsWith("master") || branch.startsWith("head") ||
+                branch.startsWith("projects") || branch.startsWith("user"))
+            && !prevbranch.startsWith("stable")) {
         if(ruledebug)
             qDebug() << "copy from branch" << prevbranch << "to branch" << branch << "@rev" << rev_from;
         txn->noteCopyFromBranch (prevbranch, rev_from);
