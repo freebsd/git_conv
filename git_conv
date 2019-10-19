@@ -195,7 +195,7 @@ svn2git()
 
     echo "Pushing $target to $dest"
     for d in $dest; do
-	git push $d || { echo "Error in pushing to $dest" >&2; exit 1; }
+	{ cd $target && git push $d; } || { echo "Error in pushing to $dest" >&2; exit 1; }
     done
 }
 
