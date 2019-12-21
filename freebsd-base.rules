@@ -34,6 +34,10 @@ match /vendor/.*
 min revision 355815
 max revision 355815
 end match
+match /vendor/.*
+min revision 355939
+max revision 355939
+end match
 
 match /head/
   repository freebsd-base.git
