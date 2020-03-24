@@ -1,8 +1,4 @@
-#! /bin/sh
-HOME=/home/svnmir
-export HOME
-PATH=/usr/local/bin:$PATH
-export PATH
+#!/bin/sh
 
 # svnsync is non-atomic.  Every commit is done in two distinct steps.
 # 1: the commit is replayed as a transaction.
@@ -14,11 +10,6 @@ export PATH
 # revisions and re-copy as needed.  This reduces the window to a few
 # seconds.  Still not good but better than no recovery at all.
 
-#MAILTO=clusteradm-updates@FreeBSD.org
-#@reboot	/usr/sbin/daemon -cf lockf -s -t 0 /home/svnmir/dosync.lock /home/svnmir/dosync.sh
-#* * * * *	/usr/sbin/daemon -cf lockf -s -t 0 /home/svnmir/dosync.lock /home/svnmir/dosync.sh
-#7 * * * *	/home/svnmir/update.sh
-
 usage() {
   echo "Usage: $0 [-1] [-l logdir ] [-r repodirs] [-s setlist]" 1>&2
   exit 1
@@ -28,8 +19,8 @@ umask 002
 me=$(id -un)
 
 once=false
-logdir=/var/log
-repodirs=/home/svn
+logdir=$PWD
+repodirs=$PWD
 setlist=""
 
 while getopts "1l:r:s:" _opt; do
@@ -47,7 +38,7 @@ if [ $# -ne 0 ]; then
 fi
 
 if [ -z "${setlist}" ]; then
-  for r in base doc ports socsvn; do
+  for r in base doc ports; do
     if [ -d ${repodirs}/$r ]; then
       setlist="${setlist} $r"
     fi
@@ -66,8 +57,7 @@ for r in ${setlist}; do
   svnadmin pack ${repodirs}/$r >> ${logdir}/svnsync-$r.log 2>&1
 done
 
-while :
-do
+while :; do
   for r in ${setlist}; do
     locked=$(svn propget --revprop -r 0 svn:sync-lock file://${repodirs}/$r 2>/dev/null)
     if [ -n "$locked" ]; then
@@ -81,10 +71,14 @@ do
     for rev in $(jot $numrev $oldrev); do
       a=$(svn propget --revprop -r $rev svn:author file://${repodirs}/$r 2>>${logdir}/svnsync-$r.log)
       if [ "x$a" == "x$me" ]; then
+	# Got garbage metadata, copy revprops again. This only checks for
+	# obvious snafus about the commit author, but not other problems like
+	# different timestamps in the metadata :/
         svnsync copy-revprops -r $rev file://${repodirs}/$r >> ${logdir}/svnsync-$r.log 2>&1
       fi
     done
   done
+
   if $once; then
     exit 0
   fi
@@ -95,5 +89,5 @@ do
   if [ ${elapsed} -gt 3590 ]; then
     exit 0
   fi
-  sleep 5
+  sleep 300
 done
