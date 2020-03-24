@@ -21,7 +21,7 @@
 # has happened already with the mirror as used by the official svn2git
 # conversion as exported in github. This is even worse than you can imagine.
 #
-# DO NOT USE THIS NAIVE SVN SYNC FROM THE LIVE REPO, see dosync.sh instead.
+# DO NOT USE THIS NAIVE SVN SYNC FROM THE LIVE REPO, see svnmir.sh instead.
 # - svnsync sync file://$PWD/freebsd-base.svn
 # - svnsync sync file://$PWD/freebsd-doc.svn
 # - svnsync sync file://$PWD/freebsd-ports.svn
@@ -66,34 +66,38 @@
 #   IdentityFile ~/.ssh/github_base
 #
 # And similar for ports and doc.
-: ${BASE=/home/git}
+
+# Some paths; these are historically grown; don't read too much sense into them.
+: ${BASE=${PWD}}
 : ${RULES_DIR=${BASE}}
 : ${SVN2GIT=${BASE}/svn2git/svn-all-fast-export}  # Needs to have the merge-hack
 
-: ${REPO_base=/home/svn/base}
-: ${REPO_doc=/home/svn/doc}
-: ${REPO_ports=/home/svn/ports}
+: ${REPO_base=${BASE}/base}
+: ${REPO_doc=${BASE}/doc}
+: ${REPO_ports=${BASE}/ports}
 
 usage()
 {
-    exit 1
+    echo "usage: `basename $0` [-gps] {base | doc | ports} " >&2
+    echo "  -g: run git-svn conversion"
+    echo "  -p: push to upstream, don't use this"
+    echo "  -s: run svn2git conversion, this is the default"
 }
 
-do_gitsvn=1
 do_svn2git=1
-run_local=
+do_gitsvn=
+do_push=
 
-# These options are ass-backwards, but default should be to do both.
-while getopts "gls" OPT; do
+while getopts "gps" OPT; do
     case "$OPT" in
 	g)
-	    do_svn2git=
+	    do_gitsvn=1
 	    ;;
-	l)
-	    run_local=1
+	p)
+	    do_push=1
 	    ;;
 	s)
-	    do_gitsvn=
+	    do_svn2git=1
 	    ;;
     esac
 done
@@ -107,7 +111,8 @@ case "$1" in
     doc)
 	;;
     *)
-	echo "Need to specify which repo to convert" >&2
+	usage
+	echo "Repo missing or unknown: $1" >&2
 	exit 1
 	;;
 esac
@@ -136,8 +141,10 @@ svn2git()
     test -d "$BASE" || { echo "$BASE is not a directory, exiting ..." >&2; exit 1; }
     test -f "$rules" || { echo "$rules do not exist, exiting ..." >&2; exit 1; }
 
+    first_run=false
     cd $BASE
     if ! test -f "$BASE/$target/HEAD"; then
+	first_run=true
 	echo "$BASE/$target is not a git repo, creating first revisions ..."
 
 	git init --bare $target
@@ -180,16 +187,25 @@ svn2git()
 	)
 
 	# Initial small run
-	$SVN2GIT --max-rev 100 --fast-import-timeout 3600 --add-metadata-notes --identity-domain FreeBSD.org --rules $rules $source
+	$SVN2GIT --max-rev 100 --fast-import-timeout 3600 --add-metadata-notes --identity-map authors.txt --rules $rules $source
     fi
 
     echo "Converting $source to $target using svn2git"
-    $SVN2GIT --fast-import-timeout 3600 --add-metadata-notes --identity-domain FreeBSD.org --rules $rules $source
+    $SVN2GIT --fast-import-timeout 3600 --add-metadata-notes --identity-map authors.txt --rules $rules $source
     if [ $? != 0 ]; then
 	echo "Error in svn2git conversion of $source" >&2
 	exit 1
     fi
-    if [ -z "$dest" -o -n "$run_local" ]; then
+
+    if $first_run; then
+	(
+	    cd $target
+	    echo "Compacting, showing before and after numbers:"
+	    du -sh .; git repack -adf; du -sh .
+	)
+    fi
+
+    if [ -z "$dest" -o -z "$do_push" ]; then
 	return
     fi
 
@@ -230,7 +246,7 @@ gitsvn()
 	exit 1
     fi
 
-    if [ -z "$dest" -o -n "$run_local" ]; then
+    if [ -z "$dest" -o -z "$do_push" ]; then
 	return
     fi
 
