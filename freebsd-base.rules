@@ -62,10 +62,6 @@ match /(cvs2svn)/([^/]+)/([^/]+)/
   branch \1/\2/\3
 end match
 
-# XXX temporary?? /dev/null all user branches
-match /user/.*
-end match
-
 # blacklist bogus branch copy
 match /user/.*
 min revision 205302
@@ -127,7 +123,7 @@ end match
 match /user/(nwhitehorn|peterj)/.*
 end match
 # Cannot put .git directories into git, makes it unhappy
-match /user/uqs/git_conv
+match /user/uqs/git_conv/.*\.git/.*
 end match
 match /vendor/(atf|ldns-host|v4l)/README.*
 end match
