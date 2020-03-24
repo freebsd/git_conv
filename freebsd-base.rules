@@ -23,6 +23,19 @@ match /projects/.*
 min revision 244487
 max revision 244487
 end match
+# Skip a bunch of partial SVN branch copies
+match /projects/.*
+min revision 184052
+max revision 184052
+end match
+match /projects/.*
+min revision 214084
+max revision 214084
+end match
+match /projects/.*
+min revision 300828
+max revision 300829
+end match
 match /svnadmin/.*
 end match
 # Skip empty vendor dir creation and branch
@@ -47,6 +60,16 @@ end match
 match /(cvs2svn)/([^/]+)/([^/]+)/
   repository freebsd-base.git
   branch \1/\2/\3
+end match
+
+# XXX temporary?? /dev/null all user branches
+match /user/.*
+end match
+
+# blacklist bogus branch copy
+match /user/.*
+min revision 205302
+max revision 205302
 end match
 
 match /(stable|releng|release)/([0-9.]+)/
@@ -131,18 +154,23 @@ match /vendor/device-tree/
   max revision 262569
 end match
 
-# unknown vendor is one level short
+# `unknown` vendor is one level short
 match /(vendor)/(unknown)/
   repository freebsd-base.git
   branch \1/\2
 end match
 
-# XXX drop the different vendor-* prefixes?
-match /(user|vendor|vendor-sys|vendor-cddl|vendor-crypto)/([^/]+)/([^/]+)/
+match /(vendor|vendor-sys|vendor-cddl|vendor-crypto)/([^/]+)/([^/]+)/
+  repository freebsd-base.git
+  # drop the different vendor-* prefixes
+  branch vendor/\2/\3
+end match
+
+match /(user)/([^/]+)/([^/]+)/
   repository freebsd-base.git
   branch \1/\2/\3
 end match
 
-# ignore the rest, XXX temp only
+# ignore the rest
 #match .*
 #end match
