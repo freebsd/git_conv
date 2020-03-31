@@ -21,13 +21,14 @@ jraynard = James Raynard <jraynard@FreeBSD.org>
 olah = Andras Olah <olah@FreeBSD.org>
 pst = Paul Traina <pst@FreeBSD.org>
 ugen = Ugen J.S. Antsilevich <ugen@FreeBSD.org>
+root = Charlie Root <root@FreeBSD.org>
 vkashyap = Vinod Kashyap <vkashyap@FreeBSD.org>
 yar = Yar Tikhiy <yar@FreeBSD.org>
 zarzycki = Dave Zarzycki <zarzycki@FreeBSD.org>
 EOS
 
 ssh freefall "getent passwd" | \
-awk -F: '{sub(/,.*/, "", $5); sub(/;.*/, "", $5); printf "%s = %s <%s@FreeBSD.org>\n", $1, $5, $1}'
+awk -F: '$3 >= 500 && $3 < 65534 {sub(/,.*/, "", $5); sub(/;.*/, "", $5); printf "%s = %s <%s@FreeBSD.org>\n", $1, $5, $1}'
 ) | \
 # squash duplicates
 awk '{a[$1] = $0} END{for (v in a) {print a[v]}}' | sort > authors.txt
