@@ -410,6 +410,8 @@ public:
     bool propsFetched;
     bool needCommit;
 
+    QSet<int> logged_already_;
+
     SvnRevision(int revision, svn_fs_t *f, apr_pool_t *parent_pool)
         : pool(parent_pool), fs(f), fs_root(0), revnum(revision), propsFetched(false)
     {
@@ -884,8 +886,14 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
             && (branch.startsWith("master") || branch.startsWith("head") ||
                 branch.startsWith("projects") || branch.startsWith("user"))
             && !prevbranch.startsWith("stable")) {
-        if(ruledebug)
-            qDebug() << "copy from branch" << prevbranch << "to branch" << branch << "@rev" << rev_from;
+        QStringList log = QStringList()
+                          << "copy from branch" << prevbranch << "to branch"
+                          << branch << "@rev" << QString::number(rev_from);
+        if (!logged_already_.contains(qHash(log))) {
+            logged_already_.insert(qHash(log));
+            qDebug() << "copy from branch" << prevbranch << "to branch"
+                     << branch << "@rev" << rev_from;
+        }
         txn->noteCopyFromBranch (prevbranch, rev_from);
     }
 

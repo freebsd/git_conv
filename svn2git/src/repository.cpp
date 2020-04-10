@@ -983,13 +983,23 @@ void FastImportRepository::Transaction::noteCopyFromBranch(const QString &branch
     qWarning() << "WARN: Unknown revision r" << QByteArray::number(branchRevNum)
                << ".  Continuing, assuming the files exist.";
     } else {
-        qWarning() << "WARN: repository " + repository->name + " branch " + branch + " has some files copied from " + branchFrom + "@" + QByteArray::number(branchRevNum);
+        // Log this warning only once per revnum
+        static QSet<int> logged_already_;
+        QStringList log = QStringList()
+                          << "WARN: repository " + repository->name +
+                                 " branch " + branch +
+                                 " has some files copied from " + branchFrom +
+                                 "@" + QByteArray::number(branchRevNum);
+        if (!logged_already_.contains(qHash(log))) {
+            logged_already_.insert(qHash(log));
+            qWarning() << "WARN: repository " + repository->name + " branch " + branch + " has some files copied from " + branchFrom + "@" + QByteArray::number(branchRevNum);
+        }
 
         if (!merges.contains(mark)) {
             merges.append(mark);
             qDebug() << "adding" << branchFrom + "@" + QByteArray::number(branchRevNum) << ":" << mark << "as a merge point";
         } else {
-            qDebug() << "merge point already recorded";
+            //qDebug() << "merge point already recorded";
         }
     }
 }
