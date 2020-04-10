@@ -392,7 +392,7 @@ class SvnRevision
 {
 public:
     AprAutoPool pool;
-    QHash<QString, Repository::Transaction *> transactions;
+    QMap<QString, Repository::Transaction *> transactions;
     QList<MatchRuleList> allMatchRules;
     RepositoryHash repositories;
     IdentityHash identities;
