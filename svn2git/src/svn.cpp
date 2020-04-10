@@ -100,6 +100,7 @@ private:
     AprAutoPool scratch_pool;
     svn_fs_t *fs;
     svn_revnum_t youngest_rev;
+    QString svn_repo_path;
 };
 
 void Svn::initialize()
@@ -155,12 +156,13 @@ bool Svn::exportRevision(int revnum)
 }
 
 SvnPrivate::SvnPrivate(const QString &pathToRepository)
-    : global_pool(NULL) , scratch_pool(NULL)
+    : global_pool(NULL) , scratch_pool(NULL), svn_repo_path(pathToRepository)
 {
     if( openRepository(pathToRepository) != EXIT_SUCCESS) {
         qCritical() << "Failed to open repository";
         exit(1);
     }
+    svn_repo_path.prepend("file:///");
 
     // get the youngest revision
     svn_fs_youngest_rev(&youngest_rev, fs, global_pool);
@@ -411,9 +413,10 @@ public:
     bool needCommit;
 
     QSet<int> logged_already_;
+    QString& svn_repo_path;
 
-    SvnRevision(int revision, svn_fs_t *f, apr_pool_t *parent_pool)
-        : pool(parent_pool), fs(f), fs_root(0), revnum(revision), propsFetched(false)
+    SvnRevision(int revision, svn_fs_t *f, apr_pool_t *parent_pool, QString& svn_repo_path)
+        : pool(parent_pool), fs(f), fs_root(0), revnum(revision), propsFetched(false), svn_repo_path(svn_repo_path)
     {
         ruledebug = CommandLineParser::instance()->contains( QLatin1String("debug-rules"));
     }
@@ -450,7 +453,7 @@ private:
 
 int SvnPrivate::exportRevision(int revnum)
 {
-    SvnRevision rev(revnum, fs, global_pool);
+    SvnRevision rev(revnum, fs, global_pool, svn_repo_path);
     rev.allMatchRules = allMatchRules;
     rev.repositories = repositories;
     rev.identities = identities;
@@ -625,6 +628,41 @@ int SvnRevision::exportEntry(const char *key, const svn_fs_path_change2_t *chang
         // svn_fs_copied_from would fail on deleted paths, because the path
         // obviously no longer exists in the current revision
         SVN_ERR(svn_fs_copied_from(&rev_from, &path_from, fs_root, key, revpool));
+    }
+    // Is there mergeinfo attached? Only do this once per revnum
+    // We abuse the logged_already hash for this.
+    QStringList cmds = QStringList() << "diff"
+                                     << "-c" << QString::number(revnum)
+                                     << "--properties-only" << svn_repo_path;
+    if (change->mergeinfo_mod == svn_tristate_true &&
+        rev_from == SVN_INVALID_REVNUM &&
+        !logged_already_.contains(qHash(cmds))) {
+      logged_already_.insert(qHash(cmds));
+
+      qWarning() << "MERGEINFO: rev " << revnum
+                 << " has pure mergeinfo w/o path copies";
+      qWarning() << "=START=";
+      // svn diff -c 179481 --properties-only file:///$PWD/base
+      QProcess::execute("/usr/local/bin/svn", cmds);
+      qWarning() << "=END=";
+
+#if 0
+        AprAutoPool mipool(pool.data());
+        svn_mergeinfo_catalog_t catalog;
+        apr_array_header_t *paths = apr_array_make(mipool, 10, sizeof(const char *));
+        APR_ARRAY_PUSH(paths, const char *) = "/";
+
+        // Seems to grab *all* mergeinfo in the repo, takes quite some time to run.
+        SVN_ERR(svn_fs_get_mergeinfo(&catalog, fs_root, paths, svn_mergeinfo_explicit, true, mipool));
+
+        for (apr_hash_index_t *i = apr_hash_first(mipool, catalog); i; i = apr_hash_next(i)) {
+            const void *vkey;
+            void *value;
+            // XXX value is actually arrays of merge ranges
+            apr_hash_this(i, &vkey, NULL, &value);
+            qWarning() << "Got mergeinfo for " << (const char *)vkey;
+        }
+#endif
     }
 
     // is this a directory?
