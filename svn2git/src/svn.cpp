@@ -413,7 +413,40 @@ public:
     bool needCommit;
 
     QSet<int> logged_already_;
+
     QString& svn_repo_path;
+    QString merge_from_branch_;
+    QString merge_from_rev_;
+    QSet<QString> to_branches_;
+
+    // There are some handful of mergeinfo changes that are bogus and need to be skipped
+    // r306199 - Revert svn:mergeinfo added inadvertantly in last commit r306197
+    // r305318 - Handle missed mergeinfo by merging r305031 (the missing revision according to svn merge)
+    // r299143
+    // r288036 - Fixup mergeinfo on sys/contrib/ipfilter/netinet/ip_fil_freebsd.c.
+    // r287679
+    // r281784
+    // r276402 - Remove "svn:mergeinfo" property that was dragged along when these files were svn copied in r273375.
+    // r273097
+    // r272415
+    // r262613
+    // r255958 - Add missing mergeinfo associated with r255852.
+    // r208239 - Adjust svn:mergeinfo for revision 204546.  This commit moves mergeinfo to lib/ and removes mergeinfo on individual file.
+    // r206971 - remove svn:mergeinfo properties committed during my MFCs.
+    // r203808 - Migrate mergeinfo which was done on wrong target back to etc/ (203163).
+    // r203516 - Fix mergeinfo from r197799
+    // r202105
+    // r198498 - Trim empty mergeinfo.
+    // r197807 - Properly record merginfo for r197681 into lib/libc instead of lib/libc/gen.
+    // r194300 
+    // r190749 - Remove pointeless mergeinfo that crept in from r190633.
+    // r190634 - Remove some pointless mergeinfo that is the result of doing a local 'svn cp'
+    // r186082 - Bootstrapping merge history for resolver.
+    // r185539 - Delete a bunch of empty mergeinfo records caused by local copies.
+    // r182315 - Consolidate mergeinfo
+    // r182274 - Move mergeinfo around.
+    //
+    // lots more, especially on stable/X branches
 
     SvnRevision(int revision, svn_fs_t *f, apr_pool_t *parent_pool, QString& svn_repo_path)
         : pool(parent_pool), fs(f), fs_root(0), revnum(revision), propsFetched(false), svn_repo_path(svn_repo_path)
@@ -556,10 +589,28 @@ int SvnRevision::prepareTransactions()
     }
 
     QMapIterator<QByteArray, svn_fs_path_change2_t*> i(map);
+    bool mergeinfo_found = false;
     while (i.hasNext()) {
         i.next();
+        if (i.value()->mergeinfo_mod == svn_tristate_true) {
+            mergeinfo_found = true;
+        }
         if (exportEntry(i.key(), i.value(), changes) == EXIT_FAILURE)
             return EXIT_FAILURE;
+    }
+
+    if (mergeinfo_found && (merge_from_branch_ == "" || merge_from_rev_ == "")) {
+        QStringList branches;
+        foreach (const QString &value, to_branches_)
+            branches << value;
+        qWarning() << "MERGEINFO: rev " << revnum
+            << " has pure mergeinfo w/o path copies going into " << branches;
+        qWarning() << "=START=";
+        // svn diff -c 179481 --properties-only file:///$PWD/base
+        QProcess::execute("/usr/local/bin/svn", QStringList() << "diff"
+                                     << "-c" << QString::number(revnum)
+                                     << "--properties-only" << svn_repo_path);
+        qWarning() << "=END=";
     }
 
     return EXIT_SUCCESS;
@@ -631,21 +682,8 @@ int SvnRevision::exportEntry(const char *key, const svn_fs_path_change2_t *chang
     }
     // Is there mergeinfo attached? Only do this once per revnum
     // We abuse the logged_already hash for this.
-    QStringList cmds = QStringList() << "diff"
-                                     << "-c" << QString::number(revnum)
-                                     << "--properties-only" << svn_repo_path;
     if (change->mergeinfo_mod == svn_tristate_true &&
-        rev_from == SVN_INVALID_REVNUM &&
-        !logged_already_.contains(qHash(cmds))) {
-      logged_already_.insert(qHash(cmds));
-
-      qWarning() << "MERGEINFO: rev " << revnum
-                 << " has pure mergeinfo w/o path copies";
-      qWarning() << "=START=";
-      // svn diff -c 179481 --properties-only file:///$PWD/base
-      QProcess::execute("/usr/local/bin/svn", cmds);
-      qWarning() << "=END=";
-
+        rev_from == SVN_INVALID_REVNUM) {
 #if 0
         AprAutoPool mipool(pool.data());
         svn_mergeinfo_catalog_t catalog;
@@ -799,6 +837,8 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
     QString svnprefix, repository, effectiveRepository, branch, path;
     splitPathName(rule, current, &svnprefix, &repository, &effectiveRepository, &branch, &path);
 
+    to_branches_.insert(branch);
+
     Repository *repo = repositories.value(repository, 0);
     if (!repo) {
         if (change->change_kind != svn_fs_path_change_delete)
@@ -932,6 +972,8 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
             qDebug() << "copy from branch" << prevbranch << "to branch"
                      << branch << "@rev" << rev_from;
         }
+        merge_from_rev_ = rev_from;
+        merge_from_branch_ = prevbranch;
         txn->noteCopyFromBranch (prevbranch, rev_from);
     }
 
