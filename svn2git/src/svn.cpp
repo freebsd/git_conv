@@ -46,6 +46,7 @@
 
 #include <QFile>
 #include <QDebug>
+#include <QRegularExpression>
 
 #include "repository.h"
 
@@ -482,6 +483,7 @@ public:
 private:
     void splitPathName(const Rules::Match &rule, const QString &pathName, QString *svnprefix_p,
                        QString *repository_p, QString *effectiveRepository_p, QString *branch_p, QString *path_p);
+    bool maybeParseSimpleMergeinfo(const int revnum, int* revfrom, QString* branchfrom);
 };
 
 int SvnPrivate::exportRevision(int revnum)
@@ -559,6 +561,76 @@ void SvnRevision::splitPathName(const Rules::Match &rule, const QString &pathNam
     }
 }
 
+bool SvnRevision::maybeParseSimpleMergeinfo(const int revnum, int* revfrom, QString* branchfrom) {
+    QProcess svn;
+    // svn diff -c 179481 --properties-only file:///$PWD/base
+    svn.start("/usr/local/bin/svn",
+            QStringList() << "diff"
+            << "-c" << QString::number(revnum)
+            << "--properties-only" << svn_repo_path);
+
+    if (!svn.waitForFinished())
+        exit(1);
+
+    const QString result = QString(svn.readAll());
+
+    qWarning() << "=START=";
+    qWarning() << qPrintable(result);
+    qWarning() << "=END=";
+    static QRegularExpression re = QRegularExpression(
+           R"(^Index: ([\d\w/]+)
+=============*
+... ([\d\w/]+).\(revision [0-9]+\)
+... ([\d\w/]+).\(revision [0-9]+\)
+
+Property changes on: ([\d\w/]+).*
+_____________*
+(Modified|Added): svn:mergeinfo
+## \-0,0 \+0,1 ##
+   Merged ([\d\w/]+):r([0-9]+)([,r0-9])*
+$)" , QRegularExpression::MultilineOption | QRegularExpression::DotMatchesEverythingOption);
+    if (!re.isValid()) {
+        qWarning() << re.errorString();
+        exit(1);
+    }
+    QRegularExpressionMatch match = re.match(result);
+    if (match.hasMatch()) {
+        qWarning() << "Matched" <<  match.captured(0);
+        //qWarning() << "Matched 1" <<  match.captured(1);
+        //qWarning() << "Matched 2" <<  match.captured(2);
+        //qWarning() << "Matched 3" <<  match.captured(3);
+        //qWarning() << "Matched 4" <<  match.captured(4);
+        qWarning() << "Matched 5" <<  match.captured(5);
+        qWarning() << "Matched 6" <<  match.captured(6);
+        qWarning() << "Matched 7" <<  match.captured(7);
+        QString p = match.captured(6).remove(0,1); // chop leading /
+        *revfrom = match.captured(7).toInt(nullptr, 10);
+
+        // We need to chop paths down to their "root"
+        if (p.startsWith("head")) {
+            *branchfrom = "head";
+            return true;
+        } else {
+            static QRegularExpression pr = QRegularExpression(R"(^(projects)/([\w\d]+)/.+)");
+            QRegularExpressionMatch match = pr.match(p);
+            if (match.hasMatch()) {
+                qWarning() << "Matched" << match.captured(1) << match.captured(2);
+                *branchfrom = match.captured(1) + "/" + match.captured(2);
+                return true;
+            } else {
+                static QRegularExpression uvr = QRegularExpression(R"(^(user|vendor)/([\w\d]+)/([\w\d]+)/.+)");
+                QRegularExpressionMatch match = uvr.match(p);
+                if (match.hasMatch()) {
+                    qWarning() << "Matched" << match.captured(1) << match.captured(2) << match.captured(3);
+                    *branchfrom = match.captured(1) + "/" + match.captured(2) + "/" + match.captured(3);
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
 int SvnRevision::prepareTransactions()
 {
     // find out what was changed in this revision:
@@ -599,19 +671,59 @@ int SvnRevision::prepareTransactions()
             return EXIT_FAILURE;
     }
 
-    if (mergeinfo_found && (merge_from_branch_ == "" || merge_from_rev_ == "")) {
-        QStringList branches;
-        foreach (const QString &value, to_branches_)
-            branches << value;
-        qWarning() << "MERGEINFO: rev " << revnum
-            << " has pure mergeinfo w/o path copies going into " << branches;
-        qWarning() << "=START=";
-        // svn diff -c 179481 --properties-only file:///$PWD/base
-        QProcess::execute("/usr/local/bin/svn", QStringList() << "diff"
-                                     << "-c" << QString::number(revnum)
-                                     << "--properties-only" << svn_repo_path);
-        qWarning() << "=END=";
+    // No svn:mergeinfo found, not in src or in the pre-svn days, skip.
+    if (!mergeinfo_found || !svn_repo_path.endsWith("base") || revnum < 179447)
+        return EXIT_SUCCESS;
+
+    // Apparently, we already recorded some form of merge, could be to a
+    // different branch though.
+    if (merge_from_branch_ != "" && merge_from_rev_ != "")
+        return EXIT_SUCCESS;
+
+    QStringList branches;
+    foreach (const QString &value, to_branches_)
+        branches << value;
+    qWarning() << "MERGEINFO: rev " + QString::number(revnum) +
+        " has pure mergeinfo w/o path copies going into " +
+        QString::number(to_branches_.size()) +
+        " branches: " + branches.join(" ");
+
+    if (to_branches_.size() == 0) {
+        qWarning() << "MONKEYMERGE don't know how to handle empty branches";
+        return EXIT_SUCCESS;
     }
+
+    // For now, we only care when a branch is merged into head.
+    if (to_branches_.size() != 1) {
+        qWarning() << "MONKEYMERGE don't know how to handle multiple branches" << to_branches_.values();
+        return EXIT_SUCCESS;
+    }
+
+    if (to_branches_.values().front() != "master" ) {
+        qWarning() << "MONKEYMERGE ignoring merge into non-master" << to_branches_.values().front();
+        return EXIT_SUCCESS;
+    }
+
+    if (transactions.size() != 1) {
+        qWarning() << "MONKEYMERGE not sure how to handle " + QString::number(transactions.size()) + " transactions";
+        return EXIT_SUCCESS;
+    }
+
+    int revfrom = -1;
+    QString branchfrom;
+    Repository::Transaction *txn;
+    if (!maybeParseSimpleMergeinfo(revnum, &revfrom, &branchfrom)) {
+        qWarning() << "Couldn't parse mergeinfo";
+        return EXIT_SUCCESS;
+    }
+
+    qWarning() << "Ended up with " + branchfrom + "@" + QString::number(revfrom);
+    if (branchfrom.startsWith("user") || branchfrom.startsWith("user")) {
+        qWarning() << "MONKEYMERGE not merging from user, please inspect me: " << branchfrom;
+    }
+    qWarning() << "MONKEYMERGE IS HAPPENING!";
+    txn = transactions.first();
+    txn->noteCopyFromBranch(branchfrom, revfrom);
 
     return EXIT_SUCCESS;
 }
