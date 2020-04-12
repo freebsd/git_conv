@@ -23,19 +23,6 @@ match /projects/.*
 min revision 244487
 max revision 244487
 end match
-# Skip a bunch of partial SVN branch copies
-match /projects/.*
-min revision 184052
-max revision 184052
-end match
-match /projects/.*
-min revision 214084
-max revision 214084
-end match
-match /projects/.*
-min revision 300828
-max revision 300829
-end match
 match /svnadmin/.*
 end match
 # Skip empty vendor dir creation and branch
@@ -60,12 +47,6 @@ end match
 match /(cvs2svn)/([^/]+)/([^/]+)/
   repository freebsd-base.git
   branch \1/\2/\3
-end match
-
-# blacklist bogus branch copy
-match /user/.*
-min revision 205302
-max revision 205302
 end match
 
 match /(stable|releng|release)/([0-9.]+)/
@@ -117,10 +98,11 @@ match /user/simon/test.txt
 end match
 match /user/peter/foo.txt
 end match
-match /vendor/.arcconfig
+match /user/nwhitehorn/.*
+  min revision 253490
+  max revision 253490
 end match
-# Not a branch, ignore
-match /user/(nwhitehorn|peterj)/.*
+match /vendor/.arcconfig
 end match
 # Cannot put .git directories into git, makes it unhappy
 match /user/uqs/git_conv/.*\.git/.*
@@ -160,6 +142,11 @@ match /(vendor|vendor-sys|vendor-cddl|vendor-crypto)/([^/]+)/([^/]+)/
   repository freebsd-base.git
   # drop the different vendor-* prefixes
   branch vendor/\2/\3
+end match
+
+match /(user)/(peterj)/
+  repository freebsd-base.git
+  branch \1/\2
 end match
 
 match /(user)/([^/]+)/([^/]+)/
