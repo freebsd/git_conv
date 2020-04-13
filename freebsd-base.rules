@@ -7,6 +7,8 @@ match /ROADMAP.txt
 end match
 match /projects/GUIDELINES.txt
 end match
+match /projects/suj/rev.txt
+end match
 match /user/GUIDELINES.txt
 end match
 # Skip empty test-commit, that I'm unable to svnsync, maybe it's corrupted?
@@ -65,7 +67,7 @@ match /(releng)/BETA_2_0/
 end match
 
 # special nesting for these
-match /(projects)/(graid|ofed)/([^/]+)/
+match /(projects)/(graid|multi-fibv6|ofed|pf|suj|zfsd)/([^/]+)/
   repository freebsd-base.git
   branch \1/\2/\3
 end match
