@@ -483,7 +483,7 @@ public:
 private:
     void splitPathName(const Rules::Match &rule, const QString &pathName, QString *svnprefix_p,
                        QString *repository_p, QString *effectiveRepository_p, QString *branch_p, QString *path_p);
-    bool maybeParseSimpleMergeinfo(const int revnum, int* revfrom, QString* branchfrom);
+    bool maybeParseSimpleMergeinfo(const int revnum, int* revfrom, QString* branchfrom, QString* branchto);
 };
 
 int SvnPrivate::exportRevision(int revnum)
@@ -561,7 +561,7 @@ void SvnRevision::splitPathName(const Rules::Match &rule, const QString &pathNam
     }
 }
 
-bool SvnRevision::maybeParseSimpleMergeinfo(const int revnum, int* revfrom, QString* branchfrom) {
+bool SvnRevision::maybeParseSimpleMergeinfo(const int revnum, int* revfrom, QString* branchfrom, QString* branchto) {
     QProcess svn;
     // svn diff -c 179481 --properties-only file:///$PWD/base
     svn.start("/usr/local/bin/svn",
@@ -569,14 +569,46 @@ bool SvnRevision::maybeParseSimpleMergeinfo(const int revnum, int* revfrom, QStr
             << "-c" << QString::number(revnum)
             << "--properties-only" << svn_repo_path);
 
-    if (!svn.waitForFinished())
+    if (!svn.waitForFinished(-1))
         exit(1);
 
     const QString result = QString(svn.readAll());
 
-    qWarning() << "=START=";
-    qWarning() << qPrintable(result);
-    qWarning() << "=END=";
+    qDebug() << "=START=";
+    qDebug() << qPrintable(result);
+    qDebug() << "=END=";
+
+    // If there are N mergeinfo hits, and they all look like so, we have fully
+    // empty mergeinfo and can skip this rev.
+    // Added: svn:mergeinfo
+    // ## -0,0 +0,0 ##
+    // or
+    // Deleted: svn:mergeinfo
+    // ## -0,0 +0,0 ##
+    // see r183713 for an interesting case. Maybe we should just delete all the
+    // above strings?
+    int del_mi = result.count(QRegularExpression(R"(^Deleted: svn:mergeinfo$)", QRegularExpression::MultilineOption));
+    int add_mi = result.count(QRegularExpression(R"(^Added: svn:mergeinfo$)", QRegularExpression::MultilineOption));
+    int diff_mi = result.count(QRegularExpression(R"(^Modified: svn:mergeinfo$)", QRegularExpression::MultilineOption));
+
+    int del_mi_empty = result.count(QRegularExpression(R"(^Deleted: svn:mergeinfo
+## -0,0 \+0,0 ##$)", QRegularExpression::MultilineOption));
+    int add_mi_empty = result.count(QRegularExpression(R"(^Added: svn:mergeinfo
+## -0,0 \+0,0 ##$)", QRegularExpression::MultilineOption));
+    int diff_mi_empty = result.count(QRegularExpression(R"(^Modified: svn:mergeinfo
+## -0,0 \+0,0 ##$)", QRegularExpression::MultilineOption));
+
+    qDebug() << "mergeinfo parsing: del/add/mod=" << del_mi << del_mi_empty << add_mi << add_mi_empty << diff_mi << diff_mi_empty;
+
+    if ((del_mi+add_mi+diff_mi) == 0) {
+        qFatal("Something went wrong parsing the mergeinfo!");
+    }
+
+    if ((del_mi+add_mi+diff_mi) > 0 && del_mi == del_mi_empty && add_mi == add_mi_empty && diff_mi == diff_mi_empty) {
+        printf(" ===Skipping empty mergeinfo=== ");
+        return true;
+    }
+
     static QRegularExpression re = QRegularExpression(
            R"(^Index: ([-\d\w/]+)
 =============*
@@ -596,7 +628,7 @@ $)" , QRegularExpression::MultilineOption | QRegularExpression::DotMatchesEveryt
     QRegularExpressionMatch match = re.match(result);
     if (match.hasMatch()) {
         qDebug() << "Matched" <<  match.captured(0);
-        //qDebug() << "Matched 1" <<  match.captured(1);
+        qDebug() << "Matched 1" <<  match.captured(1);
         //qDebug() << "Matched 2" <<  match.captured(2);
         //qDebug() << "Matched 3" <<  match.captured(3);
         //qDebug() << "Matched 4" <<  match.captured(4);
@@ -604,38 +636,46 @@ $)" , QRegularExpression::MultilineOption | QRegularExpression::DotMatchesEveryt
         qDebug() << "Matched 6" <<  match.captured(6);
         qDebug() << "Matched 7" <<  match.captured(7);
         qDebug() << "Matched 8" <<  match.captured(8);
-        QString p = match.captured(6).remove(0,1); // chop leading /
+        QString f = "/" + match.captured(1) + "/";
+        QString p = match.captured(6) + "/";  // Our rules expect a trailing '/'
         *revfrom = match.captured(8).toInt(nullptr, 10);
-        // We need to chop paths down to their "root"
-        if (p.startsWith("head")) {
-            *branchfrom = "master";
-            return true;
-        } else {
-            // These project branches have an extra level
-            static QRegularExpression pr3 = QRegularExpression(R"(^(projects)/(graid|ofed)/([\w\d]+))");
-            QRegularExpressionMatch match = pr3.match(p);
-            if (match.hasMatch()) {
-                qDebug() << "Matched" << match.captured(1) << match.captured(2) << match.captured(3);
-                *branchfrom = match.captured(1) + "/" + match.captured(2) + "/" + match.captured(3);;
-                return true;
+
+        // There's really just 1 rule file ...
+        foreach (const MatchRuleList matchRules, allMatchRules) {
+            MatchRuleList::ConstIterator match = findMatchRule(matchRules, revnum, p);
+            if (match != matchRules.constEnd()) {
+                const Rules::Match &rule = *match;
+                QString svnprefix, repository, effectiveRepository, branch, path;
+                switch (rule.action) {
+                    case Rules::Match::Export:
+                        splitPathName(rule, p, &svnprefix, &repository, &effectiveRepository, &branch, &path);
+                        *branchfrom = branch;
+                        break;
+                    default:
+                        qFatal("Rule match had unexpected action on %s", qPrintable(p));
+                        break;
+                }
             }
 
-            static QRegularExpression pr2 = QRegularExpression(R"(^(projects)/([\w\d]+))");
-            match = pr2.match(p);
-            if (match.hasMatch()) {
-                qDebug() << "Matched" << match.captured(1) << match.captured(2);
-                *branchfrom = match.captured(1) + "/" + match.captured(2);
-                return true;
-            } else {
-                static QRegularExpression uvr = QRegularExpression(R"(^(user|vendor)[^/]*/([\w\d]+)/([\w\d]+))");
-                QRegularExpressionMatch match = uvr.match(p);
-                if (match.hasMatch()) {
-                    qDebug() << "Matched" << match.captured(1) << match.captured(2) << match.captured(3);
-                    *branchfrom = match.captured(1) + "/" + match.captured(2) + "/" + match.captured(3);
-                    return true;
+            match = findMatchRule(matchRules, revnum, f);
+            if (match != matchRules.constEnd()) {
+                const Rules::Match &rule = *match;
+                QString svnprefix, repository, effectiveRepository, branch, path;
+                switch (rule.action) {
+                    case Rules::Match::Export:
+                        splitPathName(rule, f, &svnprefix, &repository, &effectiveRepository, &branch, &path);
+                        *branchto = branch;
+                        break;
+                    default:
+                        qFatal("Rule match had unexpected action on %s", qPrintable(p));
+                        break;
                 }
             }
         }
+        if (!branchto->isEmpty() && !branchfrom->isEmpty()) {
+            return true;
+        }
+        qDebug("Couldn't parse mergeinfo via rules file for %s or %s", qPrintable(p), qPrintable(f));
     }
     return false;
 }
@@ -689,48 +729,69 @@ int SvnRevision::prepareTransactions()
     if (merge_from_branch_ != "" && merge_from_rev_ != "")
         return EXIT_SUCCESS;
 
+    // We don't "merge" into stable branches, so silently skip all those.
     QStringList branches;
-    foreach (const QString &value, to_branches_)
+    bool non_stable = false;
+    foreach (const QString &value, to_branches_) {
+        if (!value.startsWith("stable/") && !value.startsWith("releng/")) {
+            non_stable = true;
+        }
         branches << value;
-    qWarning() << "MERGEINFO: rev " + QString::number(revnum) +
-        " has pure mergeinfo w/o path copies going into " +
-        QString::number(to_branches_.size()) +
-        " branches: " + branches.join(" ");
+    }
+    if (to_branches_.size() > 0 && !non_stable)
+        return EXIT_SUCCESS;
+
+    printf(" MERGEINFO: rev %d has pure mergeinfo w/o path copies going into %d branches: %s",
+           revnum, to_branches_.size(), qPrintable(branches.join(" ")));
 
     if (to_branches_.size() == 0) {
-        qWarning() << "MONKEYMERGE don't know how to handle empty branches";
+        printf(" MONKEYMERGE don't know how to handle empty branches!");
+        return EXIT_SUCCESS;
+    }
+    fflush(stdout);
+
+    int revfrom = -1;
+    QString branchfrom, branchto;
+    bool parse_ok = false;
+    // There are quite a number of revisions touching many branches and having a
+    // "change" in svn:mergeinfo, except it's all empty, e.g. r182326. Try to
+    // parse this and silently skip it if the mergeinfo is empty.
+    parse_ok = maybeParseSimpleMergeinfo(revnum, &revfrom, &branchfrom, &branchto);
+    if (parse_ok && revfrom == -1) {
+        // all empty, ignore, this happens when we have -0,0 +0,0 changes
+        // only.
+        return EXIT_SUCCESS;
+    }
+
+    if (transactions.size() != 1) {
+        printf(" MONKEYMERGE not sure how to handle %d transactions over %d branches!", transactions.size(), to_branches_.size());
         return EXIT_SUCCESS;
     }
 
     // For now, we only care when a branch is merged into head.
     if (to_branches_.size() != 1) {
-        qWarning() << "MONKEYMERGE don't know how to handle multiple branches" << to_branches_.values();
+        printf(" MONKEYMERGE don't know how to handle multiple branches: %s", qPrintable(to_branches_.values().join(" ")));
         return EXIT_SUCCESS;
     }
 
-    if (to_branches_.values().front() != "master" ) {
-        qWarning() << "MONKEYMERGE ignoring merge into non-master" << to_branches_.values().front();
+    const QString& to = to_branches_.values().front();
+    if (to != "master" && !to.startsWith("projects/") && !to.startsWith("user/")) {
+        printf(" MONKEYMERGE ignoring merge into %s", qPrintable(to));
         return EXIT_SUCCESS;
     }
 
-    if (transactions.size() != 1) {
-        qWarning() << "MONKEYMERGE not sure how to handle " + QString::number(transactions.size()) + " transactions";
+    if (!parse_ok) {
+        printf(" Couldn't parse mergeinfo!");
         return EXIT_SUCCESS;
     }
 
-    int revfrom = -1;
-    QString branchfrom;
-    Repository::Transaction *txn;
-    if (!maybeParseSimpleMergeinfo(revnum, &revfrom, &branchfrom)) {
-        qWarning() << "Couldn't parse mergeinfo";
-        return EXIT_SUCCESS;
-    }
-
-    qWarning() << "Ended up with " + branchfrom + "@" + QString::number(revfrom);
+    qDebug() << "Ended up with " + branchfrom + "@" + QString::number(revfrom) + " into " + branchto;
     if (branchfrom.startsWith("user") || branchfrom.startsWith("user")) {
-        qWarning() << "MONKEYMERGE not merging from user, please inspect me: " << branchfrom;
+        printf(" MONKEYMERGE not merging from user, please inspect me: %s", qPrintable(branchfrom));
+        return EXIT_SUCCESS;
     }
-    qWarning() << "MONKEYMERGE IS HAPPENING!";
+    printf(" MONKEYMERGE IS HAPPENING!");
+    Repository::Transaction *txn;
     txn = transactions.first();
     txn->noteCopyFromBranch(branchfrom, revfrom);
 
