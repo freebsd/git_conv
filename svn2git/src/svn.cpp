@@ -578,16 +578,16 @@ bool SvnRevision::maybeParseSimpleMergeinfo(const int revnum, int* revfrom, QStr
     qWarning() << qPrintable(result);
     qWarning() << "=END=";
     static QRegularExpression re = QRegularExpression(
-           R"(^Index: ([\d\w/]+)
+           R"(^Index: ([-\d\w/]+)
 =============*
-... ([\d\w/]+).\(revision [0-9]+\)
-... ([\d\w/]+).\(revision [0-9]+\)
+... ([-\d\w/]+).\(revision [0-9]+\)
+... ([-\d\w/]+).\(revision [0-9]+\)
 
 Property changes on: ([\d\w/]+).*
 _____________*
 (Modified|Added): svn:mergeinfo
 ## \-0,0 \+0,1 ##
-   Merged ([\d\w/]+):r([0-9]+)([,r0-9])*
+   Merged ([-\d\w/]+):r([0-9]*[-,])*([0-9]*)
 $)" , QRegularExpression::MultilineOption | QRegularExpression::DotMatchesEverythingOption);
     if (!re.isValid()) {
         qWarning() << re.errorString();
@@ -595,33 +595,42 @@ $)" , QRegularExpression::MultilineOption | QRegularExpression::DotMatchesEveryt
     }
     QRegularExpressionMatch match = re.match(result);
     if (match.hasMatch()) {
-        qWarning() << "Matched" <<  match.captured(0);
-        //qWarning() << "Matched 1" <<  match.captured(1);
-        //qWarning() << "Matched 2" <<  match.captured(2);
-        //qWarning() << "Matched 3" <<  match.captured(3);
-        //qWarning() << "Matched 4" <<  match.captured(4);
-        qWarning() << "Matched 5" <<  match.captured(5);
-        qWarning() << "Matched 6" <<  match.captured(6);
-        qWarning() << "Matched 7" <<  match.captured(7);
+        qDebug() << "Matched" <<  match.captured(0);
+        //qDebug() << "Matched 1" <<  match.captured(1);
+        //qDebug() << "Matched 2" <<  match.captured(2);
+        //qDebug() << "Matched 3" <<  match.captured(3);
+        //qDebug() << "Matched 4" <<  match.captured(4);
+        qDebug() << "Matched 5" <<  match.captured(5);
+        qDebug() << "Matched 6" <<  match.captured(6);
+        qDebug() << "Matched 7" <<  match.captured(7);
+        qDebug() << "Matched 8" <<  match.captured(8);
         QString p = match.captured(6).remove(0,1); // chop leading /
-        *revfrom = match.captured(7).toInt(nullptr, 10);
-
+        *revfrom = match.captured(8).toInt(nullptr, 10);
         // We need to chop paths down to their "root"
         if (p.startsWith("head")) {
-            *branchfrom = "head";
+            *branchfrom = "master";
             return true;
         } else {
-            static QRegularExpression pr = QRegularExpression(R"(^(projects)/([\w\d]+)/.+)");
-            QRegularExpressionMatch match = pr.match(p);
+            // These project branches have an extra level
+            static QRegularExpression pr3 = QRegularExpression(R"(^(projects)/(graid|ofed)/([\w\d]+))");
+            QRegularExpressionMatch match = pr3.match(p);
             if (match.hasMatch()) {
-                qWarning() << "Matched" << match.captured(1) << match.captured(2);
+                qDebug() << "Matched" << match.captured(1) << match.captured(2) << match.captured(3);
+                *branchfrom = match.captured(1) + "/" + match.captured(2) + "/" + match.captured(3);;
+                return true;
+            }
+
+            static QRegularExpression pr2 = QRegularExpression(R"(^(projects)/([\w\d]+))");
+            match = pr2.match(p);
+            if (match.hasMatch()) {
+                qDebug() << "Matched" << match.captured(1) << match.captured(2);
                 *branchfrom = match.captured(1) + "/" + match.captured(2);
                 return true;
             } else {
-                static QRegularExpression uvr = QRegularExpression(R"(^(user|vendor)/([\w\d]+)/([\w\d]+)/.+)");
+                static QRegularExpression uvr = QRegularExpression(R"(^(user|vendor)[^/]*/([\w\d]+)/([\w\d]+))");
                 QRegularExpressionMatch match = uvr.match(p);
                 if (match.hasMatch()) {
-                    qWarning() << "Matched" << match.captured(1) << match.captured(2) << match.captured(3);
+                    qDebug() << "Matched" << match.captured(1) << match.captured(2) << match.captured(3);
                     *branchfrom = match.captured(1) + "/" + match.captured(2) + "/" + match.captured(3);
                     return true;
                 }
