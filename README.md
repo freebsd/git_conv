@@ -34,6 +34,25 @@ tar xf svnmirror-ports-r527184.tar.xz
 
 Additional runs of `svnmir.sh` or `git_conv` will run incrementally.
 
+On on moderately fast system with an SSD and/or enough RAM for the buffer cache,
+this should take about 2h to finish for `src` and will produce about 10GiB of
+intermediate data. The final `src` repo size should be around 1.7GiB.
+
+## What you get
+
+While the conversion will try to convert all branches (except for some truly
+degenerate cases), we will only publish a small set of branches in the official
+repo, the _other_ branches will be published to an _archive_ repo.
+
+- src will have: master, stable/N, releng/N, release/N.M, vendor/\*
+- doc will have: master, release/N.M
+- ports will have: master, branches/YYYYQx
+
+In the future, _project_ branches will be individual forks of the repos.
+
+Further information and documentation can be found on the Wiki sites at
+https://github.com/freebsd/git_conv/wiki
+
 ## License
 The included svn2git is GPLv3; see svn2git/LICENSE. The scripts and configuration files are licensed under
 [CC0](https://creativecommons.org/publicdomain/zero/1.0/legalcode).
