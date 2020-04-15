@@ -76,22 +76,35 @@
 : ${REPO_doc=${BASE}/doc}
 : ${REPO_ports=${BASE}/ports}
 
+ulimit -S -c 0
+ulimit -H -c 0
+
 usage()
 {
-    echo "usage: `basename $0` [-gps] {base | doc | ports} " >&2
+    echo "usage: `basename $0` [-fgps] [-m 123] {base | doc | ports} " >&2
+    echo "  -f: run just the filtering step"
     echo "  -g: run git-svn conversion"
+    echo "  -m arg: max revisions to conver to"
     echo "  -p: push to upstream, don't use this"
     echo "  -s: run svn2git conversion, this is the default"
 }
 
+do_filter=
 do_svn2git=1
 do_gitsvn=
 do_push=
+max_rev=
 
-while getopts "gps" OPT; do
+while getopts "fgm:ps" OPT; do
     case "$OPT" in
+	f)
+	    do_filter=1
+	    ;;
 	g)
 	    do_gitsvn=1
+	    ;;
+	m)
+	    max_rev="--max-rev $OPTARG"
 	    ;;
 	p)
 	    do_push=1
@@ -126,6 +139,30 @@ if ! shlock -p $$ -f "${LOCK}"; then
     echo "Locked by ${TYPE} (`cat "${LOCK}"`), running too long? Please fix ..." >&2
     exit 1
 fi
+
+filter_repo()
+{
+    local from to
+    from=$1; shift
+    to=$1; shift
+
+    cd $BASE
+    git clone --bare $from $to
+
+    cd $to
+    git config --add remote.origin.fetch '+refs/notes/*:refs/notes/*'
+    git fetch -v
+    git branch --list "user/*"|xargs git branch -D
+    git filter-repo --prune-empty=always --prune-degenerate=always
+    case "$TYPE" in
+	base)
+	    ;;
+	doc)
+	    ;;
+	ports)
+	    ;;
+    esac
+}
 
 svn2git()
 {
@@ -191,7 +228,7 @@ svn2git()
     fi
 
     echo "Converting $source to $target using svn2git"
-    $SVN2GIT --fast-import-timeout 3600 --add-metadata-notes --identity-map authors.txt --rules $rules $source
+    $SVN2GIT $max_rev --fast-import-timeout 3600 --add-metadata-notes --identity-map authors.txt --rules $rules $source
     if [ $? != 0 ]; then
 	echo "Error in svn2git conversion of $source" >&2
 	exit 1
@@ -255,6 +292,15 @@ gitsvn()
 	git push $d || { echo "Error in pushing to $dest" >&2; exit 1; }
     done
 }
+
+if [ -n "$do_filter" ]; then
+    case "$TYPE" in
+	base)  filter_repo freebsd-base.git  src.git ;;
+	doc)   filter_repo freebsd-doc.git   doc.git ;;
+	ports) filter_repo freebsd-ports.git ports.git ;;
+    esac
+    exit $?
+fi
 
 if [ -n "$do_gitsvn" ]; then
     case "$TYPE" in
