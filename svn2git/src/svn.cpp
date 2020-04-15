@@ -572,7 +572,7 @@ bool SvnRevision::maybeParseSimpleMergeinfo(const int revnum, int* revfrom, QStr
     if (!svn.waitForFinished(-1))
         exit(1);
 
-    const QString result = QString(svn.readAll());
+    const QString result = QString(svn.readAll()).remove("\\ No newline at end of property\n");
 
     qDebug() << "=START=";
     qDebug() << qPrintable(result);
@@ -610,17 +610,20 @@ bool SvnRevision::maybeParseSimpleMergeinfo(const int revnum, int* revfrom, QStr
     }
 
     static QRegularExpression re = QRegularExpression(
-           R"(^Index: ([-\d\w/]+)
+           R"(^Index: ([-_.\d\w/]+)
 =============*
-... ([-\d\w/]+).\(revision [0-9]+\)
-... ([-\d\w/]+).\(revision [0-9]+\)
+... ([-_.\d\w/]+).\([^)]+\)
+... ([-_.\d\w/]+).\([^)]+\)
 
-Property changes on: ([\d\w/]+).*
+Property changes on: (?<path>[-_.\d\w/]+)
 _____________*
-(Modified|Added): svn:mergeinfo
+((Added|Deleted): svn:(keywords|eol-style)
+## -[\d,]+ \+[\d,]+ ##
+[-+].*
+)*(Modified|Added): svn:mergeinfo
 ## \-0,0 \+0,1 ##
-   Merged ([-\d\w/]+):r([0-9]*[-,])*([0-9]*)
-$)" , QRegularExpression::MultilineOption | QRegularExpression::DotMatchesEverythingOption);
+   Merged (?<from>[-_.\d\w/]+):r([0-9]*[-,])*(?<rev>[0-9]*)
+$)" , QRegularExpression::MultilineOption);
     if (!re.isValid()) {
         qWarning() << re.errorString();
         exit(1);
@@ -629,16 +632,16 @@ $)" , QRegularExpression::MultilineOption | QRegularExpression::DotMatchesEveryt
     if (match.hasMatch()) {
         qDebug() << "Matched" <<  match.captured(0);
         qDebug() << "Matched 1" <<  match.captured(1);
-        //qDebug() << "Matched 2" <<  match.captured(2);
-        //qDebug() << "Matched 3" <<  match.captured(3);
-        //qDebug() << "Matched 4" <<  match.captured(4);
+        qDebug() << "Matched 2" <<  match.captured(2);
+        qDebug() << "Matched 3" <<  match.captured(3);
+        qDebug() << "Matched 4" <<  match.captured(4);
         qDebug() << "Matched 5" <<  match.captured(5);
         qDebug() << "Matched 6" <<  match.captured(6);
         qDebug() << "Matched 7" <<  match.captured(7);
         qDebug() << "Matched 8" <<  match.captured(8);
-        QString f = "/" + match.captured(1) + "/";
-        QString p = match.captured(6) + "/";  // Our rules expect a trailing '/'
-        *revfrom = match.captured(8).toInt(nullptr, 10);
+        QString f = "/" + match.captured("path") + "/";
+        QString p = match.captured("from") + "/";  // Our rules expect a trailing '/'
+        *revfrom = match.captured("rev").toInt(nullptr, 10);
 
         // There's really just 1 rule file ...
         foreach (const MatchRuleList matchRules, allMatchRules) {
@@ -723,6 +726,24 @@ int SvnRevision::prepareTransactions()
     // No svn:mergeinfo found, not in src or in the pre-svn days, skip.
     if (!mergeinfo_found || !svn_repo_path.endsWith("base") || revnum < 179447)
         return EXIT_SUCCESS;
+
+    // List of revisions to skip as their mergeinfo is complex and irrelevant in
+    // terms of git.
+    static QSet<int> skip_mergeinfo = {
+        179468,
+    };
+    if (skip_mergeinfo.contains(revnum)) {
+        return EXIT_SUCCESS;
+    }
+
+    // List of revisions to skip as their mergeinfo is empty and consists of
+    // -0,0 +0,0 changes only. We hardcode the list here as it a) never changes
+    // and so we can b) skip a whole lot of forking into svn(1).
+    static QSet<int> empty_mergeinfo = {
+    };
+    if (empty_mergeinfo.contains(revnum)) {
+        return EXIT_SUCCESS;
+    }
 
     // Apparently, we already recorded some form of merge, could be to a
     // different branch though.
