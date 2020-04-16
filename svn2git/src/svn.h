@@ -20,9 +20,16 @@
 
 #include <QHash>
 #include <QList>
+#include <QString>
 #include "ruleparser.h"
 
 class Repository;
+
+struct mi {
+    QString from;
+    int rev;
+    QString to;
+};
 
 class SvnPrivate;
 class Svn

@@ -483,7 +483,7 @@ public:
 private:
     void splitPathName(const Rules::Match &rule, const QString &pathName, QString *svnprefix_p,
                        QString *repository_p, QString *effectiveRepository_p, QString *branch_p, QString *path_p);
-    bool maybeParseSimpleMergeinfo(const int revnum, int* revfrom, QString* branchfrom, QString* branchto);
+    bool maybeParseSimpleMergeinfo(const int revnum, struct mi* mi);
 };
 
 int SvnPrivate::exportRevision(int revnum)
@@ -561,7 +561,7 @@ void SvnRevision::splitPathName(const Rules::Match &rule, const QString &pathNam
     }
 }
 
-bool SvnRevision::maybeParseSimpleMergeinfo(const int revnum, int* revfrom, QString* branchfrom, QString* branchto) {
+bool SvnRevision::maybeParseSimpleMergeinfo(const int revnum, struct mi* mi) {
     QProcess svn;
     // svn diff -c 179481 --properties-only file:///$PWD/base
     svn.start("/usr/local/bin/svn",
@@ -573,10 +573,6 @@ bool SvnRevision::maybeParseSimpleMergeinfo(const int revnum, int* revfrom, QStr
         exit(1);
 
     const QString result = QString(svn.readAll()).remove("\\ No newline at end of property\n");
-
-    qDebug() << "=START=";
-    qDebug() << qPrintable(result);
-    qDebug() << "=END=";
 
     // If there are N mergeinfo hits, and they all look like so, we have fully
     // empty mergeinfo and can skip this rev.
@@ -598,16 +594,24 @@ bool SvnRevision::maybeParseSimpleMergeinfo(const int revnum, int* revfrom, QStr
     int diff_mi_empty = result.count(QRegularExpression(R"(^Modified: svn:mergeinfo
 ## -0,0 \+0,0 ##$)", QRegularExpression::MultilineOption));
 
-    qDebug() << "mergeinfo parsing: del/add/mod=" << del_mi << del_mi_empty << add_mi << add_mi_empty << diff_mi << diff_mi_empty;
-
     if ((del_mi+add_mi+diff_mi) == 0) {
         qFatal("Something went wrong parsing the mergeinfo!");
     }
 
     if ((del_mi+add_mi+diff_mi) > 0 && del_mi == del_mi_empty && add_mi == add_mi_empty && diff_mi == diff_mi_empty) {
-        printf(" ===Skipping empty mergeinfo=== ");
+        printf(" ===Skipping empty mergeinfo on %d=== ", revnum);
         return true;
     }
+
+    if (del_mi >0 && add_mi == 0 && diff_mi == 0) {
+        printf(" ===Skipping delete-only (%d) mergeinfo on %d=== ", del_mi, revnum);
+        return true;
+    }
+
+    qDebug() << "=START=";
+    qDebug() << qPrintable(result);
+    qDebug() << "=END=";
+    qDebug() << "mergeinfo parsing: del/add/mod=" << del_mi << del_mi_empty << add_mi << add_mi_empty << diff_mi << diff_mi_empty;
 
     static QRegularExpression re = QRegularExpression(
            R"(^Index: ([-_.\d\w/]+)
@@ -623,7 +627,7 @@ _____________*
 )*(Modified|Added): svn:mergeinfo
 ## \-0,0 \+0,1 ##
    Merged (?<from>[-_.\d\w/]+):r([0-9]*[-,])*(?<rev>[0-9]*)
-$)" , QRegularExpression::MultilineOption);
+*$)" , QRegularExpression::MultilineOption);
     if (!re.isValid()) {
         qWarning() << re.errorString();
         exit(1);
@@ -631,17 +635,20 @@ $)" , QRegularExpression::MultilineOption);
     QRegularExpressionMatch match = re.match(result);
     if (match.hasMatch()) {
         qDebug() << "Matched" <<  match.captured(0);
-        qDebug() << "Matched 1" <<  match.captured(1);
-        qDebug() << "Matched 2" <<  match.captured(2);
-        qDebug() << "Matched 3" <<  match.captured(3);
-        qDebug() << "Matched 4" <<  match.captured(4);
-        qDebug() << "Matched 5" <<  match.captured(5);
-        qDebug() << "Matched 6" <<  match.captured(6);
-        qDebug() << "Matched 7" <<  match.captured(7);
-        qDebug() << "Matched 8" <<  match.captured(8);
+        qDebug() << "Matched  1" <<  match.captured(1);
+        qDebug() << "Matched  2" <<  match.captured(2);
+        qDebug() << "Matched  3" <<  match.captured(3);
+        qDebug() << "Matched  4" <<  match.captured(4);
+        qDebug() << "Matched  5" <<  match.captured(5);
+        qDebug() << "Matched  6" <<  match.captured(6);
+        qDebug() << "Matched  7" <<  match.captured(7);
+        qDebug() << "Matched  8" <<  match.captured(8);
+        qDebug() << "Matched  9" <<  match.captured(9);
+        qDebug() << "Matched 10" <<  match.captured(10);
+        qDebug() << "Matched 11" <<  match.captured(11);
         QString f = "/" + match.captured("path") + "/";
         QString p = match.captured("from") + "/";  // Our rules expect a trailing '/'
-        *revfrom = match.captured("rev").toInt(nullptr, 10);
+        mi->rev = match.captured("rev").toInt(nullptr, 10);
 
         // There's really just 1 rule file ...
         foreach (const MatchRuleList matchRules, allMatchRules) {
@@ -652,7 +659,7 @@ $)" , QRegularExpression::MultilineOption);
                 switch (rule.action) {
                     case Rules::Match::Export:
                         splitPathName(rule, p, &svnprefix, &repository, &effectiveRepository, &branch, &path);
-                        *branchfrom = branch;
+                        mi->from = branch;
                         break;
                     default:
                         qFatal("Rule match had unexpected action on %s", qPrintable(p));
@@ -667,7 +674,7 @@ $)" , QRegularExpression::MultilineOption);
                 switch (rule.action) {
                     case Rules::Match::Export:
                         splitPathName(rule, f, &svnprefix, &repository, &effectiveRepository, &branch, &path);
-                        *branchto = branch;
+                        mi->to = branch;
                         break;
                     default:
                         qFatal("Rule match had unexpected action on %s", qPrintable(p));
@@ -675,7 +682,7 @@ $)" , QRegularExpression::MultilineOption);
                 }
             }
         }
-        if (!branchto->isEmpty() && !branchfrom->isEmpty()) {
+        if (!mi->to.isEmpty() && !mi->from.isEmpty()) {
             return true;
         }
         qDebug("Couldn't parse mergeinfo via rules file for %s or %s", qPrintable(p), qPrintable(f));
@@ -740,6 +747,26 @@ int SvnRevision::prepareTransactions()
     // -0,0 +0,0 changes only. We hardcode the list here as it a) never changes
     // and so we can b) skip a whole lot of forking into svn(1).
     static QSet<int> empty_mergeinfo = {
+        179566, 179790, 180332, 181027, 181074, 181522, 181524, 181601, 181738,
+        181739, 181740, 181741, 181872, 181905, 182044, 182326, 182724, 183198,
+        183226, 183430, 183431, 183432, 183433, 183654, 183714, 183910, 184330,
+        184425, 184521, 184562, 185160, 185305, 185307, 185402, 185539, 185626,
+        185631, 186256, 186261, 186535, 186934, 187064, 187220, 187258, 187962,
+        // we keep these to test the code that finds them
+        //189628, 189705, 193734, 194143, 194148, 194150, 194153, 194155, 194157,
+        194159, 194674, 196280, 196696, 197352, 197509, 198498, 203325, 205176,
+        282800, 282913, 283041, 283078, 283177, 283180, 283608, 283619, 283621,
+        283626, 283628, 284185, 284187, 284235, 284244, 284396, 284678, 284680,
+        284992, 285102, 285164, 285166, 285194, 285210, 286426, 286428, 286498,
+        286500, 286502, 286508, 286749, 287451, 287504, 287511, 287513, 287515,
+        287517, 287519, 287629, 287916, 288141, 288150, 288244, 289062, 289069,
+        289285, 289721, 290005,
+        // These are delete-only mergeinfos, usually deleting Reverse-merged
+        // mergeinfo, whatever that is.
+        190634, 194300, 196219, 196322, 196330, 196698, 198048, 198052, 198057,
+        198058, 199096, 199141, 202103, 202105, 253750, 259935, 261839, 262486,
+        // we keep these to test the code that finds them
+        //276402, 293215, 298094, 337607, 349592,
     };
     if (empty_mergeinfo.contains(revnum)) {
         return EXIT_SUCCESS;
@@ -771,14 +798,27 @@ int SvnRevision::prepareTransactions()
     }
     fflush(stdout);
 
-    int revfrom = -1;
-    QString branchfrom, branchto;
+    // Things we patch up manually as the SVN history around them is ...
+    // creative.
+    static QMap<int, struct mi> manual_merges = {
+        // These 2 were merged from "/vendor" (sic!)
+        { 357636, { .from = "vendor/NetBSD/tests", .rev = 357635, .to = "master" } },
+        { 357688, { .from = "vendor/NetBSD/tests", .rev = 357687, .to = "master" } },
+    };
+
     bool parse_ok = false;
-    // There are quite a number of revisions touching many branches and having a
-    // "change" in svn:mergeinfo, except it's all empty, e.g. r182326. Try to
-    // parse this and silently skip it if the mergeinfo is empty.
-    parse_ok = maybeParseSimpleMergeinfo(revnum, &revfrom, &branchfrom, &branchto);
-    if (parse_ok && revfrom == -1) {
+    struct mi mi = { .from = "", .rev = -1, .to = "" };
+    if (manual_merges.contains(revnum)) {
+        const auto& val = manual_merges.value(revnum);
+        mi = val;
+        parse_ok = true;
+    } else {
+        // There are quite a number of revisions touching many branches and having a
+        // "change" in svn:mergeinfo, except it's all empty, e.g. r182326. Try to
+        // parse this and silently skip it if the mergeinfo is empty.
+        parse_ok = maybeParseSimpleMergeinfo(revnum, &mi);
+    }
+    if (parse_ok && mi.rev == -1) {
         // all empty, ignore, this happens when we have -0,0 +0,0 changes
         // only.
         return EXIT_SUCCESS;
@@ -806,15 +846,16 @@ int SvnRevision::prepareTransactions()
         return EXIT_SUCCESS;
     }
 
-    qDebug() << "Ended up with " + branchfrom + "@" + QString::number(revfrom) + " into " + branchto;
-    if (branchfrom.startsWith("user") || branchfrom.startsWith("user")) {
-        printf(" MONKEYMERGE not merging from user, please inspect me: %s", qPrintable(branchfrom));
+    // This is redundant with the WARN log about the branch copies.
+    qDebug() << "Ended up with " + mi.from + "@" + QString::number(mi.rev) + " into " + mi.to;
+    if (mi.from.startsWith("user") || mi.from.startsWith("user")) {
+        printf(" MONKEYMERGE not merging from user, please inspect me: %s", qPrintable(mi.from));
         return EXIT_SUCCESS;
     }
     printf(" MONKEYMERGE IS HAPPENING!");
     Repository::Transaction *txn;
     txn = transactions.first();
-    txn->noteCopyFromBranch(branchfrom, revfrom);
+    txn->noteCopyFromBranch(mi.from, mi.rev);
 
     return EXIT_SUCCESS;
 }
