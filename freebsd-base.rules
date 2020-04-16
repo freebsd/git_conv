@@ -32,6 +32,11 @@ match /vendor/.*
 min revision 355814
 max revision 355814
 end match
+# Skip branch creation and deletion at wrong level
+match /user/.*
+min revision 269785
+max revision 269786
+end match
 match /vendor/.*
 min revision 355815
 max revision 355815
@@ -104,10 +109,38 @@ match /user/nwhitehorn/.*
   min revision 253490
   max revision 253490
 end match
-match /vendor/.arcconfig
-end match
 # Cannot put .git directories into git, makes it unhappy
 match /user/uqs/git_conv/.*\.git/.*
+end match
+
+match /(user)/(peterj)/
+  repository freebsd-base.git
+  branch \1/\2
+end match
+
+# These have extra levels
+match /(user)/(dfr)/([^/]+)/([^/]+)/
+  repository freebsd-base.git
+  branch \1/\2/\3/\4
+end match
+match /(user)/(gjb)/(hacking)/([^/]+)/
+  repository freebsd-base.git
+  branch \1/\2/\3/\4
+end match
+
+# strip extra head
+match /(user)/(eri)/(pf45)/(head)/
+  repository freebsd-base.git
+  branch \1/\2/\3
+end match
+
+match /(user)/([^/]+)/([^/]+)/
+  repository freebsd-base.git
+  branch \1/\2/\3
+end match
+
+
+match /vendor/.arcconfig
 end match
 match /vendor/(atf|ldns-host|v4l)/README.*
 end match
@@ -140,20 +173,13 @@ match /(vendor)/(unknown)/
   branch \1/\2
 end match
 
+# /vendor/NetBSD has a mix of 2-level and 3-level dirs :/
+# TODO(uqs): fix this somehow?
+
 match /(vendor|vendor-sys|vendor-cddl|vendor-crypto)/([^/]+)/([^/]+)/
   repository freebsd-base.git
   # drop the different vendor-* prefixes
   branch vendor/\2/\3
-end match
-
-match /(user)/(peterj)/
-  repository freebsd-base.git
-  branch \1/\2
-end match
-
-match /(user)/([^/]+)/([^/]+)/
-  repository freebsd-base.git
-  branch \1/\2/\3
 end match
 
 # ignore the rest
