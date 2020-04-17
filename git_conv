@@ -93,10 +93,15 @@ do_filter=
 do_svn2git=1
 do_gitsvn=
 do_push=
+debug_rules=
 max_rev=
+resume_from=
 
-while getopts "fgm:ps" OPT; do
+while getopts "dfgm:pr:s" OPT; do
     case "$OPT" in
+	d)
+	    debug_rules=--debug-rules
+	    ;;
 	f)
 	    do_filter=1
 	    ;;
@@ -108,6 +113,9 @@ while getopts "fgm:ps" OPT; do
 	    ;;
 	p)
 	    do_push=1
+	    ;;
+	r)
+	    resume_from="--resume-from $OPTARG"
 	    ;;
 	s)
 	    do_svn2git=1
@@ -219,16 +227,23 @@ svn2git()
 		    git config --add remote.github.push '+refs/heads/master:refs/heads/master'
 		    git config --add remote.github.push '+refs/heads/projects/*:refs/heads/projects/*'
 		    git config --add remote.github.push '+refs/notes/*:refs/notes/*'
+
+		    git remote add bapt ssh://git@git.etoilebsd.net:1022/ports
+		    git config --add remote.bapt.push '+refs/heads/master:refs/heads/master'
+		    git config --add remote.bapt.push '+refs/heads/projects/*:refs/heads/projects/*'
+		    git config --add remote.bapt.push '+refs/heads/branches/*:refs/heads/branches/*'
+		    git config --add remote.bapt.push '+refs/heads/tags/*:refs/tags/*'
+		    git config --add remote.bapt.push '+refs/notes/*:refs/notes/*'
 		    ;;
 	    esac
 	)
 
 	# Initial small run
-	$SVN2GIT --max-rev 100 --fast-import-timeout 3600 --add-metadata-notes --identity-map authors.txt --rules $rules $source
+	$SVN2GIT $debug_rules --max-rev 100 --fast-import-timeout 3600 --add-metadata-notes --identity-map authors.txt --rules $rules $source
     fi
 
     echo "Converting $source to $target using svn2git"
-    $SVN2GIT $max_rev --fast-import-timeout 3600 --add-metadata-notes --identity-map authors.txt --rules $rules $source
+    $SVN2GIT $debug_rules $max_rev $resume_from --fast-import-timeout 3600 --add-metadata-notes --identity-map authors.txt --rules $rules $source
     if [ $? != 0 ]; then
 	echo "Error in svn2git conversion of $source" >&2
 	exit 1
