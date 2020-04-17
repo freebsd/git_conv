@@ -16,6 +16,11 @@ match /head/.*
 min revision 179587
 max revision 179587
 end match
+# Wrong import and back-out
+match /head/.*
+min revision 254686
+max revision 254687
+end match
 # Skip bogus revision and the backout rev
 match /projects/.*
 min revision 244485
@@ -33,15 +38,27 @@ min revision 355814
 max revision 355814
 end match
 # Skip branch creation and deletion at wrong level
-match /user/.*
+match /user/bz/
+min revision 262833
+max revision 262834
+end match
+match /projects/arm_intrng/
 min revision 269785
 max revision 269786
 end match
-match /vendor/.*
+match /projects/cambria/
+min revision 186004
+max revision 186007
+end match
+match /projects/doctools/
+min revision 306856
+max revision 306858
+end match
+match /vendor/llvm-project/
 min revision 355815
 max revision 355815
 end match
-match /vendor/.*
+match /vendor/llvm-project/
 min revision 355939
 max revision 355939
 end match
@@ -94,6 +111,11 @@ match /(user)/(piso)/([^/]+)/
   branch \1/\2/\3
   min revision 190859
 end match
+# /head copied into existing branch, later deleted in rev 196663 anyway.
+match /(user)/(kmacy)/
+  min revision 196075
+  max revision 196075
+end match
 # ignore stuff, no branch for these
 match /user/gad/README.txt
 end match
@@ -105,14 +127,17 @@ match /user/simon/test.txt
 end match
 match /user/peter/foo.txt
 end match
-match /user/nwhitehorn/.*
-  min revision 253490
-  max revision 253490
-end match
 # Cannot put .git directories into git, makes it unhappy
 match /user/uqs/git_conv/.*\.git/.*
 end match
 
+# patch up imports at wrong level
+match /(user)/(nwhitehorn)/
+  min revision 253490
+  max revision 253490
+  repository freebsd-base.git
+  branch \1/\2/condorports
+end match
 match /(user)/(peterj)/
   repository freebsd-base.git
   branch \1/\2
@@ -165,6 +190,8 @@ end match
 match /vendor/device-tree/
   min revision 262569
   max revision 262569
+  repository freebsd-base.git
+  branch vendor/device-tree/dist
 end match
 
 # `unknown` vendor is one level short
@@ -175,6 +202,82 @@ end match
 
 # /vendor/NetBSD has a mix of 2-level and 3-level dirs :/
 # TODO(uqs): fix this somehow?
+
+# r282579 renamed a whole bunch of vendor branches and results in backup tags.
+# r282582 and r282585 moved some more.
+# r253716 is also relevant here, resurrecting the deleted gnu-patch. Map the old
+# branches to the new ones already, with the twist of removing the redundant
+# "gnu" from gnu-sort.
+# We need to skip the actual moves, as they moved roots in SVN that don't exist
+# in git and the exporter gets confused by that.
+# Note that while we could use a recurse rule to skip the deleting and do the
+# proper thing for the additions, somehow this does not result in the actual
+# SVN revision commit message to be created as a commit on the various
+# branches. This is bad in that the history of when the move was done is lost.
+# So we can also just skip the move revisions entirely. :/
+### match /(vendor)/(awk|bc|bison|cpio|gnu-sort|patch|tar)/
+### min revision 282579
+### max revision 282579
+### end match
+### match /(vendor)/misc-GNU/(awk|bc|bison|cpio|gnu-sort|patch|tar)/$
+### min revision 282579
+### max revision 282579
+### action recurse
+### end match
+match /vendor/.*
+min revision 282579
+max revision 282579
+end match
+match /vendor/.*
+min revision 282582
+max revision 282582
+end match
+match /vendor/.*
+min revision 282584
+max revision 282584
+end match
+match /vendor/.*
+min revision 282585
+max revision 282585
+end match
+match /(vendor)/(awk|bc|bison|cpio|cvs|patch|tar|texinfo)/([^/]+)/
+  repository freebsd-base.git
+  branch \1/misc-GNU/\2/\3
+end match
+match /(vendor)/gnu-(sort)/([^/]+)/
+  repository freebsd-base.git
+  branch \1/misc-GNU/\2/\3
+end match
+match /(vendor)/(misc-GNU)/(awk|bc|bison|cpio|cvs|patch|tar|texinfo)/([^/]+)/
+  repository freebsd-base.git
+  branch \1/\2/\3/\4
+end match
+match /(vendor)/(misc-GNU)/gnu-(sort)/([^/]+)/
+  repository freebsd-base.git
+  branch \1/\2/\3/\4
+end match
+# NetBSD stuff got moved around in r282584
+match /(vendor)/(lukemftpd?|sort)/([^/]+)/
+  repository freebsd-base.git
+  branch \1/NetBSD/\2/\3
+end match
+# ignore some files littered here and there.
+match /vendor/NetBSD/bmake/do-update.sh
+end match
+match /vendor/NetBSD/bmake/import.sh
+end match
+match /vendor/NetBSD/((libc-)?(un)?vis|libexecinfo)/FreeBSD-Upgrade
+end match
+# 4-levels for some of them
+match /(vendor)/(NetBSD)/(blacklist|bmake|libc-pwcache|libc-vis|libedit|libexecinfo|lukemftpd?|mknod|mtree|softfloat|sort|tests|unvis|vis|xlint)/([^/]+)/
+  repository freebsd-base.git
+  branch \1/\2/\3/\4
+end match
+# something was missing ...
+match /(vendor)/(1.14)/
+  repository freebsd-base.git
+  branch \1/bsnmp/\2
+end match
 
 match /(vendor|vendor-sys|vendor-cddl|vendor-crypto)/([^/]+)/([^/]+)/
   repository freebsd-base.git

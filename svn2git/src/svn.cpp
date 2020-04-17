@@ -737,7 +737,13 @@ int SvnRevision::prepareTransactions()
     // List of revisions to skip as their mergeinfo is complex and irrelevant in
     // terms of git.
     static QSet<int> skip_mergeinfo = {
+        196075,
         179468,
+        244485,
+        244487,
+        262833,
+        262834,
+        355814,
     };
     if (skip_mergeinfo.contains(revnum)) {
         return EXIT_SUCCESS;
@@ -802,8 +808,8 @@ int SvnRevision::prepareTransactions()
     // creative.
     static QMap<int, struct mi> manual_merges = {
         // These 2 were merged from "/vendor" (sic!)
-        { 357636, { .from = "vendor/NetBSD/tests", .rev = 357635, .to = "master" } },
-        { 357688, { .from = "vendor/NetBSD/tests", .rev = 357687, .to = "master" } },
+        { 357636, { .from = "vendor/NetBSD/tests/dist", .rev = 357635, .to = "master" } },
+        { 357688, { .from = "vendor/NetBSD/tests/dist", .rev = 357687, .to = "master" } },
     };
 
     bool parse_ok = false;
