@@ -27,6 +27,9 @@ target.path = $$BINDIR
 DEPENDPATH += .
 QT = core
 
+CONFIG += force_debug_info debug
+QMAKE_CXXFLAGS_DEBUG += -O2 -Wno-deprecated-declarations
+
 INCLUDEPATH += . $$SVN_INCLUDE $$APR_INCLUDE
 !isEmpty(SVN_LIBDIR): LIBS += -L$$SVN_LIBDIR
 LIBS += -lsvn_fs-1 -lsvn_repos-1 -lapr-1 -lsvn_subr-1
