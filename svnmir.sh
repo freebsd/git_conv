@@ -67,8 +67,7 @@ while :; do
     svnsync --non-interactive sync file://${repodirs}/$r >> ${logdir}/svnsync-$r.log 2>&1
     newrev=$(svn propget --revprop -r 0 svn:sync-last-merged-rev file://${repodirs}/$r 2>>${logdir}/svnsync-$r.log)
     oldrev=$(($oldrev - 10))
-    numrev=$(($newrev - $oldrev + 1))
-    for rev in $(jot $numrev $oldrev); do
+    for rev in $(seq $oldrev $newrev); do
       a=$(svn propget --revprop -r $rev svn:author file://${repodirs}/$r 2>>${logdir}/svnsync-$r.log)
       if [ "x$a" == "x$me" ]; then
 	# Got garbage metadata, copy revprops again. This only checks for

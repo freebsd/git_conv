@@ -7,11 +7,13 @@ FreeBSD repositories
 
 `pkg install qmake qt5-core subversion git shlock`
 
+(for Debian: `apt install qt5-qmake qtbase5-dev libapr1-dev libsvn-dev subversion git shlock`)
+
 A patched copy of svn2git aka. svn-all-fast-export has been added to this repo using:
 `git subtree add --squash --prefix svn2git https://github.com/freebsd/svn2git master`
 
 ```shell
-cd svn2git && qmake && make
+cd svn2git && qmake && make && cd ..
 ```
 
 ## Setup
