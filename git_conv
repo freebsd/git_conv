@@ -237,9 +237,6 @@ svn2git()
 		    ;;
 	    esac
 	)
-
-	# Initial small run
-	$SVN2GIT $debug_rules --max-rev 100 --fast-import-timeout 3600 --add-metadata-notes --identity-map authors.txt --rules $rules $source
     fi
 
     echo "Converting $source to $target using svn2git"
