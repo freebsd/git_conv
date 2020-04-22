@@ -564,13 +564,15 @@ void SvnRevision::splitPathName(const Rules::Match &rule, const QString &pathNam
 bool SvnRevision::maybeParseSimpleMergeinfo(const int revnum, struct mi* mi) {
     QProcess svn;
     // svn diff -c 179481 --properties-only file:///$PWD/base
-    svn.start("/usr/local/bin/svn",
+    svn.start("svn",
             QStringList() << "diff"
             << "-c" << QString::number(revnum)
             << "--properties-only" << svn_repo_path);
 
-    if (!svn.waitForFinished(-1))
+    if (!svn.waitForFinished(-1)) {
+        fprintf(stderr, "svn fork terminated abnormally for rev %d\n", revnum);
         exit(1);
+    }
 
     const QString result = QString(svn.readAll()).remove("\\ No newline at end of property\n");
 
