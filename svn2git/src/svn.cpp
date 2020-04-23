@@ -843,7 +843,7 @@ int SvnRevision::prepareTransactions()
         return EXIT_SUCCESS;
     }
 
-    const QString& to = to_branches_.values().front();
+    const QString to = to_branches_.values().front();
     if (to != "master" && !to.startsWith("projects/") && !to.startsWith("user/")) {
         printf(" MONKEYMERGE ignoring merge into %s", qPrintable(to));
         return EXIT_SUCCESS;
