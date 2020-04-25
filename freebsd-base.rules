@@ -12,30 +12,25 @@ end match
 match /user/GUIDELINES.txt
 end match
 # Skip empty test-commit, that I'm unable to svnsync, maybe it's corrupted?
-match /head/.*
+match /head/
 min revision 179587
 max revision 179587
 end match
 # Wrong import and back-out
-match /head/.*
+match /head/
 min revision 254686
 max revision 254687
 end match
 # Skip bogus revision and the backout rev
-match /projects/.*
+match /projects/
 min revision 244485
 max revision 244485
 end match
-match /projects/.*
+match /projects/
 min revision 244487
 max revision 244487
 end match
-match /svnadmin/.*
-end match
-# Skip empty vendor dir creation and branch
-match /vendor/.*
-min revision 355814
-max revision 355814
+match /svnadmin/
 end match
 # Skip branch creation and deletion at wrong level
 match /user/bz/
@@ -54,13 +49,12 @@ match /projects/doctools/
 min revision 306856
 max revision 306858
 end match
-match /vendor/llvm-project/
-min revision 355815
-max revision 355815
-end match
-match /vendor/llvm-project/
-min revision 355939
-max revision 355939
+
+# Skip cvs2svn manufactured commits in favor of the fixups.
+match /head/contrib/
+# /head/contrib/patch was fully deleted in r128778
+min revision 128778
+max revision 128778
 end match
 
 match /head/
@@ -73,9 +67,14 @@ match /(cvs2svn)/([^/]+)/([^/]+)/
   branch \1/\2/\3
 end match
 
-match /(stable|releng|release)/([0-9.]+)/
+match /(stable|releng)/([0-9.]+)/
   repository freebsd-base.git
   branch \1/\2
+end match
+
+match /(release)/([0-9.]+)/
+  repository freebsd-base.git
+  branch refs/tags/\1/\2
 end match
 
 match /(releng)/ALPHA_2_0/
@@ -184,42 +183,174 @@ end match
 match /vendor/Juniper/libxo/(.svnignore|import.sh)
 end match
 
-# fixup trailing dot
+# fixup trailing dot, skip the rename revs, this still creates a backup copy of the "reset" branch, though.
 match /vendor/(clang|llvm)/(clang|llvm)-(r73070)\./
   repository freebsd-base.git
   branch vendor/\1/\2-\3
+  max revision 193727
 end match
-
+match /vendor/(clang|llvm)/
+  min revision 193736
+  max revision 193737
+end match
 # wrong tag, ignore r210074 and r210075
 match /vendor/(clang|llvm)-(r108243)/
 end match
+# tags were without 'r' at first, then got renamed in revs 208978 to 208981.
+match /vendor/(clang|llvm)/
+  min revision 208978
+  max revision 208981
+end match
+match /(vendor)/(clang|llvm)/(clang|llvm)-([0-9]+)/
+  repository freebsd-base.git
+  branch \1/\2/\3-r\4
+end match
+
+# I assume r291012 was a typo for r291015 and it got moved into the wrong place
+# (a directory that already exists, so that it ended up with a trailing dist/
+# directory). Same as happened quite a number of times.
+# See r311315 and the following. The first tag of r291012 was fine, the second
+# tag of r291015 went to the wrong dirs.
+match /(vendor)/(llvm|clang|compiler-rt|libc..|lld|lldb)/([^/]+-trunk)-r291012/dist/
+  repository freebsd-base.git
+  branch \1/\2/\3-r291015
+  min revision 311328
+end match
 
 # wrong tag and backout revs
-match /vendor/
-  min revision 261332
-  max revision 261333
+match /vendor/bind9/
+  min revision 180464
+  max revision 180464
 end match
-match /vendor/
+match /vendor/bind9/
+  min revision 180467
+  max revision 180467
+end match
+# Fix wrong tag, and ignore the fix-up move
+match /(vendor)/(tzdata)/(tzdata2000g)/(dist)/
+  min revision 191616
+  max revision 191616
+  repository freebsd-base.git
+  branch \1/\2/\3
+end match
+match /vendor/tzdata/
+  min revision 191617
+  max revision 191617
+end match
+# was already tagged in 193784
+match /vendor/tzdata/
+  min revision 194479
+  max revision 194479
+end match
+# dropped a prefix
+match /(vendor)/(tzdata)/(2009.)/
+  repository freebsd-base.git
+  branch \1/\2/tzdata\3
+  max revision 194481
+end match
+match /vendor/tzdata/
+  min revision 194483
+  max revision 194484
+end match
+# Another botched import
+match /(vendor)/(tzdata)/(tzdata2009m)/(dist)/
+  min revision 197595
+  max revision 197595
+  repository freebsd-base.git
+  branch \1/\2/tzdata2009n
+end match
+match /(vendor)/(tzdata)/(tzdata2009m)/(dist)/
+  min revision 197596
+  max revision 197596
+  #repository freebsd-base.git
+  #branch \1/\2/tzdata2009n
+end match
+# committed w/o dist at first
+match /(vendor)/(testfloat)/
+  max revision 206919
+  repository freebsd-base.git
+  branch \1/\2/dist
+end match
+match /(vendor)/(testfloat)/
+  min revision 206920
+  max revision 206921
+end match
+# libpcap snafu
+match /vendor/libpcap/
   min revision 230833
   max revision 230834
 end match
-
+# fixup copied dist/
+match /(vendor)/(dtc)/(dtc-f807af19)/dist/
+  min revision 238738
+  max revision 238738
+  branch \1/\2/\3
+end match
+# was never used
+match /vendor/NetBSD/atf/
+  min revision 236635
+  max revision 236635
+end match
+# byacc got imported/tagged twice
+match /vendor/byacc/byacc-20120115/
+  min revision 234949
+  max revision 234949
+end match
+# yours truly messes up mdocml tags
+match /vendor/mdocml/
+  min revision 261332
+  max revision 261333
+end match
 # r262569 committed one level short
-match /vendor/device-tree/
+match /(vendor)/(device-tree)/
   min revision 262569
   max revision 262569
   repository freebsd-base.git
-  branch vendor/device-tree/dist
+  branch \1/\2/dist
 end match
+# and r270867 tagged one level too deep
+match /(vendor)/(device-tree)/(ianc-b78b6b80)/dist/
+  min revision 270867
+  max revision 270867
+  repository freebsd-base.git
+  branch \1/\2/\3
+end match
+# wrongly done import, later deleted
+match /vendor/zstd/
+  min revision 322780
+  max revision 322780
+end match
+# byacc lua confusion
+match /(vendor)/(byacc|lua)/
+  min revision 326345
+  max revision 326351
+end match
+# Skip empty vendor dir creation and branches
+match /vendor/llvm-project
+min revision 355814
+max revision 355814
+end match
+match /vendor/llvm-project/
+min revision 355815
+max revision 355815
+end match
+match /vendor/llvm-project/
+min revision 355939
+max revision 355939
+end match
+# TODO: record the following copies as merges: 355944, 355945, 355947
+
 
 # `unknown` vendor is one level short
 match /(vendor)/(unknown)/
   repository freebsd-base.git
   branch \1/\2
 end match
-
-# /vendor/NetBSD has a mix of 2-level and 3-level dirs :/
-# TODO(uqs): fix this somehow?
+# something was missing ...
+match /(vendor)/(1.14)/
+  repository freebsd-base.git
+  branch \1/bsnmp/\2
+end match
 
 # r282579 renamed a whole bunch of vendor branches and results in backup tags.
 # r282582 and r282585 moved some more.
@@ -274,7 +405,6 @@ match /(vendor)/(misc-GNU)/gnu-(sort)/([^/]+)/
   repository freebsd-base.git
   branch \1/\2/\3/\4
 end match
-# NetBSD stuff got moved around in r282584
 match /(vendor)/(lukemftpd?|sort)/([^/]+)/
   repository freebsd-base.git
   branch \1/NetBSD/\2/\3
@@ -284,48 +414,17 @@ match /(vendor)/(NetBSD)/(blacklist|bmake|libc-pwcache|libc-vis|libedit|libexeci
   repository freebsd-base.git
   branch \1/\2/\3/\4
 end match
-# something was missing ...
-match /(vendor)/(1.14)/
-  repository freebsd-base.git
-  branch \1/bsnmp/\2
-end match
 
 match /(vendor)/(Juniper|google)/([^/]+)/([^/]+)/
   repository freebsd-base.git
   branch \1/\2/\3/\4
 end match
 
-# Fix wrong tag, and ignore the fix-up move
-match /(vendor)/(tzdata)/(tzdata2000g)/(dist)/
-  min revision 191616
-  max revision 191616
-  repository freebsd-base.git
-  branch \1/\2/\3
-end match
-match /(vendor)/(tzdata)/
-  min revision 191617
-  max revision 191617
-end match
-# Another botched import
-match /(vendor)/(tzdata)/(tzdata2009m)/(dist)/
-  min revision 197595
-  max revision 197595
-  repository freebsd-base.git
-  branch \1/\2/tzdata2009n
-end match
-match /(vendor)/(tzdata)/(tzdata2009m)/(dist)/
-  min revision 197596
-  max revision 197596
-  #repository freebsd-base.git
-  #branch \1/\2/tzdata2009n
-end match
-
 match /(vendor|vendor-sys|vendor-cddl|vendor-crypto)/([^/]+)/([^/]+)/
   repository freebsd-base.git
-  # drop the different vendor-* prefixes
+  # unify the different vendor-* prefixes
+  # Note that this merges e.g. vendor/illumos and vendor-sys/illumos, which
+  # share the same file common/avl/avl.c but one has a newer version than the
+  # other. This should be fine.
   branch vendor/\2/\3
 end match
-
-# ignore the rest
-#match .*
-#end match
