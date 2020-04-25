@@ -44,6 +44,7 @@
 #include <svn_types.h>
 #include <svn_version.h>
 
+#include <QDir>
 #include <QFile>
 #include <QDebug>
 #include <QRegularExpression>
@@ -614,6 +615,17 @@ bool SvnRevision::maybeParseSimpleMergeinfo(const int revnum, struct mi* mi) {
     qDebug() << qPrintable(result);
     qDebug() << "=END=";
     qDebug() << "mergeinfo parsing: del/add/mod=" << del_mi << del_mi_empty << add_mi << add_mi_empty << diff_mi << diff_mi_empty;
+    {
+      QDir dir;
+      if (dir.mkpath("mi")) {
+        // This should create only about 3k files or so.
+        QFile file(QString("mi/r%1.txt").arg(revnum));
+        if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+          QTextStream out(&file);
+          out << qPrintable(result);
+        }
+      }
+    }
 
     static QRegularExpression re = QRegularExpression(
            R"(^Index: ([-_.\d\w/]+)
