@@ -206,6 +206,17 @@ match /(vendor)/(clang|llvm)/(clang|llvm)-([0-9]+)/
   branch \1/\2/\3-r\4
 end match
 
+# Imported was r288847 and the commit message says so, the tags then went into
+# existing subdirs. Did I ever tell you how SVN's notions of tags and branches
+# are just tree copies is the bane of my existence?
+# tagged into the wrong existing tag
+match /(vendor)/(llvm|clang|compiler-rt|libc..|lld|lldb)/([^/]+-release_39)-r288513/dist/
+  min revision 309809
+  max revision 309815
+  repository freebsd-base.git
+  branch \1/\2/\3-r288847
+end match
+
 # I assume r291012 was a typo for r291015 and it got moved into the wrong place
 # (a directory that already exists, so that it ended up with a trailing dist/
 # directory). Same as happened quite a number of times.
@@ -262,8 +273,6 @@ end match
 match /(vendor)/(tzdata)/(tzdata2009m)/(dist)/
   min revision 197596
   max revision 197596
-  #repository freebsd-base.git
-  #branch \1/\2/tzdata2009n
 end match
 # committed w/o dist at first
 match /(vendor)/(testfloat)/
