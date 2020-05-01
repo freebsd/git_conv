@@ -183,7 +183,7 @@ end match
 match /vendor/Juniper/libxo/(.svnignore|import.sh)
 end match
 
-# fixup trailing dot, skip the rename revs, this still creates a backup copy of the "reset" branch, though.
+# fixup trailing dot, skip the rename revs
 match /vendor/(clang|llvm)/(clang|llvm)-(r73070)\./
   repository freebsd-base.git
   branch vendor/\1/\2-\3
@@ -200,6 +200,26 @@ end match
 match /vendor/(clang|llvm)/
   min revision 208978
   max revision 208981
+end match
+# ignore two overwritten tags.
+match /vendor/(clang|llvm)/llvm-r108428
+  max revision 212752
+end match
+match /vendor/(clang|llvm)/clang-r108428
+  max revision 212767
+end match
+# fix up tag rename
+match /(vendor)/(llvm)/(llvm-release)_35(-r216957)/
+  repository freebsd-base.git
+  branch \1/\2/\3_350\4
+  max revision 274956
+end match
+match /vendor/llvm/
+  min revision 274957
+  max revision 274957
+end match
+match /vendor/llvm/llvm-trunk-r256633/
+  max revision 292938
 end match
 match /(vendor)/(clang|llvm)/(clang|llvm)-([0-9]+)/
   repository freebsd-base.git
@@ -228,6 +248,25 @@ match /(vendor)/(llvm|clang|compiler-rt|libc..|lld|lldb)/([^/]+-trunk)-r291012/d
   min revision 311328
 end match
 
+# A bunch of misspellings, later properly tagged
+match /(vendor)/(llvm|clang|compiler-rt|libc..|llvm-libunwind|lld|lldb|llvm-openmp)/(llvm|clang|compiler-rt|libc..|libunwind|lld|lldb|openmp)-release80-r363030/
+  max revision 348961
+end match
+match /vendor/lldb/lldb-trunk-r366426
+  min revision 351291
+  max revision 351490
+end match
+
+# bogus cvs2svn vendor tag that dropped most of the files upon copy.
+match /vendor/tzdata/
+  min revision 86220
+  max revision 86220
+end match
+# deleting a branch is futile
+match /vendor/patch/
+  min revision 128777
+  max revision 128777
+end match
 # wrong tag and backout revs
 match /vendor/bind9/
   min revision 180464
@@ -270,7 +309,7 @@ match /(vendor)/(tzdata)/(tzdata2009m)/(dist)/
   repository freebsd-base.git
   branch \1/\2/tzdata2009n
 end match
-match /(vendor)/(tzdata)/(tzdata2009m)/(dist)/
+match /vendor/tzdata/tzdata2009.
   min revision 197596
   max revision 197596
 end match
@@ -283,6 +322,44 @@ end match
 match /(vendor)/(testfloat)/
   min revision 206920
   max revision 206921
+end match
+# wrong tag, it was 0.6.10
+match /vendor/wpa/
+  min revision 209140
+  max revision 209140
+end match
+match /vendor/wpa/
+  min revision 209142
+  max revision 209142
+end match
+# a prefix deletion that we're handling already
+match /vendor-cddl/
+  min revision 209768
+  max revision 209768
+end match
+# abandoned import
+match /vendor/dtracetoolkit/
+  min revision 211551
+  max revision 211556
+end match
+# wrong tag name and later rename
+match /(vendor)/(ee)/ee-(1.5.1)/
+  repository freebsd-base.git
+  branch \1/\2/\3
+  max revision 213563
+end match
+match /vendor/ee/
+  min revision 213564
+  max revision 213564
+end match
+# partial tag, later overwritten
+match /vendor/wpa/0.7.3
+  max revision 214505
+end match
+# import that was later re-done
+match /vendor/tnftp/
+  min revision 210486
+  max revision 223299
 end match
 # libpcap snafu
 match /vendor/libpcap/
@@ -305,10 +382,22 @@ match /vendor/byacc/byacc-20120115/
   min revision 234949
   max revision 234949
 end match
+# bad tags
+match /vendor/NetBSD/bmake/20120831
+  max revision 240331
+end match
+# wrong tag, later renamed
+match /(vendor)-sys/(acpica)/(20140414)/
+  max revision 260662
+  branch \1/\2/20140114
+end match
+match /vendor-sys/acpica/
+  min revision 260663
+  max revision 260663
+end match
 # yours truly messes up mdocml tags
-match /vendor/mdocml/
-  min revision 261332
-  max revision 261333
+match /vendor/mdocml/1.12.3
+  max revision 261334
 end match
 # r262569 committed one level short
 match /(vendor)/(device-tree)/
@@ -317,12 +406,60 @@ match /(vendor)/(device-tree)/
   repository freebsd-base.git
   branch \1/\2/dist
 end match
+# tag deletion makes no sense
+match /vendor/ncurses/
+  min revision 262636
+  max revision 262636
+end match
+match /vendor/tzdata/tzdata2013e
+  min revision 267453
+  max revision 267453
+end match
 # and r270867 tagged one level too deep
 match /(vendor)/(device-tree)/(ianc-b78b6b80)/dist/
   min revision 270867
   max revision 270867
   repository freebsd-base.git
   branch \1/\2/\3
+end match
+# wrong tag name
+match /vendor/elftoolchain/r3163
+  min revision 278899
+  max revision 278901
+end match
+# got retried later on
+match /vendor/ficl
+  min revision 282768
+  max revision 282800
+end match
+# wrong name
+match /(vendor)/(NetBSD)/(libedit)/2016-01-16/
+  min revision 295361
+  max revision 295361
+  repository freebsd-base.git
+  branch \1/\2/\3/2016-01-30
+end match
+match /vendor/NetBSD/libedit/
+  min revision 296551
+  max revision 296551
+end match
+# deleting a tag is futile
+match /vendor/NetBSD/libedit/
+  min revision 296500
+  max revision 296500
+end match
+# wrong tags
+match /vendor/ldns-host/hg-(20160501|20160610).*
+  min revision 301756
+  max revision 301827
+end match
+match /vendor/llvm/llvm-release_3939-r287912/
+  min revision 309153
+  max revision 309153
+end match
+# botched import and tag
+match /vendor/acpica/20180105/
+  max revision 327601
 end match
 # wrongly done import, later deleted
 match /vendor/zstd/
@@ -333,6 +470,25 @@ end match
 match /(vendor)/(byacc|lua)/
   min revision 326345
   max revision 326351
+end match
+# tag, change of SVN metadata that doesn't concern git, tag deletion
+match /vendor/llvm/
+  min revision 336810
+  max revision 336812
+end match
+# wrong tag, later deleted.
+match /vendor/file/5.34/
+  max revision 336861
+end match
+# was later re-done
+match /vendor/tzdb/
+  min revision 337683
+  max revision 337693
+end match
+# wrong tag
+match /vendor/libarchive/
+  min revision 338908
+  max revision 338909
 end match
 # Skip empty vendor dir creation and branches
 match /vendor/llvm-project
@@ -347,18 +503,50 @@ match /vendor/llvm-project/
 min revision 355939
 max revision 355939
 end match
+# Bogus re-tag, resulting in identical tree objects anyway.
+match /vendor/llvm-project/
+min revision 355986
+max revision 355987
+end match
 # TODO: record the following copies as merges: 355944, 355945, 355947
+# premature tag
+match /vendor/llvm-project/llvmorg-10.0.0-0-gd32170dbd5b
+min revision 359337
+max revision 359576
+end match
+# botched tag
+match /vendor-sys/
+  min revision 327600
+  max revision 327601
+end match
 
+# skip vendor deletions, we want the named branches so that the merge points
+# have a "name" attached to them.
+match /vendor/
+  min revision 358837
+  max revision 358847
+end match
+
+# something was missing ...
+match /(vendor)/(1.14)/
+  repository freebsd-base.git
+  branch \1/bsnmp/\2
+  max revision 359491
+end match
+# but skip the rename
+match /vendor/
+  min revision 359492
+  max revision 359492
+end match
+
+# never merged, later deleted.
+match /vendor/fsx/
+end match
 
 # `unknown` vendor is one level short
 match /(vendor)/(unknown)/
   repository freebsd-base.git
   branch \1/\2
-end match
-# something was missing ...
-match /(vendor)/(1.14)/
-  repository freebsd-base.git
-  branch \1/bsnmp/\2
 end match
 
 # r282579 renamed a whole bunch of vendor branches and results in backup tags.
@@ -382,21 +570,44 @@ end match
 ### max revision 282579
 ### action recurse
 ### end match
-match /vendor/.*
+match /vendor/
 min revision 282579
 max revision 282579
 end match
-match /vendor/.*
+match /vendor/
 min revision 282582
 max revision 282582
 end match
-match /vendor/.*
+match /vendor/
 min revision 282584
 max revision 282584
 end match
-match /vendor/.*
+match /vendor/
 min revision 282585
 max revision 282585
+end match
+# Re-tag a bunch of erronous tags
+match /(vendor)/(NetBSD)/(libc-vis)/(20121412)(a?)/
+  min revision 244230
+  max revision 248298
+  repository freebsd-base.git
+  branch \1/\2/\3/20121214\5
+end match
+match /(vendor)/(NetBSD)/(libc-vis)/(20132102)/
+  min revision 244230
+  max revision 248298
+  repository freebsd-base.git
+  branch \1/\2/\3/20130221
+end match
+match /(vendor)/(NetBSD)/(u?n?vis)/(20130221)/
+  min revision 244230
+  max revision 248298
+  repository freebsd-base.git
+  branch \1/\2/\3/20130221
+end match
+match /vendor/NetBSD/
+  min revision 248299
+  max revision 248301
 end match
 match /(vendor)/(awk|bc|bison|cpio|cvs|patch|tar|texinfo)/([^/]+)/
   repository freebsd-base.git
@@ -427,6 +638,39 @@ end match
 match /(vendor)/(Juniper|google)/([^/]+)/([^/]+)/
   repository freebsd-base.git
   branch \1/\2/\3/\4
+end match
+
+# test directory that should've gone under dist/test
+match /vendor/(libz|zlib)/test/
+end match
+match /vendor/(libz|zlib)/
+  min revision 311264
+  max revision 311264
+end match
+match /vendor/(libz|zlib)/
+  min revision 311276
+  max revision 311276
+end match
+# zlib, libz, what's the difference?
+match /(vendor)/(libz)/([^/]+)/
+  repository freebsd-base.git
+  branch \1/zlib/\3
+end match
+
+# fix wrong import, skip the move afterwards
+match /(vendor)/(edk2)/
+  repository freebsd-base.git
+  branch \1/\2/dist
+  max revision 314879
+end match
+match /vendor/edk2/
+  min revision 314880
+  max revision 314880
+end match
+
+match /(vendor)/(mandoc|mdocml)/([^/]+)/
+  repository freebsd-base.git
+  branch \1/mandoc/\3
 end match
 
 match /(vendor|vendor-sys|vendor-cddl|vendor-crypto)/([^/]+)/([^/]+)/
