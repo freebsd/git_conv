@@ -13,12 +13,38 @@ end match
 match /doc-branch-policy.txt
 end match
 
-# Used during cvs2svn conversion
-match /(branches)/([A-Z0-9_]+)/
+match /branches/RELENG_([0-9])_([0-9])_([0-9])/
   repository freebsd-doc.git
-  branch \1/\2
+  branch releng/\1.\2.\3
+  max revision 38820
+end match
+match /branches/RELENG_([0-9])_([0-9])/
+  repository freebsd-doc.git
+  branch releng/\1.\2
+  max revision 38820
+end match
+# Ignore deletion
+match /branches/
+  min revision 38821
+  max revision 38821
 end match
 
+# tags, not releases
+match /release/([A-Z][^/]+)/
+  repository freebsd-doc.git
+  branch refs/tags/\1
+  annotated true
+end match
+
+# deleted and re-created later
+match /release/10.0.0/
+  min revision 43086
+  max revision 43249
+end match
+
+# Caveat: 9.1.0 was not a tag, but a branch with 1 further commit. Ditto for
+# 8.4.0 with 3 commits and seemingly all following releases where the tag was
+# advanced :/
 match /(release)/([^/]+)/
   repository freebsd-doc.git
   branch refs/tags/\1/\2
@@ -35,6 +61,9 @@ match /(projects)/([^/]+)/
   branch \1/\2
 end match
 
+# Note that this won't get recorded as a full copy from head, so basically the
+# git branch springs into existence w/o a parent commit.
+# TODO: patch this up? should we? would need a hack in the converter.
 match /(translations)/
   repository freebsd-doc.git
   branch \1
