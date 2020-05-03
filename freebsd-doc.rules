@@ -19,9 +19,10 @@ match /(branches)/([A-Z0-9_]+)/
   branch \1/\2
 end match
 
-match /(stable|releng|release)/([A-Z0-9.]+)/
+match /(release)/([^/]+)/
   repository freebsd-doc.git
-  branch \1/\2
+  branch refs/tags/\1/\2
+  annotated true
 end match
 
 match /(www)/
@@ -29,7 +30,7 @@ match /(www)/
   branch \1
 end match
 
-match /(projects|release)/([^/]+)/
+match /(projects)/([^/]+)/
   repository freebsd-doc.git
   branch \1/\2
 end match
@@ -43,7 +44,3 @@ match /(user)/([^/]+)/([^/]+)/
   repository freebsd-doc.git
   branch \1/\2/\3
 end match
-
-# ignore the rest, XXX temp only
-#match .*
-#end match
