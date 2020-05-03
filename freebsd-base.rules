@@ -67,14 +67,13 @@ match /(cvs2svn)/([^/]+)/([^/]+)/
   branch \1/\2/\3
 end match
 
-match /(stable|releng)/([0-9.]+)/
-  repository freebsd-base.git
-  branch \1/\2
+# typo
+match /release/2.1.6.1/
 end match
-
 match /(release)/([0-9.]+)/
   repository freebsd-base.git
   branch refs/tags/\1/\2
+  annotated true
 end match
 
 match /(releng)/ALPHA_2_0/
@@ -85,6 +84,11 @@ end match
 match /(releng)/BETA_2_0/
   repository freebsd-base.git
   branch \1/2.0b
+end match
+
+match /(stable|releng)/([0-9.]+)/
+  repository freebsd-base.git
+  branch \1/\2
 end match
 
 # special nesting for these
