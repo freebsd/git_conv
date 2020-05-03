@@ -11,16 +11,236 @@ end match
 match /svnadmin/.*
 end match
 
-match /(branches|tags)/([A-Z0-9_]+)/
+# FIXME: should CVSROOT be excluded?
+
+# FIXME: this whole scheme needs to be blessed by portmgr
+
+# These "tags" just have Mk/ inside of them, what's the point?
+# See e.g. r316 which copied head, but the deleted everything. Should this be
+# patched up? We do it by ignoring all file changes under that root, only the
+# full copy-from will be recorded.
+match /tags/(ALPHA_2_0|BETA_2_0|RELENG[^/]+|RELEASE_2_0)/.+
+  # Skipping the file deletions under these paths, the paths
+  # themselves will still be copied
+  max revision 442
+end match
+match /tags/ALPHA_2_0/
   repository freebsd-ports.git
-  branch \1/\2
+  branch releng/2.0a
+end match
+match /tags/BETA_2_0/
+  repository freebsd-ports.git
+  branch releng/2.0b
+end match
+match /tags/RELENG_2_0_5/
+  repository freebsd-ports.git
+  branch releng/2.0.5
+end match
+match /tags/RELENG_2_0_5_ALPHA/
+  repository freebsd-ports.git
+  branch refs/tags/release/2.0.5a
+  annotated true
+end match
+# Identical with release
+match /tags/RELENG_(2_0_5|2_1_0)_BP/
+end match
+match /tags/RELENG_2_0_5_RELEASE/
+  repository freebsd-ports.git
+  branch refs/tags/release/2.0.5
+  annotated true
+end match
+match /branches/RELENG_2_1_0/.+
+  max revision 1826
+end match
+match /branches/RELENG_2_1_0/
+  repository freebsd-ports.git
+  branch releng/2.1.0
+end match
+match /tags/RELENG_2_1_0_RELEASE/
+  repository freebsd-ports.git
+  branch refs/tags/release/2.1.0
+  annotated true
+end match
+match /tags/RELENG_2_1_5_RELEASE/
+  repository freebsd-ports.git
+  branch refs/tags/release/2.1.5
+  annotated true
+end match
+match /tags/RELENG_2_2_BP/
+end match
+match /branches/RELENG_2_2/.+
+  max revision 4234
+end match
+match /branches/RELENG_2_2/
+  repository freebsd-ports.git
+  branch releng/2.2
+end match
+# typo
+match /tags/RELENG_2_1_6_1_RELEASE/
+end match
+match /tags/RELENG_2_1_(6|7)_RELEASE/
+  repository freebsd-ports.git
+  branch refs/tags/release/2.1.\1
+  annotated true
+end match
+match /tags/RELENG_2_2_([0-2])_RELEASE/
+  repository freebsd-ports.git
+  branch refs/tags/release/2.2.\1
+  annotated true
+end match
+# makes no sense, r7590 branches from r5975, also, release 2.2.1 was shipped in
+# April and the SVN revision is from August. Likewise for r7591
+match /tags/
+  min revision 7590
+  max revision 7591
+end match
+# no further commits went into these
+match /tags/RELENG_2_2_[5678]_RELEASE/
+end match
+match /tags/RELEASE_2_2_5/.+
+  max revision 8319
+end match
+match /tags/RELEASE_2_2_6/.+
+  max revision 10309
+end match
+match /tags/RELEASE_2_2_7/.+
+  max revision 12062
+end match
+match /tags/RELEASE_2_2_8/.+
+  max revision 14965
+end match
+match /tags/RELEASE_2_2_([5678])/
+  repository freebsd-ports.git
+  branch refs/tags/release/2.2.\1
+  annotated true
+end match
+
+# no further commits went into these
+match /tags/RELENG_3(_0_0_RELEASE|_BP)?/
+end match
+# These no longer delete Mk/ during the branch operation, so they have a chance
+# of actually being correct in SVN. They still delete a whole bunch of paths
+# when branching from head though.
+#match /tags/RELEASE_3_0_0/.+
+#  max revision 14062
+#end match
+#match /tags/RELEASE_3_1_0/.+
+#  max revision 16727
+#end match
+#match /tags/RELEASE_3_2_0/.+
+#  max revision 18828
+#end match
+#match /tags/RELEASE_3_3_0/.+
+#  max revision 21674
+#end match
+#match /tags/RELEASE_3_4_0/.+
+#  max revision 23788
+#end match
+#match /tags/RELEASE_3_5_0/.+
+#  max revision 29674
+#end match
+match /tags/RELEASE_3_([0-5])_0/
+  repository freebsd-ports.git
+  branch refs/tags/release/3.\1
+  annotated true
+end match
+match /tags/RELEASE_4_([0-9]+)_0/
+  repository freebsd-ports.git
+  branch refs/tags/release/4.\1
+  annotated true
+end match
+match /tags/RELEASE_4_([16])_([12])/
+  repository freebsd-ports.git
+  branch refs/tags/release/4.\1.\2
+  annotated true
+end match
+
+# Skip developer preview
+match /tags/RELEASE_5_0_DP1/
+end match
+match /tags/RELEASE_([0-9]+)_EOL/
+  repository freebsd-ports.git
+  branch refs/tags/\1-eol  # FIXME?!
+  annotated true
+end match
+match /tags/PKG_INSTALL_EOL/
+  repository freebsd-ports.git
+  branch refs/tags/pkg-install-eol  # FIXME?!
+  annotated true
+end match
+
+match /tags/RELEASE_([567])_([0-9])_0/
+  repository freebsd-ports.git
+  branch refs/tags/release/\1.\2
+  annotated true
+end match
+match /tags/RELEASE_5_([2])_1/
+  repository freebsd-ports.git
+  branch refs/tags/release/5.\1.1
+  annotated true
+end match
+
+match /tags/PRE_XORG_7/
+  repository freebsd-ports.git
+  branch refs/tags/pre-xorg-7
+  annotated true
+end match
+
+# got re-tagged
+match /tags/RELEASE_9_3_0/
+  min revision 358633
+  max revision 359466
+end match
+match /tags/RELEASE_([89])_([0-3])_0/
+  repository freebsd-ports.git
+  branch refs/tags/release/\1.\2
+  annotated true
+end match
+
+match /branches/RELENG_9_([12])_0/
+  repository freebsd-ports.git
+  branch releng/9.\1
+end match
+
+# ended up in the wrong place
+match /
+  min revision 315832
+  max revision 315832
+end match
+match /tags/RELEASE_8_4_0/
+  min revision 316236
+  max revision 316236
+  repository freebsd-ports.git
+  branch refs/tags/release/8.4
+  annotated true
+end match
+match /(tags|branches)/RELEASE_8_4_0/
+  repository freebsd-ports.git
+  branch releng/8.4
+end match
+
+# tag slipped
+match /tags/RELEASE_11_0_0/
+  min revision 421272
+  max revision 421515
+end match
+
+match /tags/RELEASE_([012]+)_([0-4])_0/
+  repository freebsd-ports.git
+  branch refs/tags/release/\1.\2
+  annotated true
+end match
+
+# never used
+match /branches/pkg_install/
+end match
+
+match /branches/([0-9Q]+)/
+  repository freebsd-ports.git
+  branch \1
 end match
 
 match /(projects)/([^/]+)/
   repository freebsd-ports.git
   branch \1/\2
 end match
-
-# ignore the rest, XXX temp only
-#match .*
-#end match
