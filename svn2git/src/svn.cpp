@@ -627,6 +627,11 @@ bool SvnRevision::maybeParseSimpleMergeinfo(const int revnum, struct mi* mi) {
       }
     }
 
+    // NOTE: need to use a fully anchored match, otherwise e.g. r238926 gets
+    // handled wrong, as it uses the first mergeinfo to deduce the merge-from,
+    // which is incorrect and off-by-one! r240415 also merges up to 240357 but
+    // ends up with 240326 instead. This reduces the "handled" mergeinfo from
+    // 2000 out of 3000 down to 1125. The rest should be hard-coded.
     static QRegularExpression re = QRegularExpression(
            R"(^Index: ([-_.\d\w/]+)
 =============*
@@ -641,7 +646,7 @@ _____________*
 )*(Modified|Added): svn:mergeinfo
 ## \-0,0 \+0,1 ##
    Merged (?<from>[-_.\d\w/]+):r([0-9]*[-,])*(?<rev>[0-9]*)
-*$)" , QRegularExpression::MultilineOption);
+*$)");
     if (!re.isValid()) {
         qWarning() << re.errorString();
         exit(1);
