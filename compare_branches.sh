@@ -1,6 +1,11 @@
 #!/bin/sh
 # vi:set sw=4 et:
 
+# Checks out both the SVN tree and git tree of matching tags and branches and
+# diff(1)s them. Errors out if a diff has been found. This can be used to check
+# whether the latest-revision content of SVN vs git actually matches.
+# So far, it has never found a discrepancy.
+
 type=$1; shift
 
 test -z "$type" && exit 1

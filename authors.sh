@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# Script to grab an up-to-date authormap from freefall, to be used in the
+# converter so that the SVN author "foo" can be changed to git's "Foo Bar
+# <foo@FreeBSD.org>" format.
+
 (
 # Needed as some authors/logins are missing on freefall
 # alm, asami, ats, conklin, cvs2svn, dick, dillon, dyson, erich,
