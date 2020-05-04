@@ -118,12 +118,12 @@ end match
 # no further commits went into these
 match /tags/RELENG_3(_0_0_RELEASE|_BP)?/
 end match
+match /tags/RELEASE_3_0_0/.+
+  max revision 14062
+end match
 # These no longer delete Mk/ during the branch operation, so they have a chance
 # of actually being correct in SVN. They still delete a whole bunch of paths
 # when branching from head though.
-#match /tags/RELEASE_3_0_0/.+
-#  max revision 14062
-#end match
 #match /tags/RELEASE_3_1_0/.+
 #  max revision 16727
 #end match
@@ -141,12 +141,12 @@ end match
 #end match
 match /tags/RELEASE_3_([0-5])_0/
   repository freebsd-ports.git
-  branch refs/tags/release/3.\1
+  branch refs/tags/release/3.\1.0
   annotated true
 end match
 match /tags/RELEASE_4_([0-9]+)_0/
   repository freebsd-ports.git
-  branch refs/tags/release/4.\1
+  branch refs/tags/release/4.\1.0
   annotated true
 end match
 match /tags/RELEASE_4_([16])_([12])/
@@ -171,7 +171,7 @@ end match
 
 match /tags/RELEASE_([567])_([0-9])_0/
   repository freebsd-ports.git
-  branch refs/tags/release/\1.\2
+  branch refs/tags/release/\1.\2.0
   annotated true
 end match
 match /tags/RELEASE_5_([2])_1/
@@ -193,13 +193,13 @@ match /tags/RELEASE_9_3_0/
 end match
 match /tags/RELEASE_([89])_([0-3])_0/
   repository freebsd-ports.git
-  branch refs/tags/release/\1.\2
+  branch refs/tags/release/\1.\2.0
   annotated true
 end match
 
 match /branches/RELENG_9_([12])_0/
   repository freebsd-ports.git
-  branch releng/9.\1
+  branch releng/9.\1.0
 end match
 
 # ended up in the wrong place
@@ -211,12 +211,12 @@ match /tags/RELEASE_8_4_0/
   min revision 316236
   max revision 316236
   repository freebsd-ports.git
-  branch refs/tags/release/8.4
+  branch refs/tags/release/8.4.0
   annotated true
 end match
 match /(tags|branches)/RELEASE_8_4_0/
   repository freebsd-ports.git
-  branch releng/8.4
+  branch releng/8.4.0
 end match
 
 # tag slipped
@@ -227,7 +227,7 @@ end match
 
 match /tags/RELEASE_([012]+)_([0-4])_0/
   repository freebsd-ports.git
-  branch refs/tags/release/\1.\2
+  branch refs/tags/release/\1.\2.0
   annotated true
 end match
 

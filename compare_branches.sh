@@ -11,7 +11,7 @@ S=$PWD/scratch
 mkdir -p scratch
 
 # cleanup previous runs
-oldmd0=`mount -ptufs | awk -vS=$S '$2 = S {print $1}'`
+oldmd0=`mount -ptufs | awk -vS=$S '$2 = S {print $1; exit}'`
 case "$oldmd0" in
     /dev/md*)
         sudo umount $S
@@ -37,6 +37,7 @@ diff_it() {
     if [ -r "$sentinel" ]; then
         return
     fi
+    set -e
     cd $S && rm -rf s g
     svn export --ignore-keywords -q $SVN/$from s &
     GIT_DIR=$GIT git archive --format=tar --prefix=g/ $to | tar xf -
@@ -44,22 +45,35 @@ diff_it() {
     diff -ruN s g || { echo "diffs found in SVN $from vs git $to, bailing out" >&2; exit 1; }
     touch "$sentinel"
     cd ..
+    set +e
 }
 
-#diff_it head master
+diff_it head master
 
 case "$type" in
     base)
-        for u in `svn ls $SVN/user`; do
-            for b in `svn ls $SVN/user/$u`; do
-                diff_it user/$u$b
-            done
-        done
-        for t in projects release stable releng; do
-            for b in `svn ls $SVN/$t`; do
+        for t in release stable releng; do
+            for b in `svn ls $SVN/$t | grep -v A | fgrep -v 2.1.6.1`; do
                 diff_it $t/$b
             done
         done
+        for t in vendor; do
+            for b in `svn ls $SVN/$t | egrep "tcsh"`; do
+                for s in `svn ls $SVN/$t/$b`; do
+                    diff_it $t/$b$s
+                done
+            done
+        done
+        #for t in projects; do
+        #    for b in `svn ls $SVN/$t`; do
+        #        diff_it $t/$b
+        #    done
+        #done
+        #for u in `svn ls $SVN/user`; do
+        #    for b in `svn ls $SVN/user/$u`; do
+        #        diff_it user/$u$b
+        #    done
+        #done
         ;;
     doc)
         for u in `svn ls $SVN/user`; do
@@ -77,16 +91,12 @@ case "$type" in
         done
         ;;
     ports)
-        diff_it tags/RELEASE_4_1_0 release/4.1
-        diff_it tags/RELEASE_4_2_0 release/4.2
-        diff_it tags/RELEASE_5_0_0 release/5.0
-        diff_it tags/RELEASE_6_0_0 release/6.0
-        diff_it tags/RELEASE_7_0_0 release/7.0
-        diff_it tags/RELEASE_8_4_0 release/8.4
-        diff_it branches/RELEASE_8_4_0/ releng/8.4
-        diff_it tags/RELEASE_9_0_0 release/9.0
-        diff_it tags/RELEASE_10_0_0 release/10.0
-        diff_it tags/RELEASE_11_0_0 release/11.0
+        # 2.x and 3.0.0 are broken in SVN, skip EOL tags as well.
+        for t in `svn ls $SVN/tags | egrep '^RELEASE_([4-9]|1[0-9]|3_[1-9])_[0-9_]+/'`; do
+            diff_it tags/$t `echo $t|sed 's,RELEASE_,release/,; s,_,.,g; s,/$,,'`
+        done
+        diff_it branches/RELEASE_8_4_0/ releng/8.4.0
+        diff_it branches/RELENG_9_2_0 releng/9.2.0
         #for b in `svn ls $SVN/branches | grep Q`; do
         #    diff_it branches/$b $b
         #done
