@@ -829,16 +829,51 @@ match /vendor/illumos/
   max revision 238447
 end match
 
-match /vendor-sys/(illumos)/(dist)/.+
+# Copy the kernel bits over carefully, w/o clobbering stuff in the existing
+# common/ subdir.
+match /vendor-sys/(illumos)/(dist)/(OPENSOLARIS.LICENSE|common/[^/]+/|uts/)
   min revision 238570
   max revision 238570
   repository freebsd-base.git
   branch vendor/\1/\2
+  prefix \3
 end match
 match /vendor-sys/illumos/dist/
   min revision 238570
   max revision 238570
   action recurse
+end match
+
+# Skip deletion and make the following re-copy surgical.
+match /vendor/illumos/dist/
+  min revision 238576
+  max revision 238576
+end match
+# WARNING, this leaves an extra man/ subdir that was there previously, but not
+# in the copy source :/ We could probably delete it with r238576 by recursing
+# into the man/ dir only. The history would look weird though.
+# The missing manpages were later brought back in r238580 and r238581, so this
+# will sort itself out. The tag 20100818 is not quite right though, ¯\_(ツ)_/¯
+match /vendor/(illumos)/(dist)/(OPENSOLARIS.LICENSE|common/[^/]+/|cmd/|head/|lib/|tools/)
+  min revision 238577
+  max revision 238577
+  repository freebsd-base.git
+  branch vendor/\1/\2
+  prefix \3
+end match
+match /vendor/illumos/dist/
+  min revision 238577
+  max revision 238577
+  action recurse
+end match
+# tag will be created in r238585 instead
+match /vendor-sys/illumos/20120614/
+end match
+# file got added twice, deleted once. Skip 2 revisions
+# note that r267931 will fall through, as it has a different /vendor/ prefix
+match /vendor-sys/illumos/dist/
+  min revision 267930
+  max revision 267932
 end match
 
 match /vendor(?:-sys)?/(illumos)/([^/]+)/
