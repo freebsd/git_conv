@@ -32,10 +32,21 @@ sudo mount -o async,noatime /dev/$md0 $S
 sudo chown $USER $S
 
 diff_it() {
-    local from to
-    from=${1%%/}; shift
-    to=${1:-$from}
-    to=${to%%/}
+    local from to r
+    set -e
+    case $1 in
+        *:*)
+            from=${1%:*}@${1#*:}
+            r="-r ${1#*:}"
+            to=$2
+            ;;
+        *)
+            from=${1%%/}
+            r=
+            to=${2:-$from}
+            to=${to%%/}
+            ;;
+    esac
 
     sentinel="$GIT/compared_to_`echo -n $to | tr / _`"
 
