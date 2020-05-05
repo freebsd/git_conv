@@ -70,6 +70,19 @@ end match
 # typo
 match /release/2.1.6.1/
 end match
+# deleted attempts
+match /release/8.4.0/
+  min revision 250625
+  max revision 250629
+end match
+match /release/9.3.0/
+  min revision 268520
+  max revision 268522
+end match
+match /release/10.0.0/
+  min revision 260665
+  max revision 260788
+end match
 match /(release)/([0-9.]+)/
   repository freebsd-base.git
   branch refs/tags/\1/\2
@@ -677,11 +690,170 @@ match /(vendor)/(mandoc|mdocml)/([^/]+)/
   branch \1/mandoc/\3
 end match
 
-match /(vendor|vendor-sys|vendor-cddl|vendor-crypto)/([^/]+)/([^/]+)/
+# TODO(uqs): figure this out somehow
+# Pull up a chair, let me tell you a story. There was the opensolaris vendor,
+# first imported under vendor-cddl and everything was great. r194442 then split
+# this between vendor and vendor-sys for the userland and kernel parts
+# respectively. Both were later copied over to illumos, as the project was
+# renamed. We here merge the userland/kernel bits together, as the git merges
+# are to the full branch anyway and don't distinguish between merges to / or
+# /sys in the src tree. We need to skip the file deletions of accidental cross
+# commits though.
+# Additionally there is a backup tag, because:
+# - r178476: import into vendor-cddl/opensolaris
+# - r194442: split into vendor/opensolaris and vendor-sys/opensolaris
+# - r237833: vendor/opensolaris was copied to vendor/illumos
+# - some modifications go in
+# - r237860: vendor/illumos merges to master
+# - ...
+# - r238422: vendor/illumos merges to master
+# - ...
+# - r238446: vendor-sys/opensolaris/dist is copied to vendor-sys/illumos/dist. No one cares, as this was never used in any merge to master
+# - r238447: some "kernel" files are removed from vendor/illumos
+# - r238569: deletes vendor-sys/illumos/dist again.
+# - r238570: vendor-sys/opensolaris is again copied to vendor-sys/illumos
+# - r238457: vendor/illumos merges to master
+# - r238558: vendor/illumos merges to master
+# - r238576: vendor/illumos is deleted (!)
+# - r238577: vendor/opensolaris is again copied to vendor/illumos
+# - ...
+# - r238926: merges from vendor/illumos *and* vendor-sys/illumos to master
+
+# First try
+# This approach doesn't work, there are 2 branches in SVN and having 1 in git
+# means the former branch gets "reset". The contents will then also not be merged.
+# It might be possible to have 1 unified branch though, skipping all branch
+# copies (but also the tags, potentially)
+#X#match /vendor.*/
+#X#  min revision 194443
+#X#  max revision 194443
+#X#end match
+#X#match /vendor.*/
+#X#  min revision 238446
+#X#  max revision 238447
+#X#end match
+#X## XXX TODO: skipping the deletion here, but the following rev will still reset
+#X## the git branch, resulting in a backup tag and not recording the "parent"
+#X## properly. Probably needs a serious hack into the git fast-import stream.
+#X#match /vendor.*/
+#X#  min revision 238569
+#X#  max revision 238569
+#X#end match
+#X#match /(vendor|vendor-cddl|vendor-sys)/(illumos|opensolaris)/([^/]+)/
+#X#  repository freebsd-base.git
+#X#  # Note that this merges e.g. vendor/illumos and vendor-sys/illumos, which
+#X#  # share the same file common/avl/avl.c but one has a newer version than the
+#X#  # other. This should be fine. Ditto for opensolaris.
+#X#  branch vendor/\2/\3
+#X#end match
+
+# Second try, creating 2 git branches from the 1 SVN branch (which was later
+# chopped in two). Also doesn't work, as the tag to create 20080410a is done on
+# the top-level SVN dir, and that then doesn't exist in git.
+#
+# The big move from vendor-cddl into vendor & vendor-sys
+#X#match /vendor(-sys)?/
+#X#  min revision 194442
+#X#  max revision 194442
+#X#end match
+#X#match /vendor-cddl/(opensolaris)/(20080410a)/
+#X#  repository freebsd-base.git
+#X#  branch vendor-cddl/\2/\3
+#X#end match
+#X#match /vendor-cddl/(opensolaris)/([^/]+)/sys/cddl/contrib/opensolaris/
+#X#  repository freebsd-base.git
+#X#  branch vendor-sys/\1/\2
+#X#  max revision 194441
+#X#end match
+#X#match /vendor-cddl/(opensolaris)/([^/]+)/cddl/contrib/opensolaris/
+#X#  repository freebsd-base.git
+#X#  branch vendor/\1/\2
+#X#  max revision 194441
+#X#end match
+
+# 3rd try, secret sauce is the recurse rule to make the branch copies work.
+# move/split into 2 branches
+match /vendor(-sys)?/opensolaris/
+  min revision 194442
+  max revision 194443
+end match
+# only changes svn props
+match /vendor(-sys)?/opensolaris/
+  min revision 194445
+  max revision 194445
+end match
+# now duplicate tag
+match /vendor(-sys)?/opensolaris/
+  min revision 194452
+  max revision 194452
+end match
+match /vendor-cddl/(opensolaris)/(20080410a?)/(sys/)?cddl/contrib/opensolaris/
   repository freebsd-base.git
-  # unify the different vendor-* prefixes
-  # Note that this merges e.g. vendor/illumos and vendor-sys/illumos, which
-  # share the same file common/avl/avl.c but one has a newer version than the
-  # other. This should be fine.
+  branch refs/tags/vendor/\1/\2
+end match
+match /vendor-cddl/(opensolaris)/(20080410a?)/
+  action recurse
+  min revision 178530
+  max revision 179195
+end match
+match /vendor-cddl/(opensolaris)/([^/]+)/(sys/)?cddl/contrib/opensolaris/
+  repository freebsd-base.git
+  branch vendor/\1/\2
+  max revision 194441
+end match
+match /vendor-sys/(opensolaris)/([^/]+)/
+  repository freebsd-base.git
+  branch vendor/\1/\2
+  min revision 194445
+end match
+# tagging 1 branch is enough, need to match the -sys branch, as that was copied
+# from r238567 whereas non-sys was copied from r238566
+match /vendor/opensolaris/20100818/
+  min revision 238568
+  max revision 238568
+end match
+match /vendor(?:-sys)/(opensolaris)/(20100802|20100818)/
+  repository freebsd-base.git
+  branch refs/tags/vendor/\1/\2
+end match
+
+# opensolaris got copied into illumos
+# ignore first branch that was deleted w/o any merges
+match /vendor-sys/illumos/
+  min revision 238446
+  max revision 238569
+end match
+# deletion of "kernel parts"
+match /vendor/illumos/
+  min revision 238447
+  max revision 238447
+end match
+
+match /vendor-sys/(illumos)/(dist)/.+
+  min revision 238570
+  max revision 238570
+  repository freebsd-base.git
+  branch vendor/\1/\2
+end match
+match /vendor-sys/illumos/dist/
+  min revision 238570
+  max revision 238570
+  action recurse
+end match
+
+match /vendor(?:-sys)?/(illumos)/([^/]+)/
+  repository freebsd-base.git
+  branch vendor/\1/\2
+end match
+
+# We have some conflicting vendor names here, e.g. illumos, opensolaris, ngatm, pf, ipfilter.
+match /(vendor-sys)/([^/]+)/([^/]+)/
+  repository freebsd-base.git
+  branch \1/\2/\3
+end match
+
+match /(vendor|vendor-sys|vendor-crypto)/([^/]+)/([^/]+)/
+  repository freebsd-base.git
+  # unify the prefix
   branch vendor/\2/\3
 end match
