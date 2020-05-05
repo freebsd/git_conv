@@ -1065,12 +1065,10 @@ int SvnRevision::exportDispatch(const char *key, const svn_fs_path_change2_t *ch
                                 apr_hash_t *changes, const QString &current,
                                 const Rules::Match &rule, const MatchRuleList &matchRules, apr_pool_t *pool)
 {
-    //if(ruledebug)
-    //  qDebug() << "rev" << revnum << qPrintable(current) << "matched rule:" << rule.lineNumber << "(" << rule.rx.pattern() << ")";
     switch (rule.action) {
     case Rules::Match::Ignore:
-        //if(ruledebug)
-        //    qDebug() << "  " << "ignoring.";
+        if(ruledebug)
+            qDebug() << "rev" << revnum << qPrintable(current) << "matched rule:" << rule.info() << "  " << "ignoring.";
         return EXIT_SUCCESS;
 
     case Rules::Match::Recurse:
