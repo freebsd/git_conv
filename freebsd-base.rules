@@ -432,7 +432,12 @@ match /vendor/tzdata/tzdata2013e
   min revision 267453
   max revision 267453
 end match
-# and r270867 tagged one level too deep
+# r270865 gets overwritten ...
+match /vendor/device-tree/ianc-b78b6b80
+  min revision 270865
+  max revision 270865
+end match
+# and r270867 copied dist into the existing dir, snip it off
 match /(vendor)/(device-tree)/(ianc-b78b6b80)/dist/
   min revision 270867
   max revision 270867
@@ -882,13 +887,13 @@ match /vendor(?:-sys)?/(illumos)/([^/]+)/
 end match
 
 # We have some conflicting vendor names here, e.g. illumos, opensolaris, ngatm, pf, ipfilter.
-match /(vendor-sys)/([^/]+)/([^/]+)/
+match /(vendor-sys)/(ipfilter|ngatm|pf)/([^/]+)/
   repository freebsd-base.git
   branch \1/\2/\3
 end match
 
 match /(vendor|vendor-sys|vendor-crypto)/([^/]+)/([^/]+)/
   repository freebsd-base.git
-  # unify the prefix
+  # unify the prefix for other branches
   branch vendor/\2/\3
 end match
