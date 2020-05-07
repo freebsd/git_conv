@@ -57,11 +57,6 @@ min revision 128778
 max revision 128778
 end match
 
-match /head/
-  repository freebsd-base.git
-  branch master
-end match
-
 match /(cvs2svn)/([^/]+)/([^/]+)/
   repository freebsd-base.git
   branch \1/\2/\3
@@ -273,7 +268,20 @@ match /vendor/lldb/lldb-trunk-r366426
   min revision 351291
   max revision 351490
 end match
+# missing a "trunk where others usually have it"
+match /(vendor)/(clang|compiler-rt|libc..|lld|lldb|llvm-libunwind|llvm-openmp|llvm)/(clang|compiler-rt|libc..|lld|lldb|libunwind|openmp|llvm)(-r375505)/
+  max revision 353955
+  repository freebsd-base.git
+  branch \1/\2/\3-trunk\4
+end match
 
+# this tag has an extra /tags
+match /(vendor)/(SGI)/tags/(v_2_17)/
+  min revision 46287
+  max revision 46287
+  repository freebsd-base.git
+  branch \1/\2/\3
+end match
 # bogus cvs2svn vendor tag that dropped most of the files upon copy.
 match /vendor/tzdata/
   min revision 86220
@@ -292,6 +300,11 @@ end match
 match /vendor/bind9/
   min revision 180467
   max revision 180467
+end match
+# don't flatten the tags, as it advances them and they no longer tag along the axis of `dist`
+match /vendor/tzdata/tzdata[0-9]*[a-z]/
+  min revision 181401
+  max revision 181401
 end match
 # Fix wrong tag, and ignore the fix-up move
 match /(vendor)/(tzdata)/(tzdata2000g)/(dist)/
@@ -329,6 +342,19 @@ end match
 match /vendor/tzdata/tzdata2009.
   min revision 197596
   max revision 197596
+end match
+# merges into a tag, advancing it, but it's an emtpy diff (empty dir got deleted)
+match /vendor/ntp/4.2.4p8/
+  min revision 200454
+  max revision 200454
+end match
+# tough one, the tag was moved to delete an unused file, we could blacklist the
+# file during the initial import, but that would make a later revision on dist
+# bogus. Instead, just skip the re-tagging. A newer point-release was tagged
+# just 8 days later anyway.
+match /vendor/libz/1.2.4/
+  min revision 205483
+  max revision 205483
 end match
 # committed w/o dist at first
 match /(vendor)/(testfloat)/
@@ -373,6 +399,13 @@ end match
 match /vendor/wpa/0.7.3
   max revision 214505
 end match
+# later tags drop the redundant prefix
+match /(vendor)/(dialog)/dialog-(1.1-[0-9]+)/
+  min revision 217339
+  max revision 241817
+  repository freebsd-base.git
+  branch \1/\2/\3
+end match
 # import that was later re-done
 match /vendor/tnftp/
   min revision 210486
@@ -403,9 +436,16 @@ end match
 match /vendor/NetBSD/bmake/20120831
   max revision 240331
 end match
+# has 1 bmake too many compared to all other tags
+match /(vendor)/(NetBSD)/(bmake)/bmake-(20121111)/
+  max revision 243106
+  repository freebsd-base.git
+  branch \1/\2/\3/\4
+end match
 # wrong tag, later renamed
 match /(vendor)-sys/(acpica)/(20140414)/
   max revision 260662
+  repository freebsd-base.git
   branch \1/\2/20140114
 end match
 match /vendor-sys/acpica/
@@ -532,7 +572,7 @@ max revision 355987
 end match
 # TODO: record the following copies as merges: 355944, 355945, 355947
 # premature tag
-match /vendor/llvm-project/llvmorg-10.0.0-0-gd32170dbd5b
+match /vendor/llvm-project/llvmorg-10.0.0-0-gd32170dbd5b/
 min revision 359337
 max revision 359576
 end match
@@ -896,4 +936,9 @@ match /(vendor|vendor-sys|vendor-crypto)/([^/]+)/([^/]+)/
   repository freebsd-base.git
   # unify the prefix for other branches
   branch vendor/\2/\3
+end match
+
+match /head/
+  repository freebsd-base.git
+  branch master
 end match
