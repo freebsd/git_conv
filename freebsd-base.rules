@@ -926,6 +926,90 @@ match /vendor(?:-sys)?/(illumos)/([^/]+)/
   branch vendor/\1/\2
 end match
 
+# Because we flatten the vendor + vendor-sys namespace, some tags need to be
+# skipped, as they will be tagged in a later revision.
+# The rules could be collapsed and written in a much more clever way, but KISS.
+match /vendor-sys/ngatm/0.9/
+  max revision 121328
+end match
+match /vendor-sys/ngatm/0.91/
+  max revision 122210
+end match
+match /vendor/ngatm/1.0/
+  max revision 131825
+end match
+match /vendor/ngatm/1.1/
+  max revision 133490
+end match
+match /vendor/ngatm/1.2/
+  max revision 146534
+end match
+match /vendor(?:-sys)?/(ngatm)/([^/]+)/
+  repository freebsd-base.git
+  branch vendor/\1/\2
+end match
+
+# This doesn't work for pf, as the tags for 4.2--4.4 were interleaved between
+# userland and kernel, so we can't easily make the tag represent the unified
+# view.
+#X#match /vendor-sys/pf/3.4/
+#X#  max revision 126260
+#X#end match
+#X#match /vendor-sys/pf/3.5/
+#X#  max revision 130612
+#X#end match
+#X#match /vendor-sys/pf/3.7/
+#X#  max revision 145835
+#X#end match
+#X#match /vendor-sys/pf/4.1/
+#X#  max revision 171166
+#X#end match
+#X#match /vendor/pf/4.2/
+#X#  max revision 185877
+#X#end match
+#X#match /vendor/pf/4.3/
+#X#  max revision 185881
+#X#end match
+#X#match /vendor/pf/4.4/
+#X#  max revision 185883
+#X#end match
+
+# IPFilter is weird, the kernel parts are committing to
+# vendor-sys/ipfilter/dist *and* vendor-sys/ipfilter/dist-old. The tags come
+# from the latter path. There was some CVS muckery afoot.
+# The kernel tags also use dashes and underscores for the tags, the userland part uses dots.
+# But wait, the dist-old is used in tagging for all tags up to and including
+# v3-4-16, but not for 3-4-20 onward, except for v3-4-29 it's being used again,
+# but that tag is duplicated 3-4-29 also.
+# On top of that, r253467 flattened everything, including the tags. We want to
+# skip this for git, so that the tags actually point to the revisions that were
+# merged in a `git log` output.
+# As with pf though, there is sadly 1 interleaved tag, where user/kernel for
+# 3.1.7 and 3.1.8 were not done in strict sequence, so a faithful merged
+# representation of those two would need post-processing.
+
+# Skip the flattening of non-dist tags, it's pointless and needlessly moves the
+# tags values around.
+match /vendor(-sys)?/ipfilter/[^d][^/]*/
+  min revision 253467
+  max revision 253467
+end match
+# ipfilter sys code was repocopied around, first it lived in
+# /sys/netinet/ then it was moved to sys/contrib/ipfilter/netinet/
+# r77859 deleted the leftover copies in /sys and r72006 was the last revision
+# to touch the files in both places. Luckily all the files.
+# This will make the files spring into existence under the new location with
+# r72006 and the old files will be deleted with r77859
+match /head/sys/contrib/ipfilter/netinet/
+  max revision 72005
+end match
+
+match /(vendor-sys)/(ipfilter)/(dist)(-old)?/
+  max revision 253468  # maybe use r102516 instead?
+  repository freebsd-base.git
+  branch \1/\2/\3
+end match
+
 # We have some conflicting vendor names here, e.g. illumos, opensolaris, ngatm, pf, ipfilter.
 match /(vendor-sys)/(ipfilter|ngatm|pf)/([^/]+)/
   repository freebsd-base.git
