@@ -237,7 +237,6 @@ match /(vendor)/(clang|llvm)/(clang|llvm)-([0-9]+)/
   repository freebsd-base.git
   branch \1/\2/\3-r\4
 end match
-
 # Imported was r288847 and the commit message says so, the tags then went into
 # existing subdirs. Did I ever tell you how SVN's notions of tags and branches
 # are just tree copies is the bane of my existence?
@@ -248,7 +247,6 @@ match /(vendor)/(llvm|clang|compiler-rt|libc..|lld|lldb)/([^/]+-release_39)-r288
   repository freebsd-base.git
   branch \1/\2/\3-r288847
 end match
-
 # I assume r291012 was a typo for r291015 and it got moved into the wrong place
 # (a directory that already exists, so that it ended up with a trailing dist/
 # directory). Same as happened quite a number of times.
@@ -259,7 +257,6 @@ match /(vendor)/(llvm|clang|compiler-rt|libc..|lld|lldb)/([^/]+-trunk)-r291012/d
   branch \1/\2/\3-r291015
   min revision 311328
 end match
-
 # A bunch of misspellings, later properly tagged
 match /(vendor)/(llvm|clang|compiler-rt|libc..|llvm-libunwind|lld|lldb|llvm-openmp)/(llvm|clang|compiler-rt|libc..|libunwind|lld|lldb|openmp)-release80-r363030/
   max revision 348961
@@ -273,6 +270,46 @@ match /(vendor)/(clang|compiler-rt|libc..|lld|lldb|llvm-libunwind|llvm-openmp|ll
   max revision 353955
   repository freebsd-base.git
   branch \1/\2/\3-trunk\4
+end match
+# Skip empty vendor dir creation and branches
+match /vendor/llvm-project
+  min revision 355814
+  max revision 355814
+end match
+match /vendor/llvm-project/
+  min revision 355815
+  max revision 355815
+end match
+match /vendor/llvm-project/
+  min revision 355939
+  max revision 355939
+end match
+# Bogus re-tag, resulting in identical tree objects anyway.
+match /vendor/llvm-project/
+  min revision 355986
+  max revision 355987
+end match
+# TODO: record the following copies as merges: 355944, 355945, 355947
+# premature tag
+match /vendor/llvm-project/llvmorg-10.0.0-0-gd32170dbd5b/
+  min revision 359337
+  max revision 359576
+end match
+
+# we have 2 identical vendor branches, one under vendor, the other under vendory-crypto. They have different subdirs though.
+match /(vendor)/(telnet)/(dist)/
+  repository freebsd-base.git
+  branch \1/\2/\3
+  strip contrib/telnet/
+end match
+match /(vendor)-crypto/(telnet)/(dist)/
+  repository freebsd-base.git
+  branch \1/\2/\3
+  strip crypto/telnet/
+end match
+match /vendor/telnet/95-10-23/
+  min revision 29091
+  max revision 29091
 end match
 
 # Note: sendmail uses vendor/sendmail/dist-old for a while, then
@@ -306,6 +343,16 @@ match /vendor/tzdata/
   min revision 86220
   max revision 86220
 end match
+# tzcode got tagged from tzdata (sic!), that didn't go as planned, it was later deleted.
+match /vendor/tzcode/tzcode2001d/
+  min revision 86225
+  max revision 86225
+end match
+# skip the deletion, and most importantly skip the damage that flattening does.
+match /vendor/tzcode/
+  min revision 183401
+  max revision 183402
+end match
 # deleting a branch is futile
 match /vendor/patch/
   min revision 128777
@@ -325,12 +372,17 @@ match /vendor/tzdata/tzdata[0-9]*[a-z]/
   min revision 181401
   max revision 181401
 end match
+# Flattening tags? Not even once. Say "no" today, save a kitten.
+match /vendor/libpcap/[0-9].*
+  min revision 190153
+  max revision 190153
+end match
 # Fix wrong tag, and ignore the fix-up move
 match /(vendor)/(tzdata)/(tzdata2000g)/(dist)/
   min revision 191616
   max revision 191616
   repository freebsd-base.git
-  branch \1/\2/\3
+  branch \1/\2/tzdata2009g
 end match
 match /vendor/tzdata/
   min revision 191617
@@ -431,8 +483,8 @@ match /vendor/tnftp/
   max revision 223299
 end match
 # libpcap snafu
-match /vendor/libpcap/
-  min revision 230833
+match /vendor/libpcap/1.2.1
+  min revision 230829
   max revision 230834
 end match
 # fixup copied dist/
@@ -538,6 +590,21 @@ match /vendor/llvm/llvm-release_3939-r287912/
   min revision 309153
   max revision 309153
 end match
+# tag was re-spun
+match /vendor-sys/ck/20161128/
+  min revision 309261
+  max revision 309261
+end match
+# re-does the tag to the exact same content as before, skip it
+match /vendor/NetBSD/libedit/2016-02-27/
+  min revision 312996
+  max revision 312996
+end match
+# botched tag
+match /vendor/libarchive/3.3.2/
+  min revision 320925
+  max revision 320925
+end match
 # botched import and tag
 match /vendor/acpica/20180105/
   max revision 327601
@@ -571,29 +638,10 @@ match /vendor/libarchive/
   min revision 338908
   max revision 338909
 end match
-# Skip empty vendor dir creation and branches
-match /vendor/llvm-project
-min revision 355814
-max revision 355814
-end match
-match /vendor/llvm-project/
-min revision 355815
-max revision 355815
-end match
-match /vendor/llvm-project/
-min revision 355939
-max revision 355939
-end match
-# Bogus re-tag, resulting in identical tree objects anyway.
-match /vendor/llvm-project/
-min revision 355986
-max revision 355987
-end match
-# TODO: record the following copies as merges: 355944, 355945, 355947
-# premature tag
-match /vendor/llvm-project/llvmorg-10.0.0-0-gd32170dbd5b/
-min revision 359337
-max revision 359576
+# botched tag
+match /vendor/libarchive/3.4.0/
+  min revision 348972
+  max revision 348972
 end match
 # botched tag
 match /vendor-sys/
@@ -907,6 +955,11 @@ match /vendor-sys/illumos/dist/
   max revision 238570
   action recurse
 end match
+# we'll take the copy from r238579 instead.
+match /vendor-sys/illumos/20100818
+  min revision 238571
+  max revision 238571
+end match
 
 # Skip deletion and make the following re-copy surgical.
 match /vendor/illumos/dist/
@@ -1023,6 +1076,7 @@ match /head/sys/contrib/ipfilter/netinet/
   max revision 72005
 end match
 
+# TODO: merge sys and non-sys for ipfilter?
 match /(vendor-sys)/(ipfilter)/(dist)(-old)?/
   max revision 253468  # maybe use r102516 instead?
   repository freebsd-base.git
