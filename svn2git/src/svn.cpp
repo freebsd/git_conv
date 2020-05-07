@@ -792,6 +792,8 @@ int SvnRevision::prepareTransactions()
         198058, 199096, 199141, 202103, 202105, 253750, 259935, 261839, 262486,
         // we keep these to test the code that finds them
         //276402, 293215, 298094, 337607, 349592,
+        // Other mergeinfo that copies everything from head around
+        296962,
     };
     if (empty_mergeinfo.contains(revnum)) {
         return EXIT_SUCCESS;
@@ -826,6 +828,7 @@ int SvnRevision::prepareTransactions()
     // Things we patch up manually as the SVN history around them is ...
     // creative.
     static QMap<int, struct mi> manual_merges = {
+        { 229307, { .from = "releng/9.0", .rev = 229306, .to = "refs/tags/release/9.0.0" } },
         // These 2 were merged from "/vendor" (sic!)
         { 357636, { .from = "vendor/NetBSD/tests/dist", .rev = 357635, .to = "master" } },
         { 357688, { .from = "vendor/NetBSD/tests/dist", .rev = 357687, .to = "master" } },
@@ -861,7 +864,10 @@ int SvnRevision::prepareTransactions()
     }
 
     const QString to = to_branches_.values().front();
-    if (to != "master" && !to.startsWith("projects/") && !to.startsWith("user/")) {
+    // TODO: scan through all merges into vendor to make sure they DTRT.
+    // r229307 re-tagged 9.0 release, allow it to be a proper merge from releng
+    if (to != "master" && !to.startsWith("projects/") && !to.startsWith("user/")
+            && !to.startsWith("vendor/") && to != "refs/tags/release/9.0.0") {
         printf(" MONKEYMERGE ignoring merge into %s", qPrintable(to));
         return EXIT_SUCCESS;
     }
