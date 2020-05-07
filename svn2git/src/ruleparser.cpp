@@ -142,6 +142,7 @@ void Rules::load(const QString &filename)
     QRegExp matchRevLine("(min|max) revision (\\d+)", Qt::CaseInsensitive);
     QRegExp matchAnnotateLine("annotated\\s+(\\S+)", Qt::CaseInsensitive);
     QRegExp matchPrefixLine("prefix\\s+(.*)$", Qt::CaseInsensitive);
+    QRegExp matchStripLine("strip\\s+(.*)$", Qt::CaseInsensitive);
     QRegExp declareLine("declare\\s+("+varRegex+")\\s*=\\s*(\\S+)", Qt::CaseInsensitive);
     QRegExp variableLine("\\$\\{("+varRegex+")(\\|[^}$]*)?\\}", Qt::CaseInsensitive);
     QRegExp includeLine("include\\s+(.*)", Qt::CaseInsensitive);
@@ -261,6 +262,9 @@ void Rules::load(const QString &filename)
                     match.prefix = matchPrefixLine.cap(1);
                     if( match.prefix.startsWith('/'))
                         match.prefix = match.prefix.mid(1);
+                    continue;
+                } else if (matchStripLine.exactMatch(line)) {
+                    match.strip = matchStripLine.cap(1);
                     continue;
                 } else if (matchActionLine.exactMatch(line)) {
                     QString action = matchActionLine.cap(1);

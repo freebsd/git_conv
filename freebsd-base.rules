@@ -275,6 +275,25 @@ match /(vendor)/(clang|compiler-rt|libc..|lld|lldb|llvm-libunwind|llvm-openmp|ll
   branch \1/\2/\3-trunk\4
 end match
 
+# Note: sendmail uses vendor/sendmail/dist-old for a while, then
+# r38032 brings in the new dist/ and the old is never used again.
+# This would need a hack for the branchNote to end in old-dist, not
+# old-dist/usr.sbin/sendmail, otherwise a later tag generation fails due to
+# unknown copyfrom branch. ... or some other hack to make the old paths
+# disappear from r38032.
+# We can also add a graftpoint, but baking it into the repo is not possible for
+# the continuous conversion, due to the respinning of hashes.
+# Instead we add a new `strip` rule action that can strip of usr.sbin/sendmail.
+# We still get left-over files for a while, till the flattening of r182324
+# garbage collects them.
+match /(vendor)/(sendmail)/(dist)-old/ #usr.sbin/sendmail/
+  max revision 31087
+  repository freebsd-base.git
+  branch \1/\2/\3
+  strip usr.sbin/sendmail/
+  prefix contrib/sendmail/
+end match
+
 # this tag has an extra /tags
 match /(vendor)/(SGI)/tags/(v_2_17)/
   min revision 46287

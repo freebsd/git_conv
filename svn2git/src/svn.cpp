@@ -558,7 +558,10 @@ void SvnRevision::splitPathName(const Rules::Match &rule, const QString &pathNam
     if (path_p) {
         QString prefix = svnprefix;
         prefix.replace(rule.rx, rule.prefix);
-        *path_p = prefix + pathName.mid(svnprefix.length());
+        QString suffix = pathName.mid(svnprefix.length());
+        if (suffix.startsWith(rule.strip))
+            suffix.replace(0, rule.strip.length(), "");
+        *path_p = prefix + suffix;
     }
 }
 
