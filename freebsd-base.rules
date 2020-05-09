@@ -355,6 +355,15 @@ match /vendor/patch/
   min revision 128777
   max revision 128777
 end match
+# Flattening tags? Not even once. Say "no" today, save a kitten.
+match /vendor/cpio/[^d][^/]*/
+  min revision 180398
+  max revision 180398
+end match
+match /vendor/bind9/[^d][^/]*/
+  min revision 180456
+  max revision 180456
+end match
 # wrong tag and backout revs
 match /vendor/bind9/
   min revision 180464
@@ -364,16 +373,79 @@ match /vendor/bind9/
   min revision 180467
   max revision 180467
 end match
-# don't flatten the tags, as it advances them and they no longer tag along the axis of `dist`
+# don't flatten the tags, as it advances them and they no longer tag along the
+# axis of `dist`
+match /vendor-crypto/openssh/[^d][^/]*/
+  min revision 180714
+  max revision 180714
+end match
 match /vendor/tzdata/tzdata[0-9]*[a-z]/
   min revision 181401
   max revision 181401
 end match
-# Flattening tags? Not even once. Say "no" today, save a kitten.
-match /vendor/libpcap/[0-9].*
+match /vendor-sys/pf/[^d][^/]*/
+  min revision 181288
+  max revision 181289
+end match
+match /vendor/ntp/[^d][^/]*/
+  min revision 181800
+  max revision 181800
+end match
+match /vendor-sys/ath/[^d][^/]*/
+  min revision 182298
+  max revision 182298
+end match
+match /vendor/gdtoa/[^d][^/]*/
+  min revision 182700
+  max revision 182702
+end match
+match /vendor/netcat/[^d][^/]*/
+  min revision 183393
+  max revision 183393
+end match
+match /vendor/tzcode/[^d][^/]*/
+  min revision 183402
+  max revision 183402
+end match
+match /vendor/top/[^d][^/]*/
+  min revision 183433
+  max revision 183433
+end match
+match /vendor/pf/[^d][^/]*/
+  min revision 185872
+  max revision 185873
+end match
+match /vendor/openpam/[^d][^/]*/
+  min revision 186063
+  max revision 186063
+end match
+# no flattening of existing tags
+match /vendor/bsnmp/[^d][^/]*/
+  min revision 186357
+  max revision 186357
+end match
+match /vendor/libbegemot/[^d][^/]*/
+  min revision 186360
+  max revision 186360
+end match
+match /vendor/file/[^d][^/]*/
+  min revision 186675
+  max revision 186675
+end match
+# TODO: check up on what 2.15-r191844-obrien does
+match /vendor/binutils/[^d][^/]*/
+  min revision 187632
+  max revision 187632
+end match
+match /vendor/tcpdump/[^d][^/]*/
+  min revision 190150
+  max revision 190150
+end match
+match /vendor/libpcap/[^d][^/]*/
   min revision 190153
   max revision 190153
 end match
+
 # Fix wrong tag, and ignore the fix-up move
 match /(vendor)/(tzdata)/(tzdata2000g)/(dist)/
   min revision 191616
@@ -1079,11 +1151,11 @@ end match
 # 3.1.7 and 3.1.8 were not done in strict sequence, so a faithful merged
 # representation of those two would need post-processing.
 
-# Skip the flattening of non-dist tags, it's pointless and needlessly moves the
-# tags values around.
+# Skip the flattening of non-dist tags, it's pointless and needlessly advances
+# the tag refs off the mainline branch.
 match /vendor(-sys)?/ipfilter/[^d][^/]*/
   min revision 253467
-  max revision 253467
+  max revision 253468
 end match
 # ipfilter sys code was repocopied around, first it lived in
 # /sys/netinet/ then it was moved to sys/contrib/ipfilter/netinet/
