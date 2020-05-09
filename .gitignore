@@ -1,7 +1,6 @@
-svn2git/.qmake.stash
+archive
 base
 doc
-ports
 freebsd-base.git
 freebsd-doc.git
 freebsd-ports.git
@@ -11,6 +10,10 @@ log-freebsd-doc.git
 log-freebsd-doc.git.old
 log-freebsd-ports.git
 log-freebsd-ports.git.old
+mi
+ports
+scratch
+svn2git/.qmake.stash
 svnsync-base.log
 svnsync-doc.log
 svnsync-ports.log
