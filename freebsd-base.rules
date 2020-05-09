@@ -62,9 +62,6 @@ match /(cvs2svn)/([^/]+)/([^/]+)/
   branch \1/\2/\3
 end match
 
-# typo
-match /release/2.1.6.1/
-end match
 # deleted attempts
 match /release/8.4.0/
   min revision 250625
