@@ -82,14 +82,14 @@ ulimit -H -c 0
 usage()
 {
     echo "usage: `basename $0` [-fgps] [-m 123] {base | doc | ports} " >&2
-    echo "  -f: run just the filtering step"
+    echo "  -f: run just the fixup step"
     echo "  -g: run git-svn conversion"
     echo "  -m arg: max revisions to conver to"
     echo "  -p: push to upstream, don't use this"
     echo "  -s: run svn2git conversion, this is the default"
 }
 
-do_filter=
+do_fixup=
 do_svn2git=1
 do_gitsvn=
 do_push=
@@ -103,7 +103,7 @@ while getopts "dfgm:pr:s" OPT; do
 	    debug_rules=--debug-rules
 	    ;;
 	f)
-	    do_filter=1
+	    do_fixup=1
 	    ;;
 	g)
 	    do_gitsvn=1
@@ -148,22 +148,22 @@ if ! shlock -p $$ -f "${LOCK}"; then
     exit 1
 fi
 
-filter_repo()
+fixup_repo()
 {
     local from to
     from=$1; shift
     to=$1; shift
 
     cd $BASE
-    git clone --bare $from $to
-
-    cd $to
-    git config --add remote.origin.fetch '+refs/notes/*:refs/notes/*'
-    git fetch -v
-    git branch --list "user/*"|xargs git branch -D
-    git filter-repo --prune-empty=always --prune-degenerate=always
+    #git --bare clone $from $to
+    #cd $to
+    #git config --add remote.origin.fetch '+refs/notes/*:refs/notes/*'
+    #git fetch -v
+    #git for-each-ref --format='%(refname:short)' refs/heads/user/|xargs git branch -D
+    #git filter-repo --prune-empty=always --prune-degenerate=always
     case "$TYPE" in
 	base)
+	    ./tag_archived_src.sh base $from
 	    ;;
 	doc)
 	    ;;
@@ -200,6 +200,7 @@ svn2git()
 	    git config --local push.default matching
 	    git config --local core.autocrlf false
 	    git config --local core.ignorecase false
+	    git config --local diff.renameLimit -1
 	    # We use fake github hosts like ports.github.com, which we fix in our
 	    # .ssh/config *and* apply a per-repo ssh key, which is the whole point
 	    # of this hack.
@@ -305,11 +306,11 @@ gitsvn()
     done
 }
 
-if [ -n "$do_filter" ]; then
+if [ -n "$do_fixup" ]; then
     case "$TYPE" in
-	base)  filter_repo freebsd-base.git  src.git ;;
-	doc)   filter_repo freebsd-doc.git   doc.git ;;
-	ports) filter_repo freebsd-ports.git ports.git ;;
+	base)  fixup_repo freebsd-base.git  src.git ;;
+	doc)   fixup_repo freebsd-doc.git   doc.git ;;
+	ports) fixup_repo freebsd-ports.git ports.git ;;
     esac
     exit $?
 fi
