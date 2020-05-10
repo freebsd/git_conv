@@ -163,7 +163,7 @@ fixup_repo()
     #git filter-repo --prune-empty=always --prune-degenerate=always
     case "$TYPE" in
 	base)
-	    ./tag_archived_src.sh base $from
+	    ./tag_archived_src.sh base $BASE/$from
 	    ;;
 	doc)
 	    ;;
@@ -252,6 +252,8 @@ svn2git()
 	    cd $target
 	    echo "Compacting, showing before and after numbers:"
 	    du -sh .; git repack -adf; du -sh .
+	    # Takes much longer, but compresses better:
+	    #du -sh .; git gc --aggressive --prune=now --force; du -sh .
 	)
     fi
 
