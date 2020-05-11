@@ -52,7 +52,7 @@ end match
 
 # Skip cvs2svn manufactured commits in favor of the fixups.
 match /head/contrib/
-# /head/contrib/patch was fully deleted in r128778
+# /head/contrib/patch was fully deleted in r128779
 min revision 128778
 max revision 128778
 end match
@@ -317,7 +317,7 @@ end match
 # disappear from r38032.
 # We can also add a graftpoint, but baking it into the repo is not possible for
 # the continuous conversion, due to the respinning of hashes.
-# Instead we add a new `strip` rule action that can strip of usr.sbin/sendmail.
+# Instead we add a new `strip` rule action that can strip off usr.sbin/sendmail.
 # We still get left-over files for a while, till the flattening of r182324
 # garbage collects them.
 match /(vendor)/(sendmail)/(dist)-old/ #usr.sbin/sendmail/
@@ -326,6 +326,10 @@ match /(vendor)/(sendmail)/(dist)-old/ #usr.sbin/sendmail/
   branch \1/\2/\3
   strip usr.sbin/sendmail/
   prefix contrib/sendmail/
+end match
+match /vendor/sendmail/[^d][^/]*/
+  min revision 182324
+  max revision 182327
 end match
 
 # this tag has an extra /tags
@@ -350,12 +354,16 @@ match /vendor/tzcode/
   min revision 183401
   max revision 183402
 end match
-# deleting a branch is futile
+# deleting a branch is futile, this one got later reverted anyway
 match /vendor/patch/
   min revision 128777
   max revision 128777
 end match
 # Flattening tags? Not even once. Say "no" today, save a kitten.
+match /vendor/gcc/[^d][^/]*/
+  min revision 179468
+  max revision 179468
+end match
 match /vendor/cpio/[^d][^/]*/
   min revision 180398
   max revision 180398
@@ -377,7 +385,17 @@ end match
 # axis of `dist`
 match /vendor-crypto/openssh/[^d][^/]*/
   min revision 180714
-  max revision 180714
+  max revision 180739  # sic, both revisions
+end match
+# shouldn't be needed, because we didn't flatten?
+match /vendor-crypto/openssh/[^d][^/]*/
+  min revision 182609
+  max revision 182609
+end match
+# rather pointless
+match /vendor-crypto/openssh/5.9p1/
+  min revision 225834
+  max revision 225834
 end match
 match /vendor/tzdata/tzdata[0-9]*[a-z]/
   min revision 181401
@@ -393,7 +411,12 @@ match /vendor/ntp/[^d][^/]*/
 end match
 match /vendor-sys/ath/[^d][^/]*/
   min revision 182298
-  max revision 182298
+  max revision 182299
+end match
+# pointless svn mimetype wrangling, even on tags
+match /vendor/sendmail/
+  min revision 182344
+  max revision 182349
 end match
 match /vendor/gdtoa/[^d][^/]*/
   min revision 182700
@@ -432,10 +455,13 @@ match /vendor/file/[^d][^/]*/
   min revision 186675
   max revision 186675
 end match
-# TODO: check up on what 2.15-r191844-obrien does
+match /vendor/wpa_supplicant/[^d][^/]*/
+  min revision 187258
+  max revision 187258
+end match
 match /vendor/binutils/[^d][^/]*/
-  min revision 187632
-  max revision 187632
+  min revision 187443
+  max revision 187632  # sic, both revisions
 end match
 match /vendor/tcpdump/[^d][^/]*/
   min revision 190150
@@ -456,6 +482,19 @@ end match
 match /vendor/tzdata/
   min revision 191617
   max revision 191617
+end match
+# no flattening for tags
+match /vendor/gdb/
+  min revision 191740
+  max revision 191740
+end match
+match /vendor/less/[^d][^/]*/
+  min revision 191925
+  max revision 191925
+end match
+match /vendor-sys/acpica/[^d][^/]*/
+  min revision 192384
+  max revision 192384
 end match
 # was already tagged in 193784
 match /vendor/tzdata/
@@ -488,6 +527,19 @@ match /vendor/ntp/4.2.4p8/
   min revision 200454
   max revision 200454
 end match
+# skip tag flattening
+match /vendor/expat/[^d][^/]*/
+  min revision 200365
+  max revision 200365
+end match
+match /vendor/groff/[^d][^/]*/
+  min revision 202347
+  max revision 202347
+end match
+match /vendor/(zlib|libz)/[^d][^/]*/
+  min revision 204237
+  max revision 204237
+end match
 # tough one, the tag was moved to delete an unused file, we could blacklist the
 # file during the initial import, but that would make a later revision on dist
 # bogus. Instead, just skip the re-tagging. A newer point-release was tagged
@@ -505,6 +557,10 @@ end match
 match /(vendor)/(testfloat)/
   min revision 206920
   max revision 206921
+end match
+match /vendor/misc-GNU/sort/[^d][^/]*/
+  min revision 207002
+  max revision 207002
 end match
 # wrong tag, it was 0.6.10
 match /vendor/wpa/
@@ -582,6 +638,15 @@ match /(vendor)/(NetBSD)/(bmake)/bmake-(20121111)/
   repository freebsd-base.git
   branch \1/\2/\3/\4
 end match
+# no flattening of tags
+match /vendor/patch/[^d][^/]*/
+  min revision 253716
+  max revision 253716
+end match
+match /vendor/nvi/[^d][^/]*/
+  min revision 254210
+  max revision 254210
+end match
 # wrong tag, later renamed
 match /(vendor)-sys/(acpica)/(20140414)/
   max revision 260662
@@ -623,6 +688,11 @@ match /(vendor)/(device-tree)/(ianc-b78b6b80)/dist/
   max revision 270867
   repository freebsd-base.git
   branch \1/\2/\3
+end match
+# don't muck with tags, especially not deleting empty dirs
+match /vendor/atf/[^d][^/]*/
+  min revision 273930
+  max revision 273930
 end match
 # wrong tag name
 match /vendor/elftoolchain/r3163
@@ -701,6 +771,11 @@ end match
 match /vendor/tzdb/
   min revision 337683
   max revision 337693
+end match
+# mandoc rename is handled already
+match /vendor/
+  min revision 338818
+  max revision 338818
 end match
 # wrong tag
 match /vendor/libarchive/
@@ -828,6 +903,19 @@ end match
 match /vendor/NetBSD/
   min revision 248299
   max revision 248301
+end match
+# This revision reverts a deletion that we skipped earlier, but this causes the
+# git branch to be reset, which we don't want. Sooo, recrse instead ...
+match /vendor/patch/dist/$
+  min revision 253716
+  max revision 253716
+  action recurse
+end match
+match /(vendor)/(patch)/(dist)/
+  min revision 253716
+  max revision 253716
+  repository freebsd-base.git
+  branch \1/misc-GNU/\2/\3
 end match
 match /(vendor)/(awk|bc|bison|cpio|cvs|patch|tar|texinfo)/([^/]+)/
   repository freebsd-base.git
