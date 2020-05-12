@@ -410,7 +410,7 @@ match /vendor/ntp/[^d][^/]*/
   max revision 181800
 end match
 match /vendor-sys/ath/[^d][^/]*/
-  min revision 182298
+  min revision 182297
   max revision 182299
 end match
 # pointless svn mimetype wrangling, even on tags
@@ -894,7 +894,7 @@ match /(vendor)/(NetBSD)/(libc-vis)/(20132102)/
   repository freebsd-base.git
   branch \1/\2/\3/20130221
 end match
-match /(vendor)/(NetBSD)/(u?n?vis)/(20130221)/
+match /(vendor)/(NetBSD)/(u?n?vis)/(20132102)/
   min revision 244230
   max revision 248298
   repository freebsd-base.git
