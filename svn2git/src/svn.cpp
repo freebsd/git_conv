@@ -831,6 +831,7 @@ int SvnRevision::prepareTransactions()
     // Things we patch up manually as the SVN history around them is ...
     // creative.
     static QMap<int, struct mi> manual_merges = {
+        { 182352, { .from = "vendor/sendmail/dist", .rev = 182351, .to = "master" } },
         { 229307, { .from = "releng/9.0", .rev = 229306, .to = "refs/tags/release/9.0.0" } },
         // These 2 were merged from "/vendor" (sic!)
         { 357636, { .from = "vendor/NetBSD/tests/dist", .rev = 357635, .to = "master" } },
@@ -870,7 +871,8 @@ int SvnRevision::prepareTransactions()
     // TODO: scan through all merges into vendor to make sure they DTRT.
     // r229307 re-tagged 9.0 release, allow it to be a proper merge from releng
     if (to != "master" && !to.startsWith("projects/") && !to.startsWith("user/")
-            && !to.startsWith("vendor/") && to != "refs/tags/release/9.0.0") {
+            && !to.startsWith("vendor/") && !to.startsWith("vendor-sys/")
+            && to != "refs/tags/release/9.0.0") {
         printf(" MONKEYMERGE ignoring merge into %s", qPrintable(to));
         return EXIT_SUCCESS;
     }

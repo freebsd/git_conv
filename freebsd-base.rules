@@ -339,11 +339,6 @@ match /(vendor)/(SGI)/tags/(v_2_17)/
   repository freebsd-base.git
   branch \1/\2/\3
 end match
-# bogus cvs2svn vendor tag that dropped most of the files upon copy.
-match /vendor/tzdata/
-  min revision 86220
-  max revision 86220
-end match
 # tzcode got tagged from tzdata (sic!), that didn't go as planned, it was later deleted.
 match /vendor/tzcode/tzcode2001d/
   min revision 86225
@@ -538,7 +533,7 @@ match /vendor/groff/[^d][^/]*/
 end match
 match /vendor/(zlib|libz)/[^d][^/]*/
   min revision 204237
-  max revision 204237
+  max revision 204238
 end match
 # tough one, the tag was moved to delete an unused file, we could blacklist the
 # file during the initial import, but that would make a later revision on dist
@@ -593,7 +588,7 @@ match /vendor/ee/
 end match
 # partial tag, later overwritten
 match /vendor/wpa/0.7.3
-  max revision 214505
+  max revision 214504
 end match
 # later tags drop the redundant prefix
 match /(vendor)/(dialog)/dialog-(1.1-[0-9]+)/
@@ -613,9 +608,14 @@ match /vendor/libpcap/1.2.1
   max revision 230834
 end match
 # fixup copied dist/
+match /vendor/dtc/dtc-f807af19/
+  min revision 238734
+  max revision 238734
+end match
 match /(vendor)/(dtc)/(dtc-f807af19)/dist/
   min revision 238738
   max revision 238738
+  repository freebsd-base.git
   branch \1/\2/\3
 end match
 # was never used
@@ -646,6 +646,11 @@ end match
 match /vendor/nvi/[^d][^/]*/
   min revision 254210
   max revision 254210
+end match
+# needlessly advances a tag
+match /vendor/openpam/[^d][^/]*/
+  min revision 255387
+  max revision 255387
 end match
 # wrong tag, later renamed
 match /(vendor)-sys/(acpica)/(20140414)/
@@ -795,6 +800,7 @@ end match
 # this was done exactly the wrong way round, need to revert it, but also use a
 # recurse rule to skip the actual SVN copy and make the commit into dist/ a
 # regular old commit.
+# FIXME: This leaves behind a spurious file ocsd_if_version.h that we need to delete!
 match /(vendor)/(opencsd)/a1961c91b02a92f3c6ed8b145c636ac4c5565aca/$
   action recurse
   min revision 353391
