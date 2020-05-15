@@ -5,6 +5,7 @@
 # a) proper CVS IDs for people that care, but most importantly
 # b) undoes the damage that repo-copies and moves did to the repo,
 #    at least for those final releases.
+# c) they lack the eBones/, kerberosIV/, secure/ and crypto/ subdirs till 5.3-RELEASE
 #
 # Same could be done for ports, but there is very little archaeological value
 # in there, so it is left as an exercise for the reader.
@@ -12,6 +13,10 @@
 : ${BASE=${PWD}}
 
 SOURCE=ftp://ftp-archive.freebsd.org/pub/FreeBSD-Archive/old-releases/i386
+# more content can be had from the ISO images
+# http://ftp-archive.freebsd.org/pub/FreeBSD-Archive/old-releases/i386/ISO-IMAGES/1.0/1.0-disc1.iso
+# http://ftp-archive.freebsd.org/pub/FreeBSD-Archive/old-releases/i386/ISO-IMAGES/FreeBSD-1.1-RELEASE/cd1.iso
+# http://ftp-archive.freebsd.org/pub/FreeBSD-Archive/old-releases/i386/ISO-IMAGES/FreeBSD-1.1.5.1/cd1.iso
 TYPE=${1:-base}
 REPO=${2:-$BASE/freebsd-base.git}
 
@@ -31,6 +36,9 @@ fetch_archive() {
               # slib is damaged under i386/
 	      wget -nH -nd -r -N --progress=dot ${SOURCE%i386}alpha/$r/src/
 	      ;;
+	  1.0-RELEASE)
+	      wget -nH -nd -r -N --progress=dot $SOURCE/$r/tarballs/srcdist/
+	      ;;
 	  *)
 	      wget -nH -nd -r -N --progress=dot $SOURCE/$r/src/
 	      ;;
@@ -45,19 +53,32 @@ extract() {
     dest=$1; shift
 
     set -e
+    case "$r" in
+        9*|10*|11*|12*|13*)
+            tar xf src.txz -s',^usr/src/,,' -C wrk
+            ;;
+        1.0-RELEASE)
+            for f in *.aa; do
+                cat ${f%.aa}.?? | tar xf - -s',^usr/src/,,' -C wrk
+            done
+            ;;
+        *)
+            for f in *.aa; do
+                cat ${f%.aa}.?? | tar xf - -C wrk
+            done
+            ;;
+    esac
+    # clean up some leftover schmutz
+    find wrk -name CVS -type d -exec rm -r {} +
+    find wrk -name .cvsignore -type f -exec rm -r {} +
+    # yeah, so, well, some releases have a bunch of .depend and object files
+    # and binaries left around still.
     (
-      case "$r" in
-	  9*|10*|11*|12*|13*)
-	      tar xf src.txz -s',^usr/src/,,' -C wrk
-	      ;;
-	  *)
-	      for f in *.aa; do
-		  cat ${f%.aa}.?? | tar xf - -C wrk
-	      done
-	      ;;
-      esac
-      # clean up some leftover schmutz
-      find wrk -name CVS -type d -exec rm -r {} +
+        cd wrk
+        for d in bin sbin usr.bin usr.sbin gnu/usr.bin release/sysinstall lib/libpam/modules/pam_krb5 lib/libpam/modules/pam_kerberosIV sys/i386/boot/biosboot sys/libkern; do
+            test -d $d && make -C $d -k MACHINE_ARCH=i386 cleandir || true
+        done
+        make -C usr.bin/vi -k MACHINE_ARCH=i386 RELEASE_BUILD_FIXIT=1 cleandir
     )
     set +e
 }
@@ -75,7 +96,14 @@ checkout_and_tag() {
     esac
 
     cd $dest
-    GIT_DIR=$REPO git worktree add --no-checkout wrk release/$tag
+    case $rel in
+        1.0-RELEASE)
+	    mkdir -p wrk
+	    ;;
+	*)
+	    GIT_DIR=$REPO git worktree add --no-checkout wrk release/$tag
+	    ;;
+    esac
     extract $rel $dest
     cd wrk
 
@@ -115,7 +143,7 @@ Releases prior to 5.3-RELEASE are omitting the secure/ and crypto/ subdirs."
 
 case "$TYPE" in
     base)
-            #1.0.0-RELEASE   # nope
+            #1.0-RELEASE     # nope
             #2.1.7.1-RELEASE # we don't have the CVS or SVN tag for it?
             #2.2.6-RELEASE   # has nothing under src/ on the archive server
             #2.2.9-RELEASE   # not in SVN
@@ -196,7 +224,6 @@ case "$TYPE" in
             test -f $archive/wrk/.git && continue
             checkout_and_tag $r $archive
         done
-        exit 0
         ;;
     *)
         exit 1
