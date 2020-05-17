@@ -29,19 +29,17 @@ fetch_archive() {
     (
       cd $dest
       case "$r" in
-	  9*|10*|11*|12*|13*)
-	      fetch $SOURCE/$r/src.txz
-	      ;;
-          4.6-RELEASE)
-              # slib is damaged under i386/
-	      wget -nH -nd -r -N --progress=dot ${SOURCE%i386}alpha/$r/src/
-	      ;;
-	  1.0-RELEASE)
-	      wget -nH -nd -r -N --progress=dot $SOURCE/$r/tarballs/srcdist/
-	      ;;
-	  *)
-	      wget -nH -nd -r -N --progress=dot $SOURCE/$r/src/
-	      ;;
+          1.0-RELEASE) wget -nH -nd -r -N --progress=dot $SOURCE/$r/tarballs/srcdist/ ;;
+          1.1-RELEASE) fetch -o- $SOURCE/ISO-IMAGES/FreeBSD-$r/cd1.iso | tar xf - -s',^tarballs/srcdist,,' tarballs/srcdist ;;
+          1.1.5.1-RELEASE) fetch -o- $SOURCE/ISO-IMAGES/FreeBSD-${r%-RELEASE}/cd1.iso | tar xf - -s',^tarballs/srcdist,,' tarballs/srcdist ;;
+          2.0-RELEASE) fetch -o- $SOURCE/ISO-IMAGES/FreeBSD-$r/cd1.iso | tar xf - -s',^srcdist,,' srcdist ;;
+          # bsdtar doesn't want to read these ...
+          2.1-RELEASE) fetch $SOURCE/ISO-IMAGES/FreeBSD-$r/cd1.iso && 7z e cd1.iso dists/src ;;
+          2.1.6-RELEASE) fetch $SOURCE/ISO-IMAGES/FreeBSD-$r/cd1.iso && 7z e cd1.iso src;;
+          2.2.1-RELEASE) fetch $SOURCE/ISO-IMAGES/FreeBSD-$r/cd1.iso && 7z e cd1.iso src ;;
+          4.6-RELEASE) wget -nH -nd -r -N --progress=dot ${SOURCE%i386}alpha/$r/src/ ;;  # slib is damaged under i386/
+          9*|10*|11*|12*|13*) fetch $SOURCE/$r/src.txz ;;
+          *) wget -nH -nd -r -N --progress=dot $SOURCE/$r/src/ ;;
       esac
     )
     set +e
@@ -57,7 +55,7 @@ extract() {
         9*|10*|11*|12*|13*)
             tar xf src.txz -s',^usr/src/,,' -C wrk
             ;;
-        1.0-RELEASE)
+        1.*-RELEASE)
             for f in *.aa; do
                 cat ${f%.aa}.?? | tar xf - -s',^usr/src/,,' -C wrk
             done
@@ -78,7 +76,7 @@ extract() {
         for d in bin sbin usr.bin usr.sbin gnu/usr.bin release/sysinstall lib/libpam/modules/pam_krb5 lib/libpam/modules/pam_kerberosIV sys/i386/boot/biosboot sys/libkern; do
             test -d $d && make -C $d -k MACHINE_ARCH=i386 cleandir || true
         done
-        make -C usr.bin/vi -k MACHINE_ARCH=i386 RELEASE_BUILD_FIXIT=1 cleandir
+        make -C usr.bin/vi -k MACHINE_ARCH=i386 RELEASE_BUILD_FIXIT=1 cleandir || true
     )
     set +e
 }
@@ -91,35 +89,55 @@ checkout_and_tag() {
     set -e
 
     case $rel in
+        2.0-RELEASE) tag=${rel%-RELEASE} ;;
         *.*.*-RELEASE) tag=${rel%-RELEASE} ;;
         *.*-RELEASE) tag=${rel%-RELEASE}.0 ;;
     esac
 
+    c_auth=
+    c_committer=
+    c_email=
+    c_date=
+    c_msg=
     cd $dest
     case $rel in
         1.0-RELEASE)
-	    mkdir -p wrk
-	    ;;
-	*)
-	    GIT_DIR=$REPO git worktree add --no-checkout wrk release/$tag
-	    ;;
+            GIT_DIR=$REPO git worktree add --detach --no-checkout wrk
+            ( cd wrk && git checkout --orphan stable/1 && git reset --hard )
+            # FIXME
+            c_auth="svn2git <svn2git@FreeBSD.org>"
+            c_date="1993-11-01T00:00:00-0800"
+            c_msg="Release FreeBSD 1.0"
+            ;;
+        1.1-RELEASE)
+            GIT_DIR=$REPO git worktree add -f --no-checkout wrk stable/1
+            # FIXME
+            c_auth="svn2git <svn2git@FreeBSD.org>"
+            c_date="1994-05-01T00:00:00-0800"
+            c_msg="Release FreeBSD 1.1"
+            ;;
+        1.1.5.1-RELEASE)
+            GIT_DIR=$REPO git worktree add -f --no-checkout wrk stable/1
+            # FIXME
+            c_auth="svn2git <svn2git@FreeBSD.org>"
+            c_date="1994-07-01T00:00:00-0800"
+            c_msg="Release FreeBSD 1.1.5.1"
+            ;;
+        *)
+            GIT_DIR=$REPO git worktree add --no-checkout wrk release/$tag
+            ;;
     esac
     extract $rel $dest
     cd wrk
 
     # Grab commit metadata from the original annotated tag
-    #X#c_auth=`git show -s --format=medium release/$tag\^{tag} | sed -n '/^Tagger:/s/^Tagger: //p'`
-    #X#c_committer=${c_auth%<*}
-    #X#c_email=${c_auth#*<}
-    #X## git show tag is stupid and wants to show me the commit data, not just the tag data, ugh.
-    #X#c_date=`TZ=UTC svn log -l 1 --xml file:///$BASE/base/release/$tag | sed -n -e 's,</*date>,,gp'`
-    #X#c_msg=`svn log -l 1 file:///$BASE/base/release/$tag | sed -e '1,3d; $d'`
-    c_auth=`git cat-file tag release/$tag | sed -n '/^tagger/s/^tagger //; s/ [0-9 +]*$//p'`
+    if [ -z "$c_auth" ]; then
+        c_auth=`git cat-file tag release/$tag | sed -n '/^tagger/s/^tagger //; s/ [0-9 +]*$//p'`
+        c_date=`git cat-file tag release/$tag | sed -n '/^tagger/s/^tagger //p' | egrep -o '[0-9]* [+0-9]*$'`
+        c_msg=`git cat-file tag release/$tag | sed '1,/^$/d'`
+    fi
     c_committer=${c_auth%<*}
     c_email=${c_auth#*<}
-    c_date=`git cat-file tag release/$tag | sed -n '/^tagger/s/^tagger //p' | egrep -o '[0-9]* [+0-9]*$'`
-    c_msg=`git cat-file tag release/$tag | sed '1,/^$/d'`
-
     msg="This commit was manufactured to restore the state of the $rel image.
 Releases prior to 5.3-RELEASE are omitting the secure/ and crypto/ subdirs."
     #X## TODO: with the git worktree support, I can probably just use a regular
@@ -130,6 +148,10 @@ Releases prior to 5.3-RELEASE are omitting the secure/ and crypto/ subdirs."
     #X## TODO: hoist tagger into author, fix up commit dates
     #X#commit=`git show -s --pretty=%B release/$tag | \
     #X#    git commit-tree -p $parent -F - -m "$msg" $tree`
+    if [ -z "$c_date" -o -z "$c_committer" -o -z "$c_email" -o -z "$c_auth" -o -z "$c_msg" -o -z "$msg" ]; then
+        echo "Don't know what to commit for rel $rel and tag $tag"
+        exit 1
+    fi
     git add -N .
     GIT_COMMITTER_DATE="$c_date" GIT_COMMITTER_NAME="$c_committer" GIT_COMMITTER_EMAIL="$c_email" git commit -q -a --author="$c_auth" --date="$c_date" -m "$c_msg" -m "$msg"
     # TODO: what's in a name?
@@ -143,16 +165,22 @@ Releases prior to 5.3-RELEASE are omitting the secure/ and crypto/ subdirs."
 
 case "$TYPE" in
     base)
-            #1.0-RELEASE     # nope
             #2.1.7.1-RELEASE # we don't have the CVS or SVN tag for it?
             #2.2.6-RELEASE   # has nothing under src/ on the archive server
             #2.2.9-RELEASE   # not in SVN
             #3.5.1-RELEASE   # not in SVN
             #12.1-RELEASE    # not on the mirror yet
         set -- \
+            1.0-RELEASE \
+            1.1-RELEASE \
+            1.1.5.1-RELEASE \
+            2.0-RELEASE \
             2.0.5-RELEASE \
+            2.1-RELEASE \
             2.1.5-RELEASE \
+            2.1.6-RELEASE \
             2.1.7-RELEASE \
+            2.2.1-RELEASE \
             2.2.2-RELEASE \
             2.2.5-RELEASE \
             2.2.7-RELEASE \
