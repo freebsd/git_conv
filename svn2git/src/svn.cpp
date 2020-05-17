@@ -1313,6 +1313,18 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
                                  epoch, log);
     }
 
+    // This is a once per-rule action, but we end up here for every path that
+    // has matched. That is, we emit tons and tons of redundant deletes into
+    // the fast-import stream. We can't drain the list either, as the rule
+    // match is marked const.
+    if (!rule.deletes.empty()) {
+        for (auto const& path : rule.deletes) {
+            if(ruledebug)
+                qDebug() << "delete (" << branch << path << ")";
+            txn->deleteFile(path);
+        }
+    }
+
     return EXIT_SUCCESS;
 }
 

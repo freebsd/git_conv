@@ -73,6 +73,7 @@ public:
         QList<Substitution> branch_substs;
         QString prefix;
         QString strip;
+        QList<QString> deletes;
         int minRevision;
         int maxRevision;
         bool annotate;
