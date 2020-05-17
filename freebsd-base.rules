@@ -799,8 +799,7 @@ match /vendor-sys/
 end match
 # this was done exactly the wrong way round, need to revert it, but also use a
 # recurse rule to skip the actual SVN copy and make the commit into dist/ a
-# regular old commit.
-# FIXME: This leaves behind a spurious file ocsd_if_version.h that we need to delete!
+# regular old commit and not re-set the branch (which would lose the parent commit)
 match /(vendor)/(opencsd)/a1961c91b02a92f3c6ed8b145c636ac4c5565aca/$
   action recurse
   min revision 353391
@@ -813,6 +812,9 @@ match /(vendor)/(opencsd)/a1961c91b02a92f3c6ed8b145c636ac4c5565aca/
   max revision 353391
   repository freebsd-base.git
   branch \1/\2/dist
+  # This is no longer in the tag, but as this didn't go into dist, but later
+  # fully replace dist, we need to clean it up manually.
+  delete decoder/include/ocsd_if_version.h
 end match
 match /(vendor)/(opencsd)/dist/
   min revision 353392

@@ -170,8 +170,6 @@ case "$type" in
                         ipfilter/*) continue ;;
                         ngatm/*) continue ;;
                         opensolaris/*) continue ;;
-                        # FIXME! there's an extra file that must not be there!
-                        opencsd/a1961c91b02a92f3c6ed8b145c636ac4c5565aca/|opencsd/dist/) continue ;;
                         # the tag flattening fucked up the svn keyword
                         # expansion, meaning that a hardcoded string was
                         # submitted with the old path and revision, you can see
