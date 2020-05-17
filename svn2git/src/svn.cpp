@@ -636,17 +636,17 @@ bool SvnRevision::maybeParseSimpleMergeinfo(const int revnum, struct mi* mi) {
     // ends up with 240326 instead. This reduces the "handled" mergeinfo from
     // 2000 out of 3000 down to 1125. The rest should be hard-coded.
     static QRegularExpression re = QRegularExpression(
-           R"(^Index: ([-_.\d\w/]+)
+           R"(^(Index: ([-_.\d\w/]+)
 =============*
 ... ([-_.\d\w/]+).\([^)]+\)
 ... ([-_.\d\w/]+).\([^)]+\)
 
 Property changes on: (?<path>[-_.\d\w/]+)
 _____________*
-((Added|Deleted): svn:(keywords|eol-style)
+((Added|Deleted): svn:(keywords|eol-style|mime-type)
 ## -[\d,]+ \+[\d,]+ ##
 [-+].*
-)*(Modified|Added): svn:mergeinfo
+)*)*(Modified|Added): svn:mergeinfo
 ## \-0,0 \+0,1 ##
    Merged (?<from>[-_.\d\w/]+):r([0-9]*[-,])*(?<rev>[0-9]*)
 *$)");
