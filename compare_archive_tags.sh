@@ -83,7 +83,10 @@ for r; do
         *.*-RELEASE) tag=${r%-RELEASE}.0 ;;
     esac
     case $tag in
+        2.*) extra_flags='-x eBones -x secure' ;;
         3.*) extra_flags='-x secure -x crypto -x kerberosIV' ;;
+        4.*) extra_flags='-x crypto -x kerberosIV -x kerberos5 -x secure' ;;
+        5.*) extra_flags='-x crypto -x kerberos5 -x secure -x .cvsignore' ;;
     esac
     git clone -b release/$tag $REPO a.git
     git clone -b release/${tag}_shipped $REPO b.git
