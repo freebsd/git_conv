@@ -114,6 +114,7 @@ public:
 
         virtual bool commitNote(const QByteArray &noteText, bool append,
                                 const QByteArray &commit = QByteArray()) = 0;
+        virtual const QByteArray& getBranch() const = 0;
     };
     virtual int setupIncremental(int &cutoff) = 0;
     virtual void restoreAnnotatedTags() = 0;

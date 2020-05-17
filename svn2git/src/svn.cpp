@@ -421,6 +421,8 @@ public:
     QString merge_from_rev_;
     QSet<QString> to_branches_;
 
+    QMap<QString, QSet<QString>> deletions_;
+
     // There are some handful of mergeinfo changes that are bogus and need to be skipped
     // r306199 - Revert svn:mergeinfo added inadvertantly in last commit r306197
     // r305318 - Handle missed mergeinfo by merging r305031 (the missing revision according to svn merge)
@@ -750,6 +752,19 @@ int SvnRevision::prepareTransactions()
         }
         if (exportEntry(i.key(), i.value(), changes) == EXIT_FAILURE)
             return EXIT_FAILURE;
+    }
+
+    // Handle the deletions that we collected throughout the path/rule matching
+    // and issue them once.
+    for (const auto& rbp : deletions_.toStdMap()) {
+        const QString& repo_branch = rbp.first;
+        // FIXME: must exist, for now. might have to relax this requirement ...
+        Repository::Transaction *txn = transactions[repo_branch];
+        for (const auto& path : rbp.second) {
+            if(ruledebug)
+                qDebug() << "delete (" << txn->getBranch() << path << ")";
+            txn->deleteFile(path);
+        }
     }
 
     // No svn:mergeinfo found, not in src or in the pre-svn days, skip.
@@ -1316,12 +1331,15 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
     // This is a once per-rule action, but we end up here for every path that
     // has matched. That is, we emit tons and tons of redundant deletes into
     // the fast-import stream. We can't drain the list either, as the rule
-    // match is marked const.
+    // match is marked const. Gather them all up for handling in
+    // SvnRevision::prepareTransactions
     if (!rule.deletes.empty()) {
+        const QString key = repository + branch;
+        if (!deletions_.contains(key)) {
+            deletions_[key] = QSet<QString>();
+        }
         for (auto const& path : rule.deletes) {
-            if(ruledebug)
-                qDebug() << "delete (" << branch << path << ")";
-            txn->deleteFile(path);
+            deletions_[key].insert(path);
         }
     }
 

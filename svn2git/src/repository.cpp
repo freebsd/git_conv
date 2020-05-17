@@ -76,6 +76,7 @@ public:
 
         bool commitNote(const QByteArray &noteText, bool append,
                         const QByteArray &commit = QByteArray());
+        const QByteArray& getBranch() const { return branch; }
     };
     FastImportRepository(const Rules::Repository &rule);
     int setupIncremental(int &cutoff);
@@ -182,6 +183,8 @@ public:
         bool commitNote(const QByteArray &noteText, bool append,
                         const QByteArray &commit)
         { return txn->commitNote(noteText, append, commit); }
+
+        const QByteArray& getBranch() const { return txn->getBranch(); }
     };
 
     ForwardingRepository(const QString &n, Repository *r, const QString &p) : name(n), repo(r), prefix(p) {}
