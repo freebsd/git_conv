@@ -320,12 +320,36 @@ end match
 # Instead we add a new `strip` rule action that can strip off usr.sbin/sendmail.
 # We still get left-over files for a while, till the flattening of r182324
 # garbage collects them.
+# FIXME: add deletes to get rid of extra files
 match /(vendor)/(sendmail)/(dist)-old/ #usr.sbin/sendmail/
   max revision 31087
   repository freebsd-base.git
-  branch \1/\2/\3
+  branch \1/\2
   strip usr.sbin/sendmail/
   prefix contrib/sendmail/
+end match
+match /(vendor)/(sendmail)/dist/
+  min revision 38032
+  max revision 38032
+  repository freebsd-base.git
+  branch \1/\2
+  delete contrib/sendmail/READ_ME
+  delete contrib/sendmail/cf/cf/Makefile.dist
+  delete contrib/sendmail/contrib/xla
+  delete contrib/sendmail/doc/changes/changes.ps
+  delete contrib/sendmail/doc/intro/intro.ps
+  delete contrib/sendmail/doc/op/op.ps
+  delete contrib/sendmail/doc/usenix/usenix.ps
+  delete contrib/sendmail/mail.local/Makefile
+  delete contrib/sendmail/mailstats/Makefile
+  delete contrib/sendmail/makemap/Makefile
+  delete contrib/sendmail/praliases/Makefile
+  delete contrib/sendmail/rmail/Makefile
+  delete contrib/sendmail/smrsh/Makefile
+  delete contrib/sendmail/src/Makefile
+  delete contrib/sendmail/src/Makefiles
+  delete contrib/sendmail/src/READ_ME
+  delete contrib/sendmail/src/sysexits.h
 end match
 match /vendor/sendmail/[^d][^/]*/
   min revision 182324
@@ -522,10 +546,10 @@ match /vendor/ntp/4.2.4p8/
   min revision 200454
   max revision 200454
 end match
-# skip tag flattening
+# skip tag flattening and re-tag that records the wrong branch point
 match /vendor/expat/[^d][^/]*/
   min revision 200365
-  max revision 200365
+  max revision 200391
 end match
 match /vendor/groff/[^d][^/]*/
   min revision 202347
@@ -608,6 +632,9 @@ match /vendor/libpcap/1.2.1
   max revision 230834
 end match
 # fixup copied dist/
+# FIXME: why does this happen?
+# progress SVN r261204 branch vendor/dtc/dtc-6a15eb23 = :239392 # from branch vendor/dtc/dist at r261201 => r238737
+# progress SVN r261204 branch vendor/dtc/dtc-6a15eb23 = :261550
 match /vendor/dtc/dtc-f807af19/
   min revision 238734
   max revision 238734
@@ -1089,6 +1116,7 @@ end match
 match /vendor-cddl/(opensolaris)/(20080410a?)/(sys/)?cddl/contrib/opensolaris/
   repository freebsd-base.git
   branch refs/tags/vendor/\1/\2
+  annotated true
 end match
 match /vendor-cddl/(opensolaris)/(20080410a?)/
   action recurse
@@ -1114,6 +1142,7 @@ end match
 match /vendor(?:-sys)/(opensolaris)/(20100802|20100818)/
   repository freebsd-base.git
   branch refs/tags/vendor/\1/\2
+  annotated true
 end match
 
 # opensolaris got copied into illumos
@@ -1274,6 +1303,17 @@ end match
 match /(vendor-sys)/(ipfilter|ngatm|pf)/([^/]+)/
   repository freebsd-base.git
   branch \1/\2/\3
+end match
+
+# Turn non-dist directories into annotated tags.
+match /(vendor)/(sendmail)/dist/
+  repository freebsd-base.git
+  branch \1/\2
+end match
+match /(vendor)/(sendmail)/([^d][^/]*)/
+  repository freebsd-base.git
+  branch refs/tags/\1/\2/\3
+  annotated true
 end match
 
 match /(vendor|vendor-sys|vendor-crypto)/([^/]+)/([^/]+)/

@@ -980,11 +980,27 @@ void FastImportRepository::Transaction::noteCopyFromBranch(const QString &branch
     Q_ASSERT(dummy.isEmpty());
 
     if (mark == -1) {
-        qWarning() << "WARN:" << branch << "is copying from branch" << branchFrom
-                    << "but the latter doesn't exist.  Continuing, assuming the files exist.";
+        // This hack is now needed, as we for example turn the SVN branch
+        // /vendor/sendmail/dist into a git branch vendor/sendmail (sans dist).
+        // This is nice, but needs an ugly and brittle hack. An alternative
+        // would be to keep it as vendor/sendmail/dist during the conversion,
+        // but do a last-pass fixup, renaming all refs called vendor/foo/dist
+        // to vendor/foo (unless they still have tags in the same namespace).
+        // ... or something.
+        if (branchFrom.endsWith("/dist")) {
+            QString non_dist = branchFrom;
+            non_dist.truncate(non_dist.lastIndexOf("/dist"));
+            qWarning() << "WARN:" << branch << "is copying from branch" << branchFrom
+                << "but the latter doesn't exist.  Trying with" << non_dist << "instead.";
+            mark = repository->markFrom(non_dist, branchRevNum, dummy);
+        }
+        if (mark == -1) {
+            qWarning() << "WARN:" << branch << "is copying from branch" << branchFrom
+                << "but the latter doesn't exist.  Continuing, assuming the files exist.";
+        }
     } else if (mark == 0) {
-    qWarning() << "WARN: Unknown revision r" << QByteArray::number(branchRevNum)
-               << ".  Continuing, assuming the files exist.";
+        qWarning() << "WARN: Unknown revision r" << QByteArray::number(branchRevNum)
+            << ".  Continuing, assuming the files exist.";
     } else {
         // Log this warning only once per revnum
         static QSet<int> logged_already_;
