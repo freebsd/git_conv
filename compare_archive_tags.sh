@@ -76,21 +76,7 @@ set -- \
     8.0-RELEASE \
     8.1-RELEASE \
     8.2-RELEASE \
-    8.3-RELEASE \
-    8.4-RELEASE \
-    9.0-RELEASE \
-    9.1-RELEASE \
-    9.2-RELEASE \
-    9.3-RELEASE \
-    10.0-RELEASE \
-    10.1-RELEASE \
-    10.2-RELEASE \
-    10.3-RELEASE \
-    10.4-RELEASE \
-    11.0-RELEASE \
-    11.1-RELEASE \
-    11.2-RELEASE \
-    12.0-RELEASE
+    8.3-RELEASE
 fi
 
 for r; do

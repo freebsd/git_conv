@@ -169,7 +169,7 @@ case "$TYPE" in
             #2.2.6-RELEASE   # has nothing under src/ on the archive server
             #2.2.9-RELEASE   # not in SVN
             #3.5.1-RELEASE   # not in SVN
-            #12.1-RELEASE    # not on the mirror yet
+            #8.4-RELEASE and ff # first releases off of SVN, no interesting IDs in there.
         set -- \
             1.0-RELEASE \
             1.1-RELEASE \
@@ -225,21 +225,7 @@ case "$TYPE" in
             8.0-RELEASE \
             8.1-RELEASE \
             8.2-RELEASE \
-            8.3-RELEASE \
-            8.4-RELEASE \
-            9.0-RELEASE \
-            9.1-RELEASE \
-            9.2-RELEASE \
-            9.3-RELEASE \
-            10.0-RELEASE \
-            10.1-RELEASE \
-            10.2-RELEASE \
-            10.3-RELEASE \
-            10.4-RELEASE \
-            11.0-RELEASE \
-            11.1-RELEASE \
-            11.2-RELEASE \
-            12.0-RELEASE
+            8.3-RELEASE
         for r; do
             dest=archive/${r%-RELEASE}
             test -d $dest && continue
