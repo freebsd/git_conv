@@ -152,7 +152,7 @@ Releases prior to 5.3-RELEASE are omitting the secure/ and crypto/ subdirs."
         echo "Don't know what to commit for rel $rel and tag $tag"
         exit 1
     fi
-    git add -N .
+    git add -fN .
     GIT_COMMITTER_DATE="$c_date" GIT_COMMITTER_NAME="$c_committer" GIT_COMMITTER_EMAIL="$c_email" git commit -q -a --author="$c_auth" --date="$c_date" -m "$c_msg" -m "$msg"
     # TODO: what's in a name?
     GIT_COMMITTER_DATE="$c_date" GIT_COMMITTER_NAME="$c_committer" GIT_COMMITTER_EMAIL="$c_email" git tag -a -f -m "Tag $rel as shipped." release/${tag}_shipped $commit
