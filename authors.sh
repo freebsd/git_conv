@@ -27,7 +27,7 @@ pst = Paul Traina <pst@FreeBSD.org>
 ugen = Ugen J.S. Antsilevich <ugen@FreeBSD.org>
 root = Charlie Root <root@FreeBSD.org>
 vkashyap = Vinod Kashyap <vkashyap@FreeBSD.org>
-yar = Yar Tikhiy <yar@FreeBSD.org>
+yar = Yaroslav Tykhiy <ytykhiy@gmail.com>
 zarzycki = Dave Zarzycki <zarzycki@FreeBSD.org>
 EOS
 
