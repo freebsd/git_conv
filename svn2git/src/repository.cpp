@@ -597,6 +597,11 @@ void FastImportRepository::reloadBranches()
 
 long long FastImportRepository::markFrom(const QString &branchFrom, int branchRevNum, QByteArray &branchFromDesc)
 {
+    // Avoid using operator[], which creates a new branch for branchFrom that
+    // might not even exist.
+    if (!branches.contains(branchFrom)) {
+        return -1;
+    }
     Branch &brFrom = branches[branchFrom];
     if (!brFrom.created)
         return -1;

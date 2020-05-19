@@ -314,47 +314,28 @@ end match
 # This would need a hack for the branchNote to end in old-dist, not
 # old-dist/usr.sbin/sendmail, otherwise a later tag generation fails due to
 # unknown copyfrom branch. ... or some other hack to make the old paths
-# disappear from r38032.
-# We can also add a graftpoint, but baking it into the repo is not possible for
-# the continuous conversion, due to the respinning of hashes.
-# Instead we add a new `strip` rule action that can strip off usr.sbin/sendmail.
-# We still get left-over files for a while, till the flattening of r182324
-# garbage collects them.
-# FIXME: add deletes to get rid of extra files
-match /(vendor)/(sendmail)/(dist)-old/ #usr.sbin/sendmail/
+# disappear from r38032, that's why the `delete` action was introduced.
+match /(vendor)/(sendmail)/(dist)-old/
   max revision 31087
   repository freebsd-base.git
-  branch \1/\2
-  strip usr.sbin/sendmail/
-  prefix contrib/sendmail/
+  branch \1/\2 #/\3
 end match
-match /(vendor)/(sendmail)/dist/
+match /(vendor)/(sendmail)/(dist)/
   min revision 38032
   max revision 38032
   repository freebsd-base.git
-  branch \1/\2
-  delete contrib/sendmail/READ_ME
-  delete contrib/sendmail/cf/cf/Makefile.dist
-  delete contrib/sendmail/contrib/xla
-  delete contrib/sendmail/doc/changes/changes.ps
-  delete contrib/sendmail/doc/intro/intro.ps
-  delete contrib/sendmail/doc/op/op.ps
-  delete contrib/sendmail/doc/usenix/usenix.ps
-  delete contrib/sendmail/mail.local/Makefile
-  delete contrib/sendmail/mailstats/Makefile
-  delete contrib/sendmail/makemap/Makefile
-  delete contrib/sendmail/praliases/Makefile
-  delete contrib/sendmail/rmail/Makefile
-  delete contrib/sendmail/smrsh/Makefile
-  delete contrib/sendmail/src/Makefile
-  delete contrib/sendmail/src/Makefiles
-  delete contrib/sendmail/src/READ_ME
-  delete contrib/sendmail/src/sysexits.h
+  branch \1/\2 #/\3
+  delete usr.sbin/sendmail
 end match
 match /vendor/sendmail/[^d][^/]*/
   min revision 182324
   max revision 182327
 end match
+match /(vendor)/(sendmail)/dist/
+  repository freebsd-base.git
+  branch \1/\2
+end match
+
 
 # this tag has an extra /tags
 match /(vendor)/(SGI)/tags/(v_2_17)/
@@ -1306,10 +1287,6 @@ match /(vendor-sys)/(ipfilter|ngatm|pf)/([^/]+)/
 end match
 
 # Turn non-dist directories into annotated tags.
-match /(vendor)/(sendmail)/dist/
-  repository freebsd-base.git
-  branch \1/\2
-end match
 match /(vendor)/(sendmail)/([^d][^/]*)/
   repository freebsd-base.git
   branch refs/tags/\1/\2/\3

@@ -1186,9 +1186,13 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
                        << qPrintable(prevbranch) << "path"
                        << qPrintable(prevpath) << "rev" << rev_from << ")";
         } else if (path != prevpath) {
-            qDebug() << qPrintable(current)
+            // NOTE(uqs): this will happen when using the `prefix` action and a
+            // vendor branch gets copied to a tag. It'll lead to a disconnected
+            // tag. This shouldn't happen and needs more work.
+            qWarning() << qPrintable(current)
                      << "is a branch copy which renames base directory of all contents"
                      << qPrintable(prevpath) << "to" << qPrintable(path);
+            qFatal("This must not happen. Vendor tags will be disconnected.");
             // FIXME: Handle with fast-import 'file rename' facility
             //        ??? Might need special handling when path == / or prevpath == /
         } else {
