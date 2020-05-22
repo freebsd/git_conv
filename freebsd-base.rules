@@ -318,24 +318,19 @@ end match
 match /(vendor)/(sendmail)/(dist)-old/
   max revision 31087
   repository freebsd-base.git
-  branch \1/\2 #/\3
+  branch \1/\2/\3
 end match
 match /(vendor)/(sendmail)/(dist)/
   min revision 38032
   max revision 38032
   repository freebsd-base.git
-  branch \1/\2 #/\3
+  branch \1/\2/\3
   delete usr.sbin/sendmail
 end match
 match /vendor/sendmail/[^d][^/]*/
   min revision 182324
   max revision 182327
 end match
-match /(vendor)/(sendmail)/dist/
-  repository freebsd-base.git
-  branch \1/\2
-end match
-
 
 # this tag has an extra /tags
 match /(vendor)/(SGI)/tags/(v_2_17)/
