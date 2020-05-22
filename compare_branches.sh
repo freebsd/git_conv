@@ -26,7 +26,7 @@ esac
 
 set -e
 md0=`sudo mdconfig -a -t swap -s 4G -S 4096 -L svn_git_compare -o compress`
-sudo newfs -U $md0
+sudo newfs -U $md0 >/dev/null
 
 sudo mount -o async,noatime /dev/$md0 $S
 sudo chown $USER $S
@@ -38,7 +38,7 @@ diff_it() {
         case "$OPT" in
             I) flags="$flags -I$OPTARG"
                 ;;
-            x) flags="$flags -I$OPTARG"
+            x) flags="$flags -x$OPTARG"
                 ;;
         esac
     done
@@ -102,14 +102,8 @@ if [ $# -ge 2 ] ; then
         to=$1;shift
         diff_it $from $to
     done
+    exit 0
 else
-
-#diff_it vendor-cddl/opensolaris/dist:178529 275928fc142
-#diff_it vendor-cddl/opensolaris/20080410a:179530 275928fc142
-#diff_it vendor-sys/opensolaris/dist:194446 vendor/opensolaris/dist
-#diff_it vendor-sys/illumos/dist:238570 vendor/illumos/dist
-#diff_it vendor-crypto/openssh/dist vendor/openssh/dist
-#diff_it vendor-crypto/openssh/5.2p1 vendor/openssh/5.2p1
 
 diff_it head master
 
@@ -133,20 +127,20 @@ case "$type" in
                         SGI/tags/) diff_it $t/$b$s/v_2_17 $t/${b}v_2_17; continue ;;
                         # strip redundant prefix
                         byacc/byacc-20120115/) diff_it $t/$b$s $t/$b${s#byacc-}; continue ;;
-                        # these got renamed, can't be bothered
+                        # Massive typo, the real r291012 was tagged as such, then r291015 (sic!) was re-tagged into r291012, meaning there's a dist inside. We can only reasonably diff the inner one.
+                        *-r291012/) diff_it $t/$b${s}dist $t/$b${s%012/}015; continue ;;
+                        *-r288513/) diff_it $t/$b${s}dist $t/$b${s%513/}847; continue ;;
+                        # these got renamed during conversion to match the previous naming scheme, can't be bothered
                         *r375505/) continue ;;
-                        # svn tags got fucked up by a second dist/ copy, there's also other schmutz
-                        # FIXME: re-investigate
-                        *-r291012/|*-r288513/) continue ;;
-                        # ditto
-                        device-tree/ianc-b78b6b80/) diff_it $t/$b$s/dist $t/$b$s; continue ;;
-                        dtc/dtc-f807af19/) diff_it $t/$b$s/dist $t/$b$s; continue ;;
+                        # svn tags got fucked up by a second dist/ copy
+                        device-tree/ianc-b78b6b80/) diff_it $t/$b${s}dist $t/$b$s; continue ;;
+                        dtc/dtc-f807af19/) diff_it $t/$b${s}dist $t/$b$s; continue ;;
                         # lol, the flattening in r186675 left behind a contrib/file/.cvsignore, but that means my heuristic for finding flattened tags fails. Oh well ...
-                        file/3.41/|file/4.10/|file/4.17a/|file/4.21/) continue ;;
+                        file/3.41/|file/4.10/|file/4.17a/|file/4.21/) diff_it $t/$b$s@186674 $t/$b$s; continue ;;
                         # git tag dropped the redundant prefix
                         dialog/dialog-1.1*) diff_it $t/$b$s $t/$b${s#dialog-}; continue ;;
-                        # TODO: these are missing the .gitignore, .gitattributes and .github/workflows/ci.yml in git, converter error?
-                        libarchive/3.2.*/|libarchive/3.3.*/|libarchive/3.4.*/|libarchive/dist/) continue ;;
+                        # NOTE: these are missing the .gitignore, .gitattributes et al, because `git archive` will honor the ignore attribute :/
+                        libarchive/3.2.*/|libarchive/3.3.*/|libarchive/3.4.*/|libarchive/dist/) diff_it -x.github -x.gitignore -x.gitattributes $t/$b${s} $t/$b$s; continue ;;
                         # These have an extra level of depth
                         google/*/|Juniper/libxo/|NetBSD/blacklist/|NetBSD/bmake/|NetBSD/libc-pwcache/|NetBSD/libc-vis/|NetBSD/libedit/|NetBSD/libexecinfo/|NetBSD/lukemftp/|NetBSD/lukemftpd/|NetBSD/mknod/|NetBSD/mtree/|NetBSD/softfloat/|NetBSD/sort/|NetBSD/tests/|NetBSD/unvis/|NetBSD/vis/|NetBSD/xlint/|misc-GNU/awk/|misc-GNU/bc/|misc-GNU/bison/|misc-GNU/cpio/|misc-GNU/cvs/|misc-GNU/tar/|misc-GNU/texinfo/)
                             for r in `svn ls $SVN/$t/$b$s | grep '/$'`; do
@@ -157,8 +151,6 @@ case "$type" in
                             done
                             continue
                             ;;
-                        # 2 svn, 1 git
-                        illumos*) continue ;;
                         # we dropped the extra gnu
                         misc-GNU/gnu-sort/)
                             for r in `svn ls $SVN/$t/$b$s | grep '/$'`; do
@@ -166,34 +158,35 @@ case "$type" in
                             done
                             continue
                         ;;
-                        # TODO
-                        ipfilter/*) continue ;;
-                        ngatm/*) continue ;;
-                        opensolaris/*) continue ;;
                         # the tag flattening fucked up the svn keyword
                         # expansion, meaning that a hardcoded string was
                         # submitted with the old path and revision, you can see
                         # that here:
                         # https://svnweb.freebsd.org/base/vendor/openpam/CALIOPSIS/modules/pam_dummy/pam_dummy.c?revision=186063&view=markup
-                        openpam/*) diff_it '-I[$](FreeBSD|Id).*[$]' $t/$b$s ;;
-                        # FIXME FIXME FIXME, due to the merging of dist and
-                        # dist-old, we have a bogus src/Makefiles subdir in
-                        # here, we need to delete that somewhere along the
-                        # conversion.
-                        sendmail/*) continue ;;
+                        openpam/*) diff_it '-I[$](FreeBSD|Id).*[$]' $t/$b$s; continue ;;
+                        # We converted this into 1 dist instead.
+                        sendmail/dist-old/) continue ;;
                         # vendor and vendor-crypto were smushed together, not the SVN tag though.
                         telnet/95-10-23/) continue ;;
                         # this matches, but the heuristic looks in the wrong
                         # dir for the tag flattening
                         telnet/dist/) diff_it $t/$b$s/contrib/telnet/ $t/$b$s; continue ;;
-                        # Ugh, these flattened away 2 dirs
-                        tzcode/*) continue ;;
+                        # Ugh, these flattened away 2 dirs, compare to earlier rev.
+                        tzcode/tzcode9*|tzcode/tzcode1999*|tzcode/tzcode2004a/) diff_it $t/$b$s@183401 $t/$b$s; continue ;;
                         # has another dist/ subdir as the 2nd tagging was messed up
                         tzdata/tzdata2009i/) diff_it $t/$b$s/dist $t/$b$s; continue ;;
                         # bogus
                         zlib/test/) continue ;;
-                        # FIXME has extra files inffas86.c and inffast.S ... how?
-                        zlib/1.2.4/|zlib/1.2.8-full/) continue ;;
+                        # r205483 removed 2 files from the tag. There was
+                        # another tag just 8d later, so we're not going to fix
+                        # this up perfectly.
+                        zlib/1.2.4/) continue ;;
+                        # skipping patched/flattened in the git conversion.
+                        expat/2.0.1_1/) continue ;;
+                        # need to compare 2 branches, not implemented yet but was compared manually
+                        illumos/*|ngatm/*|opensolaris/*) continue ;;
+                        # TODO: 2 svn, 1 git
+                        ipfilter/*) continue ;;
                     esac
                     diff_it $t/$b$s
                 done
@@ -204,20 +197,20 @@ case "$type" in
                 for s in `svn ls $SVN/$t/$b`; do
                     s=${s%/}
                     case "$b$s" in
-                        # tags were "cleaned up" in r182609, skip them
-                        openssh/4.6p1|openssh/4.7p1|openssh/4.9p1|openssh/5.0p1|openssh/5.1p1) continue ;;
+                        # bunch of extra files in here, as we didn't propagate the deletes, we could compare to an older rev though.
+                        openssh/4.6p1|openssh/4.7p1|openssh/4.9p1|openssh/5.0p1|openssh/5.1p1) diff_it $t/$b$s@182608 vendor/$b$s; continue ;;
                         # some hardcoded $FreeBSD$ were committed :/
                         openssh/3.*|openssh/4.*) diff_it '-I[$]FreeBSD.*[$]' $t/$b$s vendor/$b$s; continue ;;
-                        # bunch of extra files in here, as we didn't propagate the deletes, we could compare to an older rev though.
-                        openssh/4.6p1|openssh/4.7p1|openssh/4.9p1|openssh/5.0p1|openssh/5.1p1|openssh/5.9p1) continue ;;
+                        # tag was moved by deleting more files
+                        openssh/5.9p1) diff_it $t/$b$s@225833 vendor/$b$s; continue ;;
                         # prefixes were collapsed from 2 down to 1 in the conversion
                         telnet/95-10-23|telnet/dist) diff_it $t/$b$s/crypto/telnet vendor/$b$s; continue ;;
-                        # unflattened tags, 2010 and following are identical again
-                        acpica/200*) continue ;;
+                        # unflattened tags, 2007 and following are identical again
+                        acpica/2000*|acpica/2001*|acpica/2002*|acpica/2003*|acpica/2004*|acpica/2005*|acpica/20070320) diff_it $t/$b$s@192383 vendor/$b$s; continue ;;
                         # compare against pre-flattening
-                        ath/0.9.16*) diff_it $t/$b$s:182296 vendor/$b$s; continue ;;
-                        # FIXME
-                        ath/0*) continue ;;
+                        ath/0.9.14*|ath/0.9.16*|ath/0.9.4*|ath/0.9.5*|ath/0.9.6*) diff_it $t/$b$s@182296 vendor/$b$s; continue ;;
+                        # svn can't checkout the README at the pre-flattened revision :/ git has it, checked manually.
+                        ath/0.9.17.2|ath/0.9.20.3) diff_it -xREADME $t/$b$s@182296 vendor/$b$s; continue ;;
                         # need to compare 2 branches, not implemented yet but was compared manually
                         illumos/*|ngatm/*|opensolaris/*) continue ;;
                         # TODO merge or compare against vendor-sys

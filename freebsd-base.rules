@@ -962,13 +962,15 @@ end match
 # test directory that should've gone under dist/test
 match /vendor/(libz|zlib)/test/
 end match
-match /vendor/(libz|zlib)/
+# import and tag of 1.2.9 got later clobbered by renaming libz to zlib, but
+# from an older revision. It was also never merged to head.
+match /vendor/libz/
+  min revision 311043
+  max revision 311276
+end match
+match /vendor/zlib/
   min revision 311264
   max revision 311264
-end match
-match /vendor/(libz|zlib)/
-  min revision 311276
-  max revision 311276
 end match
 # zlib, libz, what's the difference?
 match /(vendor)/(libz)/([^/]+)/
