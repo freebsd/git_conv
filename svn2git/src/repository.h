@@ -110,6 +110,7 @@ public:
         virtual void noteCopyFromBranch (const QString &prevbranch, int revFrom) = 0;
 
         virtual void deleteFile(const QString &path) = 0;
+        virtual void renameFile(const QString &from, const QString &to) = 0;
         virtual QIODevice *addFile(const QString &path, int mode, qint64 length) = 0;
 
         virtual bool commitNote(const QByteArray &noteText, bool append,

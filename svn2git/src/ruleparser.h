@@ -74,6 +74,7 @@ public:
         QString prefix;
         QString strip;
         QList<QString> deletes;
+        QList<QPair<QString, QString>> renames;
         int minRevision;
         int maxRevision;
         bool annotate;

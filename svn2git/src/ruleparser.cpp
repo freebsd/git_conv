@@ -144,6 +144,7 @@ void Rules::load(const QString &filename)
     QRegExp matchPrefixLine("prefix\\s+(.*)$", Qt::CaseInsensitive);
     QRegExp matchStripLine("strip\\s+(.*)$", Qt::CaseInsensitive);
     QRegExp matchDeleteLine("delete\\s+(.*)$", Qt::CaseInsensitive);
+    QRegExp matchRenameLine("rename\\s+(\\S+)\\s+(\\S+)$", Qt::CaseInsensitive);
     QRegExp declareLine("declare\\s+("+varRegex+")\\s*=\\s*(\\S+)", Qt::CaseInsensitive);
     QRegExp variableLine("\\$\\{("+varRegex+")(\\|[^}$]*)?\\}", Qt::CaseInsensitive);
     QRegExp includeLine("include\\s+(.*)", Qt::CaseInsensitive);
@@ -269,6 +270,9 @@ void Rules::load(const QString &filename)
                     continue;
                 } else if (matchDeleteLine.exactMatch(line)) {
                     match.deletes += matchDeleteLine.cap(1);
+                    continue;
+                } else if (matchRenameLine.exactMatch(line)) {
+                    match.renames += QPair<QString, QString>(matchRenameLine.cap(1), matchRenameLine.cap(2));
                     continue;
                 } else if (matchActionLine.exactMatch(line)) {
                     QString action = matchActionLine.cap(1);

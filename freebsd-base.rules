@@ -1260,22 +1260,88 @@ match /vendor(-sys)?/ipfilter/[^d][^/]*/
   min revision 253467
   max revision 253468
 end match
+# no flattening and keyword expansion frobbing on the abandoned dist.
+match /vendor-sys/ipfilter/dist-old/
+  min revision 253467
+end match
 # ipfilter sys code was repocopied around, first it lived in
-# /sys/netinet/ then it was moved to sys/contrib/ipfilter/netinet/
+# sys/netinet/ then it was moved to sys/contrib/ipfilter/netinet/
 # r77859 deleted the leftover copies in /sys and r72006 was the last revision
 # to touch the files in both places. Luckily all the files.
 # This will make the files spring into existence under the new location with
-# r72006 and the old files will be deleted with r77859
+# r72006 and the old files will be deleted with r77859. Because the files are
+# not moved within 1 git commit, the rename detection does not triggere here :/
 match /head/sys/contrib/ipfilter/netinet/
   max revision 72005
 end match
 
-# TODO: merge sys and non-sys for ipfilter?
+# For the vendor area, r72001 imported things into two places and the
+# following rev tags the new import (dropping the extra files in the old rev).
+# I conclude thus that the the repo copy was done prior to r72001 and we can
+# rename the old prefix in that rev. We need to suppress the new prefix in all
+# earlier revisions also.
+match /(vendor-sys)/(ipfilter)/(dist)(-old)?/
+  max revision 72000
+  repository freebsd-base.git
+  branch \1/\2/\3
+  rename sys/contrib /dev/null # old location was sys/netinet
+  # FIXME: chase the rename of mln_ipl.c to mlf_ipl.c ???
+end match
+match /(vendor-sys)/(ipfilter)/(dist)(-old)?/
+  min revision 72001
+  max revision 72001
+  repository freebsd-base.git
+  branch \1/\2/\3
+  rename sys/netinet sys/contrib/ipfilter/netinet
+end match
+# 3.4.29 was imported partially into dist-old again and merged into head in
+# r102514 and r102515, three files only.
+match /(vendor-sys)/(ipfilter)/(dist)(-old)?/
+  min revision 102514
+  max revision 102514
+  repository freebsd-base.git
+  branch \1/\2/\3
+  rename sys/netinet/ip_h323_pxy.c sys/contrib/ipfilter/netinet/ip_h323_pxy.c
+  rename sys/netinet/ip_ipsec_pxy.c sys/contrib/ipfilter/netinet/ip_ipsec_pxy.c
+  rename sys/netinet/ip_netbios_pxy.c sys/contrib/ipfilter/netinet/ip_netbios_pxy.c
+end match
+match /(vendor-sys)/(ipfilter)/(dist)(-old)?/
+  min revision 102516
+  max revision 102516
+  repository freebsd-base.git
+  branch \1/\2/\3
+  rename sys/netinet/fil.c sys/contrib/ipfilter/netinet/fil.c
+  rename sys/netinet/ip_auth.c sys/contrib/ipfilter/netinet/ip_auth.c
+  rename sys/netinet/ip_auth.h sys/contrib/ipfilter/netinet/ip_auth.h
+  rename sys/netinet/ip_compat.h sys/contrib/ipfilter/netinet/ip_compat.h
+  rename sys/netinet/ip_fil.c sys/contrib/ipfilter/netinet/ip_fil.c
+  rename sys/netinet/ip_fil.h sys/contrib/ipfilter/netinet/ip_fil.h
+  rename sys/netinet/ip_frag.c sys/contrib/ipfilter/netinet/ip_frag.c
+  rename sys/netinet/ip_frag.h sys/contrib/ipfilter/netinet/ip_frag.h
+  rename sys/netinet/ip_ftp_pxy.c sys/contrib/ipfilter/netinet/ip_ftp_pxy.c
+  rename sys/netinet/ip_log.c sys/contrib/ipfilter/netinet/ip_log.c
+  rename sys/netinet/ip_nat.c sys/contrib/ipfilter/netinet/ip_nat.c
+  rename sys/netinet/ip_nat.h sys/contrib/ipfilter/netinet/ip_nat.h
+  rename sys/netinet/ip_proxy.c sys/contrib/ipfilter/netinet/ip_proxy.c
+  rename sys/netinet/ip_proxy.h sys/contrib/ipfilter/netinet/ip_proxy.h
+  rename sys/netinet/ip_raudio_pxy.c sys/contrib/ipfilter/netinet/ip_raudio_pxy.c
+  rename sys/netinet/ip_rcmd_pxy.c sys/contrib/ipfilter/netinet/ip_rcmd_pxy.c
+  rename sys/netinet/ip_state.c sys/contrib/ipfilter/netinet/ip_state.c
+  rename sys/netinet/ip_state.h sys/contrib/ipfilter/netinet/ip_state.h
+  rename sys/netinet/ipl.h sys/contrib/ipfilter/netinet/ipl.h
+  rename sys/netinet/mlfk_ipl.c sys/contrib/ipfilter/netinet/mlfk_ipl.c
+end match
+# r102519 is doing the actually correct tag.
+match /vendor-sys/ipfilter/v3-4-29/
+  min revision 102517
+  max revision 102517
+end match
 match /(vendor-sys)/(ipfilter)/(dist)(-old)?/
   max revision 253468  # maybe use r102516 instead?
   repository freebsd-base.git
   branch \1/\2/\3
 end match
+# TODO: merge sys and non-sys for ipfilter?
 
 # We have some conflicting vendor names here, e.g. illumos, opensolaris, ngatm, pf, ipfilter.
 match /(vendor-sys)/(ipfilter|ngatm|pf)/([^/]+)/

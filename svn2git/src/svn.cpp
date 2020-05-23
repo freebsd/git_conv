@@ -422,6 +422,7 @@ public:
     QSet<QString> to_branches_;
 
     QMap<QString, QSet<QString>> deletions_;
+    QMap<QString, QMap<QString, QString>> renames_;
 
     // There are some handful of mergeinfo changes that are bogus and need to be skipped
     // r306199 - Revert svn:mergeinfo added inadvertantly in last commit r306197
@@ -753,8 +754,8 @@ int SvnRevision::prepareTransactions()
             return EXIT_FAILURE;
     }
 
-    // Handle the deletions that we collected throughout the path/rule matching
-    // and issue them once.
+    // Handle the deletions and renames that we collected throughout the
+    // path/rule matching and issue them once.
     for (const auto& rbp : deletions_.toStdMap()) {
         const QString& repo_branch = rbp.first;
         // FIXME: must exist, for now. might have to relax this requirement ...
@@ -763,6 +764,17 @@ int SvnRevision::prepareTransactions()
             if(ruledebug)
                 qDebug() << "delete (" << txn->getBranch() << path << ")";
             txn->deleteFile(path);
+        }
+    }
+    for (const auto& rbp : renames_.toStdMap()) {
+        const QString& repo_branch = rbp.first;
+        // FIXME: must exist, for now. might have to relax this requirement ...
+        Repository::Transaction *txn = transactions[repo_branch];
+        for (const auto& from_to : rbp.second.toStdMap()) {
+            if(ruledebug)
+              qDebug() << "rename (" << txn->getBranch() << from_to.first
+                       << "->" << from_to.second << ")";
+            txn->renameFile(from_to.first, from_to.second);
         }
     }
 
@@ -779,7 +791,7 @@ int SvnRevision::prepareTransactions()
         { 264691, { .from = "vendor/openssh/dist", .rev = 264690, .to = "master" } },
         // Recorded in r299540
         { 299540, { .from = "vendor/libarchive/dist", .rev = 299539, .to = "master" } },
-        // This was actually merged from master into vendor, check if this works out.
+        // This was actually merged from master into vendor
         { 317396, { .from = "vendor/less/dist", .rev = 317395, .to = "master" } },
         // Recorded in r333678
         { 333677, { .from = "vendor/openssh/dist", .rev = 333676, .to = "master" } },
@@ -1429,7 +1441,7 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
                                  epoch, log);
     }
 
-    // This is a once per-rule action, but we end up here for every path that
+    // These are a once per-rev actions, but we end up here for every path that
     // has matched. That is, we emit tons and tons of redundant deletes into
     // the fast-import stream. We can't drain the list either, as the rule
     // match is marked const. Gather them all up for handling in
@@ -1441,6 +1453,15 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
         }
         for (auto const& path : rule.deletes) {
             deletions_[key].insert(path);
+        }
+    }
+    if (!rule.renames.empty()) {
+        const QString key = repository + branch;
+        if (!renames_.contains(key)) {
+            renames_[key] = QMap<QString, QString>();
+        }
+        for (auto const& from_to : rule.renames) {
+            renames_[key].insert(from_to.first, from_to.second);
         }
     }
 

@@ -58,6 +58,7 @@ public:
         QVector<int> merges;
 
         QStringList deletedFiles;
+        QList<QPair<QString, QString>> renamedFiles;
         QByteArray modifiedFiles;
 
         inline Transaction() {}
@@ -72,6 +73,7 @@ public:
         void noteCopyFromBranch (const QString &prevbranch, int revFrom);
 
         void deleteFile(const QString &path);
+        void renameFile(const QString &from, const QString &to);
         QIODevice *addFile(const QString &path, int mode, qint64 length);
 
         bool commitNote(const QByteArray &noteText, bool append,
@@ -177,6 +179,7 @@ public:
         { txn->noteCopyFromBranch(prevbranch, revFrom); }
 
         void deleteFile(const QString &path) { txn->deleteFile(prefix + path); }
+        void renameFile(const QString &from, const QString &to) { txn->renameFile(from, to); };
         QIODevice *addFile(const QString &path, int mode, qint64 length)
         { return txn->addFile(prefix + path, mode, length); }
 
@@ -1036,6 +1039,17 @@ void FastImportRepository::Transaction::deleteFile(const QString &path)
     deletedFiles.append(pathNoSlash);
 }
 
+void FastImportRepository::Transaction::renameFile(const QString &from, const QString &to)
+{
+    QString fromNoSlash = repository->prefix + from;
+    QString toNoSlash = repository->prefix + to;
+    if (fromNoSlash.endsWith('/'))
+      fromNoSlash.chop(1);
+    if (toNoSlash.endsWith('/'))
+      toNoSlash.chop(1);
+    renamedFiles.append(QPair<QString, QString>(fromNoSlash, toNoSlash));
+}
+
 QIODevice *FastImportRepository::Transaction::addFile(const QString &path, int mode, qint64 length)
 {
     mark_t mark = repository->next_file_mark--;
@@ -1220,6 +1234,23 @@ int FastImportRepository::Transaction::commit()
 
     // write the file modifications
     repository->fastImport.write(modifiedFiles);
+
+    // run through the rename pairs, potentially deleting paths
+    QPair<QString, QString> pair;
+    foreach (pair, renamedFiles) {
+        const QString& from = pair.first;
+        const QString& to = pair.second;
+        // We want our delete fixups to happen *after* the modifications were
+        // written, so that we can undo CVS repo copies. We cannot abuse the
+        // regular delete mechanics above though, as that would interfere
+        // horribly with the regular SVN export. So basically handle renames to
+        // "/dev/null" as such post-export deletes.
+        if (to == "" || to == "/dev/null") {
+            repository->fastImport.write("D " + from.toUtf8() + "\n");
+        } else {
+            repository->fastImport.write("R " + from.toUtf8() + " " + to.toUtf8() + "\n");
+        }
+    }
 
     repository->fastImport.write("\nprogress SVN r" + QByteArray::number(revnum)
                                  + " branch " + branch + " = :" + QByteArray::number(mark)
