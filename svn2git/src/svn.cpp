@@ -620,17 +620,6 @@ bool SvnRevision::maybeParseSimpleMergeinfo(const int revnum, struct mi* mi) {
     qDebug() << qPrintable(result);
     qDebug() << "=END=";
     qDebug() << "mergeinfo parsing: del/add/mod=" << del_mi << del_mi_empty << add_mi << add_mi_empty << diff_mi << diff_mi_empty;
-    {
-      QDir dir;
-      if (dir.mkpath("mi")) {
-        // This should create only about 3k files or so.
-        QFile file(QString("mi/r%1.txt").arg(revnum));
-        if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-          QTextStream out(&file);
-          out << qPrintable(result);
-        }
-      }
-    }
 
     // NOTE: need to use a fully anchored match, otherwise e.g. r238926 gets
     // handled wrong, as it uses the first mergeinfo to deduce the merge-from,
@@ -710,6 +699,16 @@ _____________*
             return true;
         }
         qDebug("Couldn't parse mergeinfo via rules file for %s or %s", qPrintable(p), qPrintable(f));
+    } else {
+      QDir dir;
+      if (dir.mkpath("mi")) {
+        // This should create only about 3k files or so.
+        QFile file(QString("mi/r%1.txt").arg(revnum));
+        if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+          QTextStream out(&file);
+          out << qPrintable(result);
+        }
+      }
     }
     return false;
 }
@@ -767,20 +766,118 @@ int SvnRevision::prepareTransactions()
         }
     }
 
-    // No svn:mergeinfo found, not in src or in the pre-svn days, skip.
-    if (!mergeinfo_found || !svn_repo_path.endsWith("base") || revnum < 179447)
+    // Not in src or in the pre-svn days, skip.
+    if (!svn_repo_path.endsWith("base") || revnum < 179447)
+        return EXIT_SUCCESS;
+
+    // Force a bunch of merges, even though SVN never properly recorded them.
+    // Some of them were later added via svn:mergeinfo. Even more had changes
+    // imported into head, then later the vendor import was done (?!) and
+    // finally the mergeinfo recorded. We're not going to patch that up ...
+    static QMap<int, struct mi> force_merges = {
+        // Recorded in r265214
+        { 264691, { .from = "vendor/openssh/dist", .rev = 264690, .to = "master" } },
+        // Recorded in r299540
+        { 299540, { .from = "vendor/libarchive/dist", .rev = 299539, .to = "master" } },
+        // This was actually merged from master into vendor, check if this works out.
+        { 317396, { .from = "vendor/less/dist", .rev = 317395, .to = "master" } },
+        // Recorded in r333678
+        { 333677, { .from = "vendor/openssh/dist", .rev = 333676, .to = "master" } },
+    };
+    if (force_merges.contains(revnum)) {
+        const auto& mi = force_merges.value(revnum);
+        const QString repository = "freebsd-base.git";
+        const QString svnprefix = "";
+        const QString& branch = mi.to;
+        Repository::Transaction *txn = transactions.value(repository + branch, 0);
+        if (!txn) {
+            Repository *repo = repositories.value(repository, 0);
+            txn = repo->newTransaction(branch, svnprefix, revnum);
+            if (!txn)
+                return EXIT_FAILURE;
+            transactions.insert(repository + branch, txn);
+        }
+        txn->noteCopyFromBranch(mi.from, mi.rev);
+        needCommit = true;
+        return EXIT_SUCCESS;
+    }
+
+    // No svn:mergeinfo found
+    if (!mergeinfo_found)
         return EXIT_SUCCESS;
 
     // List of revisions to skip as their mergeinfo is complex and irrelevant in
     // terms of git.
     static QSet<int> skip_mergeinfo = {
-        196075,
-        179468,
-        244485,
-        244487,
-        262833,
-        262834,
-        355814,
+        196075, 179468, 244485, 244487, 262833, 262834, 355814,
+        // These are predominantly mergeinfo bootstraps, deletes, fixups,
+        // records-after-the-fact and a whole bunch more.
+        179481, 179511, 179512, 179601, 179683, 179684, 179698, 179982, 179997,
+        180006, 180007, 180241, 180243, 180244, 180245, 180402, 180457, 180472,
+        180764, 181081, 181290, 181372, 181373, 181378, 181379, 181380, 181408,
+        181415, 181484, 181519, 181541, 181633, 181650, 181705, 181711, 181712,
+        181715, 181716, 181723, 181725, 181728, 181829, 182049, 182050, 182232,
+        182233, 182244, 182246, 182306, 182316, 182317, 182318, 182319, 182320,
+        182327, 182328, 182335, 182347, 182508, 182509, 182510, 182511, 182514,
+        182581, 182597, 182598, 182604, 182610, 182611, 182612, 182613, 182623,
+        182701, 182705, 182770, 182772, 183227, 183395, 183404, 183405, 183434,
+        183715, 183716, 183722, 183956, 184305, 184306, 184637, 184788, 184901,
+        184929, 184930, 184931, 184940, 185340, 185351, 185613, 185615, 185709,
+        185875, 186066, 186232, 186268, 186991, 186992, 186998, 187049, 187266,
+        187268, 187448, 187625, 187912, 188283, 188436, 189257, 189266, 190019,
+        190155, 190156, 190205, 190258, 190326, 190812, 191926, 192388, 193523,
+        193743, 193749, 193915, 193946, 194010, 194341, 194347, 194377, 194453,
+        194603, 195588, 195823, 195835, 196324, 196325, 196327, 196329, 196343,
+        196606, 197068, 197069, 197232, 197233, 197329, 197353, 197378, 197739,
+        197792, 197839, 197846, 197941, 198516, 198517, 199030, 199377, 199406,
+        199973, 200367, 200454, 200575, 201365, 201635, 201826, 201828, 201829,
+        201939, 202354, 202936, 202938, 202949, 202952, 203039, 203117, 203389,
+        203753, 204097, 204239, 204930, 205483, 205484, 205565, 205684, 205685,
+        205692, 205696, 205697, 205703, 205704, 206096, 206101, 206201, 206531,
+        206564, 206750, 207003, 208215, 208216, 208246, 208306, 208399, 208401,
+        208521, 208956, 209137, 209479, 209480, 210147, 210223, 210489, 211403,
+        211492, 211662, 211703, 211942, 211943, 211961, 212869, 212871, 213352,
+        213355, 213989, 214344, 215479, 215681, 215682, 215972, 215994, 216459,
+        216460, 216601, 217340, 217448, 217901, 217983, 219549, 219734, 220492,
+        220493, 220957, 221767, 222565, 223301, 223549, 224146, 224288, 224530,
+        225867, 226051, 227624, 227625, 229557, 230240, 230241, 231152, 231155,
+        231365, 231366, 231856, 231974, 232294, 232622, 235249, 235250, 235665,
+        235763, 235784, 235794, 236203, 236721, 236732, 237954, 237971, 238401,
+        238684, 239526, 240553, 240911, 241450, 244884, 244885, 244886, 244887,
+        244888, 244889, 245826, 245827, 245855, 245856, 246409, 246411, 247017,
+        247464, 248086, 248238, 249364, 249469, 250347, 251917, 252024, 252137,
+        253482, 253961, 254014, 254099, 254113, 254119, 254213, 254972, 255831,
+        256099, 256344, 258405, 258562, 258804, 259334, 259445, 259485, 259488,
+        260658, 260677, 261264, 261317, 262045, 262050, 262223, 262342, 262637,
+        262792, 262875, 263707, 263888, 264249, 265214, 265293, 265294, 265645,
+        265991, 265992, 265997, 266027, 266389, 266767, 266768, 266840, 267410,
+        267414, 267455, 267456, 267539, 267684, 267702, 267939, 268124, 268213,
+        268343, 268627, 270314, 271741, 272462, 272837, 273497, 274719, 275188,
+        275323, 275580, 276366, 276369, 276676, 278157, 280465, 281279, 282058,
+        282060, 282068, 282479, 282993, 283085, 283154, 283798, 283862, 284298,
+        284299, 284300, 284305, 284307, 284715, 284973, 284974, 285832, 285969,
+        286679, 287018, 287630, 287660, 287743, 287938, 288034, 288328, 288331,
+        288928, 289176, 289179, 289235, 289237, 289301, 289690, 289827, 291187,
+        291803, 292505, 292912, 293114, 293122, 293149, 293150, 293152, 293199,
+        293207, 293211, 293417, 293645, 294168, 294376, 295411, 295434, 295446,
+        296966, 298096, 298097, 298098, 298099, 298623, 299540, 301078, 301501,
+        301813, 301831, 301832, 302009, 302161, 303162, 303363, 304419, 304661,
+        305204, 305817, 305818, 305892, 305893, 306079, 309094, 309107, 309169,
+        309535, 310001, 312217, 312640, 313435, 313470, 313484, 313503, 313534,
+        313678, 314108, 314284, 314285, 314941, 315061, 315414, 316086, 317396,
+        317852, 318195, 318248, 318735, 318834, 318922, 318926, 320562, 320563,
+        320995, 321215, 321216, 321254, 321255, 321278, 321280, 321352, 321557,
+        321560, 321564, 322220, 322247, 323719, 324298, 325476, 327414, 327634,
+        327887, 327933, 328105, 328602, 328854, 328859, 328870, 329151, 329871,
+        330327, 331027, 331110, 331336, 331494, 331685, 331796, 332051, 332129,
+        332366, 333678, 333764, 335167, 335695, 335758, 336341, 336342, 336502,
+        336510, 336512, 336513, 336515, 336939, 337011, 337019, 337095, 337111,
+        337188, 337311, 337312, 337314, 337954, 337955, 339018, 339156, 339253,
+        339257, 339258, 339617, 341000, 341597, 342951, 343243, 343317, 343318,
+        344130, 344284, 344287, 344414, 344778, 345232, 345716, 348038, 348046,
+        348723, 349702, 351342, 351392, 352043, 352239, 352254, 352346, 352347,
+        352770, 352771, 353352, 353567, 353973, 353974, 353996, 355292, 355903,
+        355948, 356095, 356774, 356930, 357060, 357584, 358850, 360666, 360668,
     };
     if (skip_mergeinfo.contains(revnum)) {
         return EXIT_SUCCESS;
@@ -836,19 +933,19 @@ int SvnRevision::prepareTransactions()
 
     printf(" MERGEINFO: rev %d has pure mergeinfo w/o path copies going into %d branches: %s",
            revnum, to_branches_.size(), qPrintable(branches.join(" ")));
+    fflush(stdout);
 
     if (to_branches_.size() == 0) {
         printf(" MONKEYMERGE don't know how to handle empty branches!");
         return EXIT_SUCCESS;
     }
-    fflush(stdout);
 
     // Things we patch up manually as the SVN history around them is ...
     // creative.
     static QMap<int, struct mi> manual_merges = {
         { 182352, { .from = "vendor/sendmail/dist", .rev = 182351, .to = "master" } },
         { 229307, { .from = "releng/9.0", .rev = 229306, .to = "refs/tags/release/9.0.0" } },
-        // These 2 were merged from "/vendor" (sic!)
+        // These 2 were merged from "/vendor" (sic! no subdir)
         { 357636, { .from = "vendor/NetBSD/tests/dist", .rev = 357635, .to = "master" } },
         { 357688, { .from = "vendor/NetBSD/tests/dist", .rev = 357687, .to = "master" } },
     };
