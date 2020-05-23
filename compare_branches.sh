@@ -96,6 +96,83 @@ diff_it() {
     set +e
 }
 
+diff_em() {
+    local from1 from2 to r flags
+    set -e
+    while getopts "I:x:" OPT; do
+        case "$OPT" in
+            I) flags="$flags -I$OPTARG"
+                ;;
+            x) flags="$flags -x$OPTARG"
+                ;;
+        esac
+    done
+    shift $(($OPTIND - 1))
+
+    case $1 in
+        *:*)
+            from1=${1%:*}@${1#*:}
+            r="-r ${1#*:}"
+            ;;
+        *)
+            from1=${1%%/}
+            r=
+            ;;
+    esac
+
+    case $2 in
+        *:*)
+            from2=${2%:*}@${2#*:}
+            r="-r ${2#*:}"
+            ;;
+        *)
+            from2=${2%%/}
+            r=
+            ;;
+    esac
+    to=${3%%/}
+
+    sentinel="$GIT/compared_to_`echo -n $to | tr / _`"
+
+    if [ -r "$sentinel" ]; then
+        return
+    fi
+    set -e
+    cd $S && rm -rf s g
+    # NOTE: vendor-sys/illumos/dist has a newer avl.c, as does git. If we
+    # would export the SVN tags in different order, we'd get the older avl.c
+    # and would end up with a diff.
+    svn export --force --ignore-keywords -q $SVN/$from1 s
+    svn export --force --ignore-keywords -q $SVN/$from2 s
+    GIT_DIR=$GIT git archive --format=tar --prefix=g/ $to | tar xf -
+    test -d s || exit 1
+    test -d g || exit 1
+    #flags='-I[$]FreeBSD.*[$]'
+    # Some tag flattenings "lost" their original .cvsignore, ignore such diffs.
+    flags="$flags -x.cvsignore"
+    # llvm/llvm-release_60-r321788/ and co have a file called
+    # preserve-comments-crlf.s where git preserves the CRLF line ending, but
+    # the SVN export doesn't? The file in SVN has the svn:eol-style=native
+    # property though ...
+    diff -ruN --strip-trailing-cr `echo $flags` s g >/dev/null || {
+        # we don't flatten tags, so try 1 or 2 levels deeper again.
+        if [ 1 -eq `ls -1 g/|wc -l` ] ; then
+            diff -ruN --strip-trailing-cr `echo $flags` s g/*/ >/dev/null || {
+                if [ 1 -eq `ls -1 g/*/|wc -l` ] ; then
+                    diff -ruN --strip-trailing-cr `echo $flags` s g/*/*/ >/dev/null || {
+                        echo "diffs found in SVN $from1 + $from2 vs git $to, bailing out" >&2; exit 1;
+                    }
+                fi
+            }
+        else
+            echo "diffs found in SVN $from1 + $from2 vs git $to, bailing out" >&2; exit 1;
+        fi
+    }
+    touch "$sentinel"
+    cd ..
+    set +e
+}
+
 if [ $# -ge 2 ] ; then
     while [ $# -ge 2 ] ; do
         from=$1; shift
@@ -183,10 +260,20 @@ case "$type" in
                         zlib/1.2.4/) continue ;;
                         # skipping patched/flattened in the git conversion.
                         expat/2.0.1_1/) continue ;;
-                        # need to compare 2 branches, not implemented yet but was compared manually
-                        illumos/*|ngatm/*|opensolaris/*) continue ;;
-                        # TODO: 2 svn, 1 git
-                        ipfilter/*) continue ;;
+                        # NOTE: exists only in userland, need to skip kernel bits.
+                        ngatm/1.1.1/) diff_it -xsys $t/$b$s ;;
+                        # NOTE: exists only in userland, need to skip kernel bits.
+                        opensolaris/20080410b/|opensolaris/20100802/) diff_it -xuts $t/$b$s ;;
+                        # FIXME has a diff due to the merge, probably can't be helped.
+                        illumos/20100818/) continue ;;
+                        # FIXME needs investigation!
+                        opensolaris/20080410/) continue ;;
+                        # FIXME: git is missing a handful of files
+                        opensolaris/20080410a/) continue ;;
+                        # need to compare 2 branches
+                        illumos/*|ngatm/*|opensolaris/*) diff_em $t/$b$s vendor-sys/$b$s $t/$b$s; continue ;;
+                        # Curiously some SVN keyword expansion diff in that 1 tag only?!
+                        ipfilter/4.1.8/) diff_it '-I[$]FreeBSD.*[$]' $t/$b$s $t/$b$s; continue ;;
                     esac
                     diff_it $t/$b$s
                 done
@@ -211,10 +298,24 @@ case "$type" in
                         ath/0.9.14*|ath/0.9.16*|ath/0.9.4*|ath/0.9.5*|ath/0.9.6*) diff_it $t/$b$s@182296 vendor/$b$s; continue ;;
                         # svn can't checkout the README at the pre-flattened revision :/ git has it, checked manually.
                         ath/0.9.17.2|ath/0.9.20.3) diff_it -xREADME $t/$b$s@182296 vendor/$b$s; continue ;;
-                        # need to compare 2 branches, not implemented yet but was compared manually
-                        illumos/*|ngatm/*|opensolaris/*) continue ;;
-                        # TODO merge or compare against vendor-sys
-                        ipfilter/*|pf/*) continue ;;
+                        # FIXME has a diff due to the merge, probably can't be helped.
+                        illumos/20100818) continue ;;
+                        # FIXME needs investigation!
+                        opensolaris/20080410) continue ;;
+                        # FIXME: git is missing a handful of files
+                        opensolaris/20080410a) continue ;;
+                        # need to compare 2 branches, basically already handled above anyway
+                        illumos/*|ngatm/*|opensolaris/*) diff_em $t/$b$s vendor/$b$s vendor/$b$s; continue ;;
+                        # this was merged into the proper dist branch
+                        ipfilter/dist-old) continue ;;
+                        # FIXME: these got the new layout compared to SVN
+                        ipfilter/v3-4-16|ipfilter/v3-4-29) continue ;;
+                        # compare against pre-flattening, FIXME: chase up the 2 extra files
+                        ipfilter/3*|ipfilter/v3*|ipfilter/V3*|ipfilter/4*) diff_it -xmlf_ipl.c -xmln_ipl.c $t/$b$s@253466 $t/$b$s; continue ;;
+                        ipfilter/*) diff_it $t/$b$s $t/$b$s; continue ;;
+                        # compare againts pre-flattening
+                        pf/3.7.001|pf/4.1) diff_it $t/$b$s@181287 $t/$b$s; continue ;;
+                        pf/*) diff_it $t/$b$s $t/$b$s; continue ;;
                     esac
                     diff_it $t/$b$s vendor/$b$s
                 done
