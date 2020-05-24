@@ -665,6 +665,32 @@ match /vendor-sys/acpica/
   min revision 260663
   max revision 260663
 end match
+# SVN fucked this up, it copies dist from an older revision, most other files
+# too, only a few come from the latest rev. Urgh.
+# r261204 | imp | 2014-01-27 07:31:37 +0100 (Mon, 27 Jan 2014) | 2 lines
+# Changed paths:
+#    A /vendor/dtc/dtc-6a15eb23 (from /vendor/dtc/dist:261201)
+#    R /vendor/dtc/dtc-6a15eb23/Makefile (from /vendor/dtc/dist/Makefile:261202
+#    ...
+#    A /vendor/dtc/dtc-6a15eb23/tests/delete_reinstate_multilabel.dts (from /vendor/dtc/dist/tests/delete_reinstate_multilabel.dts:261203)
+#    ...
+# The converter dutifully branches this from 261201, but it makes more sense to
+# branch it from 261203 indeed.
+# Try with a recurse rule, to drop the branchpoint of the top-level dir, maybe ...
+# nope, then the tag is disconnected. While it's a leaf tag, we could re-write
+# it after the conversion is done easily, but it would mess up the notes ref,
+# so instead hack something in the exporter directly.
+#match /(vendor)/(dtc)/(dtc-6a15eb23)/$
+#  action recurse
+#  min revision 261204
+#  max revision 261204
+#end match
+#match /(vendor)/(dtc)/(dtc-6a15eb23)/
+#  min revision 261204
+#  max revision 261204
+#  repository freebsd-base.git
+#  branch \1/\2/\3
+#end match
 # yours truly messes up mdocml tags
 match /vendor/mdocml/1.12.3
   max revision 261334

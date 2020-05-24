@@ -1084,6 +1084,11 @@ int SvnRevision::exportEntry(const char *key, const svn_fs_path_change2_t *chang
         // obviously no longer exists in the current revision
         SVN_ERR(svn_fs_copied_from(&rev_from, &path_from, fs_root, key, revpool));
     }
+    // Yolo, we have a bogus rev_from for vendor/dtc tagging, patch it up right here.
+    if (!strcmp(key, "/vendor/dtc/dtc-6a15eb23") && rev_from == 261201) {
+        rev_from = 261203;
+    }
+
     // Is there mergeinfo attached? Only do this once per revnum
     // We abuse the logged_already hash for this.
     if (change->mergeinfo_mod == svn_tristate_true &&
