@@ -195,7 +195,8 @@ end match
 # fixup trailing dot, skip the rename revs
 match /vendor/(clang|llvm)/(clang|llvm)-(r73070)\./
   repository freebsd-base.git
-  branch vendor/\1/\2-\3
+  branch refs/tags/vendor/\1/\2-\3
+  annotated true
   max revision 193727
 end match
 match /vendor/(clang|llvm)/
@@ -220,7 +221,8 @@ end match
 # fix up tag rename
 match /(vendor)/(llvm)/(llvm-release)_35(-r216957)/
   repository freebsd-base.git
-  branch \1/\2/\3_350\4
+  branch refs/tags/\1/\2/\3_350\4
+  annotated true
   max revision 274956
 end match
 match /vendor/llvm/
@@ -232,7 +234,8 @@ match /vendor/llvm/llvm-trunk-r256633/
 end match
 match /(vendor)/(clang|llvm)/(clang|llvm)-([0-9]+)/
   repository freebsd-base.git
-  branch \1/\2/\3-r\4
+  branch refs/tags/\1/\2/\3-r\4
+  annotated true
 end match
 # Imported was r288847 and the commit message says so, the tags then went into
 # existing subdirs. Did I ever tell you how SVN's notions of tags and branches
@@ -242,7 +245,8 @@ match /(vendor)/(llvm|clang|compiler-rt|libc..|lld|lldb)/([^/]+-release_39)-r288
   min revision 309809
   max revision 309815
   repository freebsd-base.git
-  branch \1/\2/\3-r288847
+  branch refs/tags/\1/\2/\3-r288847
+  annotated true
 end match
 # I assume r291012 was a typo for r291015 and it got moved into the wrong place
 # (a directory that already exists, so that it ended up with a trailing dist/
@@ -251,7 +255,8 @@ end match
 # tag of r291015 went to the wrong dirs.
 match /(vendor)/(llvm|clang|compiler-rt|libc..|lld|lldb)/([^/]+-trunk)-r291012/dist/
   repository freebsd-base.git
-  branch \1/\2/\3-r291015
+  branch refs/tags/\1/\2/\3-r291015
+  annotated true
   min revision 311328
 end match
 # A bunch of misspellings, later properly tagged
@@ -266,7 +271,8 @@ end match
 match /(vendor)/(clang|compiler-rt|libc..|lld|lldb|llvm-libunwind|llvm-openmp|llvm)/(clang|compiler-rt|libc..|lld|lldb|libunwind|openmp|llvm)(-r375505)/
   max revision 353955
   repository freebsd-base.git
-  branch \1/\2/\3-trunk\4
+  branch refs/tags/\1/\2/\3-trunk\4
+  annotated true
 end match
 # Skip empty vendor dir creation and branches
 match /vendor/llvm-project
@@ -337,7 +343,8 @@ match /(vendor)/(SGI)/tags/(v_2_17)/
   min revision 46287
   max revision 46287
   repository freebsd-base.git
-  branch \1/\2/\3
+  branch refs/tags/\1/\2/\3
+  annotated true
 end match
 # tzcode got tagged from tzdata (sic!), that didn't go as planned, it was later deleted.
 match /vendor/tzcode/tzcode2001d/
@@ -472,7 +479,8 @@ match /(vendor)/(tzdata)/(tzdata2000g)/(dist)/
   min revision 191616
   max revision 191616
   repository freebsd-base.git
-  branch \1/\2/tzdata2009g
+  branch refs/tags/\1/\2/tzdata2009g
+  annotated true
 end match
 match /vendor/tzdata/
   min revision 191617
@@ -499,7 +507,8 @@ end match
 # dropped a prefix
 match /(vendor)/(tzdata)/(2009.)/
   repository freebsd-base.git
-  branch \1/\2/tzdata\3
+  branch refs/tags/\1/\2/tzdata\3
+  annotated true
   max revision 194481
 end match
 match /vendor/tzdata/
@@ -511,7 +520,8 @@ match /(vendor)/(tzdata)/(tzdata2009m)/(dist)/
   min revision 197595
   max revision 197595
   repository freebsd-base.git
-  branch \1/\2/tzdata2009n
+  branch refs/tags/\1/\2/tzdata2009n
+  annotated true
 end match
 match /vendor/tzdata/tzdata2009.
   min revision 197596
@@ -579,7 +589,8 @@ end match
 # wrong tag name and later rename
 match /(vendor)/(ee)/ee-(1.5.1)/
   repository freebsd-base.git
-  branch \1/\2/\3
+  branch refs/tags/\1/\2/\3
+  annotated true
   max revision 213563
 end match
 match /vendor/ee/
@@ -595,7 +606,8 @@ match /(vendor)/(dialog)/dialog-(1.1-[0-9]+)/
   min revision 217339
   max revision 241817
   repository freebsd-base.git
-  branch \1/\2/\3
+  branch refs/tags/\1/\2/\3
+  annotated true
 end match
 # import that was later re-done
 match /vendor/tnftp/
@@ -608,9 +620,6 @@ match /vendor/libpcap/1.2.1
   max revision 230834
 end match
 # fixup copied dist/
-# FIXME: why does this happen?
-# progress SVN r261204 branch vendor/dtc/dtc-6a15eb23 = :239392 # from branch vendor/dtc/dist at r261201 => r238737
-# progress SVN r261204 branch vendor/dtc/dtc-6a15eb23 = :261550
 match /vendor/dtc/dtc-f807af19/
   min revision 238734
   max revision 238734
@@ -619,7 +628,8 @@ match /(vendor)/(dtc)/(dtc-f807af19)/dist/
   min revision 238738
   max revision 238738
   repository freebsd-base.git
-  branch \1/\2/\3
+  branch refs/tags/\1/\2/\3
+  annotated true
 end match
 # was never used
 match /vendor/NetBSD/atf/
@@ -639,7 +649,8 @@ end match
 match /(vendor)/(NetBSD)/(bmake)/bmake-(20121111)/
   max revision 243106
   repository freebsd-base.git
-  branch \1/\2/\3/\4
+  branch refs/tags/\1/\2/\3/\4
+  annotated true
 end match
 # no flattening of tags
 match /vendor/patch/[^d][^/]*/
@@ -659,7 +670,8 @@ end match
 match /(vendor)-sys/(acpica)/(20140414)/
   max revision 260662
   repository freebsd-base.git
-  branch \1/\2/20140114
+  branch refs/tags/\1/\2/20140114
+  annotated true
 end match
 match /vendor-sys/acpica/
   min revision 260663
@@ -689,7 +701,8 @@ end match
 #  min revision 261204
 #  max revision 261204
 #  repository freebsd-base.git
-#  branch \1/\2/\3
+#  branch refs/tags/\1/\2/\3
+#  annotated true
 #end match
 # yours truly messes up mdocml tags
 match /vendor/mdocml/1.12.3
@@ -721,7 +734,8 @@ match /(vendor)/(device-tree)/(ianc-b78b6b80)/dist/
   min revision 270867
   max revision 270867
   repository freebsd-base.git
-  branch \1/\2/\3
+  branch refs/tags/\1/\2/\3
+  annotated true
 end match
 # don't muck with tags, especially not deleting empty dirs
 match /vendor/atf/[^d][^/]*/
@@ -743,7 +757,8 @@ match /(vendor)/(NetBSD)/(libedit)/2016-01-16/
   min revision 295361
   max revision 295361
   repository freebsd-base.git
-  branch \1/\2/\3/2016-01-30
+  branch refs/tags/\1/\2/\3/2016-01-30
+  annotated true
 end match
 match /vendor/NetBSD/libedit/
   min revision 296551
@@ -849,7 +864,8 @@ match /(vendor)/(opencsd)/dist/
   min revision 353392
   max revision 353392
   repository freebsd-base.git
-  branch \1/\2/a1961c91b02a92f3c6ed8b145c636ac4c5565aca
+  branch refs/tags/\1/\2/a1961c91b02a92f3c6ed8b145c636ac4c5565aca
+  annotated true
 end match
 
 # skip vendor deletions, we want the named branches so that the merge points
@@ -862,7 +878,8 @@ end match
 # something was missing ...
 match /(vendor)/(1.14)/
   repository freebsd-base.git
-  branch \1/bsnmp/\2
+  branch refs/tags/\1/bsnmp/\2
+  annotated true
   max revision 359491
 end match
 # but skip the rename
@@ -923,19 +940,22 @@ match /(vendor)/(NetBSD)/(libc-vis)/(20121412)(a?)/
   min revision 244230
   max revision 248298
   repository freebsd-base.git
-  branch \1/\2/\3/20121214\5
+  branch refs/tags/\1/\2/\3/20121214\5
+  annotated true
 end match
 match /(vendor)/(NetBSD)/(libc-vis)/(20132102)/
   min revision 244230
   max revision 248298
   repository freebsd-base.git
-  branch \1/\2/\3/20130221
+  branch refs/tags/\1/\2/\3/20130221
+  annotated true
 end match
 match /(vendor)/(NetBSD)/(u?n?vis)/(20132102)/
   min revision 244230
   max revision 248298
   repository freebsd-base.git
-  branch \1/\2/\3/20130221
+  branch refs/tags/\1/\2/\3/20130221
+  annotated true
 end match
 match /vendor/NetBSD/
   min revision 248299
@@ -1370,15 +1390,22 @@ end match
 # TODO: merge sys and non-sys for ipfilter?
 
 # We have some conflicting vendor names here, e.g. illumos, opensolaris, ngatm, pf, ipfilter.
+# NOTE: not a zero-length lookahead match, so only works up to 3 chars, as that
+# happens to be the minimum tag chars x.y
+match /(vendor-sys)/(ipfilter|ngatm|pf)/([^d][^i][^/]+)/
+  repository freebsd-base.git
+  branch refs/tags/\1/\2/\3
+  annotated true
+end match
 match /(vendor-sys)/(ipfilter|ngatm|pf)/([^/]+)/
   repository freebsd-base.git
   branch \1/\2/\3
 end match
 
 # Turn non-dist directories into annotated tags.
-match /(vendor)/(sendmail)/([^d][^/]*)/
+match /(vendor|vendor-sys|vendor-crypto)/([r-z][^/]+)/([^d][^i][^/]+)/
   repository freebsd-base.git
-  branch refs/tags/\1/\2/\3
+  branch refs/tags/vendor/\2/\3
   annotated true
 end match
 
