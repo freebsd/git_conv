@@ -69,6 +69,7 @@ extract() {
     # clean up some leftover schmutz
     find wrk -name CVS -type d -exec rm -r {} +
     find wrk -name .cvsignore -type f -exec rm -r {} +
+    find wrk -name obj -type l -delete
     # yeah, so, well, some releases have a bunch of .depend and object files
     # and binaries left around still.
     (
