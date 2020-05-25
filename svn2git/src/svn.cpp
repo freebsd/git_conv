@@ -628,19 +628,19 @@ bool SvnRevision::maybeParseSimpleMergeinfo(const int revnum, struct mi* mi) {
     // ends up with 240326 instead. This reduces the "handled" mergeinfo from
     // 2000 out of 3000 down to 1125. The rest should be hard-coded.
     static QRegularExpression re = QRegularExpression(
-           R"(^(Index: ([-_.\d\w/]+)
+           R"(^(Index: ([\S]+)
 =============*
-... ([-_.\d\w/]+).\([^)]+\)
-... ([-_.\d\w/]+).\([^)]+\)
+... ([\S]+).\([^)]+\)
+... ([\S]+).\([^)]+\)
 
-Property changes on: (?<path>[-_.\d\w/]+)
+Property changes on: (?<path>[\S]+)
 _____________*
 ((Added|Deleted): svn:(keywords|eol-style|mime-type)
 ## -[\d,]+ \+[\d,]+ ##
 [-+].*
 )*)*(Modified|Added): svn:mergeinfo
 ## \-0,[01] \+0,[01] ##
-   (?<dir>Merged|Reverse-merged) (?<from>[-_.\d\w/]+):r([0-9]*[-,])*(?<rev>[0-9]*)
+   (?<dir>Merged|Reverse-merged) (?<from>[^:]+):r([0-9]*[-,])*(?<rev>[0-9]*)
 *$)");
     if (!re.isValid()) {
         qWarning() << re.errorString();
@@ -825,7 +825,18 @@ int SvnRevision::prepareTransactions()
     // List of revisions to skip as their mergeinfo is complex and irrelevant in
     // terms of git.
     static QSet<int> skip_mergeinfo = {
-        196075, 179468, 244485, 244487, 262833, 262834, 355814,
+        196075, 179468, 244485, 244487, 262833, 262834, 355814, 193205,
+        // self-referential mergeinfo
+        180475, 181836, 181837, 183229, 286109, 288439, 228777, 228776,
+        // These are branch creations or head → project IFCs where a whole
+        // bunch of mergeinfo was copied over, there's nothing to do for these.
+        // NOTE: these are sorted by the size of the resulting svn diff output.
+        // They copy around endless mergeinfo for every frigging file.
+        319809, 210031, 219265, 197923, 218442, 222000, 219262, 210035, 232557,
+        218520, 219313, 219314, 218579, 218451, 218462, 219259, 197919, 302021,
+        232280, 218437, 197927, 217943, 210037, 188064, 216688, 191131,
+        // Stuff got moved around, yo.
+        277786, 188942,
         // These are predominantly mergeinfo bootstraps, deletes, fixups,
         // records-after-the-fact and a whole bunch more.
         179481, 179511, 179512, 179601, 179683, 179684, 179698, 179982, 179997,
@@ -960,7 +971,14 @@ int SvnRevision::prepareTransactions()
     // creative.
     static QMap<int, struct mi> manual_merges = {
         { 182352, { .from = "vendor/sendmail/dist", .rev = 182351, .to = "master" } },
+        // merged vendor/ee/dist *and* vendor/ee/1.5.2
+        { 213567, { .from = "vendor/ee/dist", .rev = 213565, .to = "master" } },
+        { 225524, { .from = "vendor/openresolv/dist", .rev = 225523, .to = "master" } },
         { 229307, { .from = "releng/9.0", .rev = 229306, .to = "refs/tags/release/9.0.0" } },
+        // merged /dist and tag
+        { 229413, { .from = "vendor/compiler-rt/dist", .rev = 229411, .to = "master" } },
+        // merged /dist and tag
+        { 302321, { .from = "vendor/Juniper/libxo/dist", .rev = 302314, .to = "master" } },
         // These 2 were merged from "/vendor" (sic! no subdir)
         { 357636, { .from = "vendor/NetBSD/tests/dist", .rev = 357635, .to = "master" } },
         { 357688, { .from = "vendor/NetBSD/tests/dist", .rev = 357687, .to = "master" } },
@@ -1007,6 +1025,9 @@ int SvnRevision::prepareTransactions()
 
     if (!parse_ok) {
         printf(" Couldn't parse mergeinfo!");
+        return EXIT_SUCCESS;
+    } else if (parse_ok && mi.from == -1) {
+        // Parsed ok but maybe was a reverse-merge or something.
         return EXIT_SUCCESS;
     }
 
