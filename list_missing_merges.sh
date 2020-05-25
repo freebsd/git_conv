@@ -27,6 +27,7 @@ git --git-dir=$git log --pretty=format:'%h %p %ad %N' --grep="^MF[VPp]" $branch 
 #
 # We don't want the 2.4 tag to stick out, it wouldn't show up when just logging /dist.
 
+# TODO: is this maybe just `git tag --no-merged`?
 export GIT_DIR=$git
 git show-ref dist | sed 's,.* refs/heads/,,; s,/dist,,' | while read v; do
   git show-ref --heads --tags | fgrep $v | while read sha ref; do

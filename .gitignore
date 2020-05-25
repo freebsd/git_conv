@@ -1,6 +1,7 @@
 archive
 base
 doc
+diff_*
 freebsd-base.git
 freebsd-doc.git
 freebsd-ports.git
