@@ -639,8 +639,8 @@ _____________*
 ## -[\d,]+ \+[\d,]+ ##
 [-+].*
 )*)*(Modified|Added): svn:mergeinfo
-## \-0,0 \+0,1 ##
-   Merged (?<from>[-_.\d\w/]+):r([0-9]*[-,])*(?<rev>[0-9]*)
+## \-0,[01] \+0,[01] ##
+   (?<dir>Merged|Reverse-merged) (?<from>[-_.\d\w/]+):r([0-9]*[-,])*(?<rev>[0-9]*)
 *$)");
     if (!re.isValid()) {
         qWarning() << re.errorString();
@@ -648,6 +648,10 @@ _____________*
     }
     QRegularExpressionMatch match = re.match(result);
     if (match.hasMatch()) {
+        if (match.captured("dir") == "Reverse-merged") {
+            qDebug() << "Ignoring SVN rollbacks via mergeinfo";
+            return false;
+        }
         qDebug() << "Matched" <<  match.captured(0);
         qDebug() << "Matched  1" <<  match.captured(1);
         qDebug() << "Matched  2" <<  match.captured(2);
