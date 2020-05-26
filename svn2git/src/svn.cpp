@@ -488,7 +488,7 @@ private:
     void splitPathName(const Rules::Match &rule, const QString &pathName, QString *svnprefix_p,
                        QString *repository_p, QString *effectiveRepository_p, QString *branch_p, QString *path_p);
     QString match_path_to_branch(const QString& path);
-    bool maybeParseSimpleMergeinfo(const int revnum, mergeinfo* mi);
+    bool maybeParseSimpleMergeinfo(const int revnum, QSet<mergeinfo>* mi_list);
 };
 
 int SvnPrivate::exportRevision(int revnum)
@@ -596,7 +596,9 @@ SvnRevision::match_path_to_branch(const QString& path)
 }
 
 
-bool SvnRevision::maybeParseSimpleMergeinfo(const int revnum, mergeinfo* mi) {
+bool
+SvnRevision::maybeParseSimpleMergeinfo(const int revnum, QSet<mergeinfo>* mi_list)
+{
     QProcess svn;
     // svn diff -c 179481 --properties-only file:///$PWD/base
     svn.start("svn",
@@ -677,7 +679,6 @@ _____________*
     //QRegularExpressionMatch match = re.match(result);
     QString tmp = result;
     QRegularExpressionMatchIterator i = re.globalMatch(result);
-    QSet<mergeinfo> mi_list;
     while (i.hasNext()) {
         mergeinfo mi;
         QRegularExpressionMatch match = i.next();
@@ -698,30 +699,42 @@ _____________*
         mi.to = match_path_to_branch(f);
         if (!mi.to.isEmpty() && !mi.from.isEmpty()) {
             qDebug() << "mergeinfo" << mi.from << mi.rev << "->" << mi.to;
-            mi_list.insert(mi);
+            // Sometimes we get multiple pairs of from/to with different
+            // revisions. Use the highest revision always.
+            QSet<mergeinfo>::iterator it = mi_list->begin();
+            while (it != mi_list->end()) {
+                if (it->from == mi.from && it->to == mi.to && it->rev < mi.rev) {
+                    mi_list->erase(it);
+                }
+                ++it;
+            }
+            mi_list->insert(mi);
             tmp.remove(match.captured(0)); // eat the input
         } else {
             qDebug("Couldn't parse mergeinfo via rules file for %s or %s", qPrintable(p), qPrintable(f));
         }
     }
-    if (mi_list.size() == 1 && tmp == "") {
-        *mi = mi_list.values().front();
+    if (mi_list->size() == 1 && tmp == "") {
         return true;
-    } else if (mi_list.size() > 1) {
-        qDebug() << "Got" << mi_list.size() << "different matches.";
+    } else if (mi_list->size() > 1 && tmp == "") {
+        qDebug() << "Got" << mi_list->size() << "different matches.";
+        return true;
+    } else if (mi_list->size() > 1) {
+        qDebug() << "Got" << mi_list->size() << "different matches.";
         qDebug() << "Remaining unparsed MI is" << qPrintable(tmp);
         return false;
-    } else {
-      QDir dir;
-      if (dir.mkpath("mi")) {
+    }
+
+    QDir dir;
+    if (dir.mkpath("mi")) {
         // This should create only about 3k files or so.
         QFile file(QString("mi/r%1.txt").arg(revnum));
         if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-          QTextStream out(&file);
-          out << qPrintable(result);
+            QTextStream out(&file);
+            out << qPrintable(result);
         }
-      }
     }
+    mi_list->clear();
     return false;
 }
 
@@ -793,6 +806,7 @@ int SvnRevision::prepareTransactions()
     if (!svn_repo_path.endsWith("base") || revnum < 179447)
         return EXIT_SUCCESS;
 
+    const QString repository = "freebsd-base.git";
     // Force a bunch of merges, even though SVN never properly recorded them.
     // Some of them were later added via svn:mergeinfo. Even more had changes
     // imported into head, then later the vendor import was done (?!) and
@@ -809,7 +823,6 @@ int SvnRevision::prepareTransactions()
     };
     if (force_merges.contains(revnum)) {
         const auto& mi = force_merges.value(revnum);
-        const QString repository = "freebsd-base.git";
         const QString svnprefix = "";
         const QString& branch = mi.to;
         Repository::Transaction *txn = transactions.value(repository + branch, 0);
@@ -833,6 +846,7 @@ int SvnRevision::prepareTransactions()
     // terms of git.
     static QSet<int> skip_mergeinfo = {
         196075, 179468, 244485, 244487, 262833, 262834, 355814, 193205, 253716,
+        184527,
         // self-referential mergeinfo
         180475, 181836, 181837, 183229, 286109, 288439, 228777, 228776,
         // These are branch creations or head → project IFCs where a whole
@@ -999,10 +1013,10 @@ int SvnRevision::prepareTransactions()
     };
 
     bool parse_ok = false;
-    mergeinfo mi = { .from = "", .rev = -1, .to = "" };
+    QSet<mergeinfo> mi;
     if (manual_merges.contains(revnum)) {
         const auto& val = manual_merges.value(revnum);
-        mi = val;
+        mi.insert(val);
         parse_ok = true;
     } else {
         // There are quite a number of revisions touching many branches and having a
@@ -1010,7 +1024,7 @@ int SvnRevision::prepareTransactions()
         // parse this and silently skip it if the mergeinfo is empty.
         parse_ok = maybeParseSimpleMergeinfo(revnum, &mi);
     }
-    if (parse_ok && mi.rev == -1) {
+    if (parse_ok && mi.isEmpty()) {
         // all empty, ignore, this happens when we have -0,0 +0,0 changes
         // only.
         return EXIT_SUCCESS;
@@ -1040,21 +1054,24 @@ int SvnRevision::prepareTransactions()
     if (!parse_ok) {
         printf(" Couldn't parse mergeinfo!");
         return EXIT_SUCCESS;
-    } else if (parse_ok && mi.from == -1) {
+    } else if (parse_ok && mi.isEmpty()) {
         // Parsed ok but maybe was a reverse-merge or something.
         return EXIT_SUCCESS;
     }
 
     // This is redundant with the WARN log about the branch copies.
-    qDebug() << "Ended up with " + mi.from + "@" + QString::number(mi.rev) + " into " + mi.to;
-    if (mi.from.startsWith("user") || mi.from.startsWith("user")) {
-        printf(" MONKEYMERGE not merging from user, please inspect me: %s", qPrintable(mi.from));
-        return EXIT_SUCCESS;
+    //qDebug() << "Ended up with" << mi;
+    for (const auto& mi : mi.values()) {
+        if (mi.from.startsWith("user") || mi.from.startsWith("user")) {
+            printf(" MONKEYMERGE not merging from user, please inspect me: %s", qPrintable(mi.from));
+            continue;
+        }
+        printf(" MONKEYMERGE IS HAPPENING!");
+        // FIXME: pull up the proper transaction
+        Repository::Transaction *txn = transactions.value(repository + mi.to, 0);
+        txn = transactions.first();
+        txn->noteCopyFromBranch(mi.from, mi.rev);
     }
-    printf(" MONKEYMERGE IS HAPPENING!");
-    Repository::Transaction *txn;
-    txn = transactions.first();
-    txn->noteCopyFromBranch(mi.from, mi.rev);
 
     return EXIT_SUCCESS;
 }

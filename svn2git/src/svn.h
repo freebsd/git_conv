@@ -27,7 +27,7 @@ class Repository;
 
 struct mergeinfo {
     QString from;
-    int rev;
+    int rev = -1;
     QString to;
 };
 
