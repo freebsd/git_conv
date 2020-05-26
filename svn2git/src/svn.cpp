@@ -487,6 +487,7 @@ public:
 private:
     void splitPathName(const Rules::Match &rule, const QString &pathName, QString *svnprefix_p,
                        QString *repository_p, QString *effectiveRepository_p, QString *branch_p, QString *path_p);
+    QString match_path_to_branch(const QString& path);
     bool maybeParseSimpleMergeinfo(const int revnum, struct mi* mi);
 };
 
@@ -568,6 +569,30 @@ void SvnRevision::splitPathName(const Rules::Match &rule, const QString &pathNam
     }
 }
 
+QString
+SvnRevision::match_path_to_branch(const QString& path)
+{
+    QString branch;
+    // There's really just 1 rule file ...
+    foreach (const MatchRuleList matchRules, allMatchRules) {
+        MatchRuleList::ConstIterator match = findMatchRule(matchRules, revnum, path);
+        if (match != matchRules.constEnd()) {
+            const Rules::Match &rule = *match;
+            QString svnprefix, repository, effectiveRepository, prefix;
+            switch (rule.action) {
+                case Rules::Match::Export:
+                    splitPathName(rule, path, &svnprefix, &repository, &effectiveRepository, &branch, &prefix);
+                    break;
+                default:
+                    qFatal("Rule match had unexpected action on %s", qPrintable(path));
+                    break;
+            }
+        }
+    }
+    return branch;
+}
+
+
 bool SvnRevision::maybeParseSimpleMergeinfo(const int revnum, struct mi* mi) {
     QProcess svn;
     // svn diff -c 179481 --properties-only file:///$PWD/base
@@ -635,10 +660,10 @@ bool SvnRevision::maybeParseSimpleMergeinfo(const int revnum, struct mi* mi) {
 
 Property changes on: (?<path>[\S]+)
 _____________*
-((Added|Deleted): svn:(keywords|eol-style|mime-type)
+((Added|Deleted|Modified): (fbsd|svn):(executable|n?o?keywords|eol-style|mime-type))
 ## -[\d,]+ \+[\d,]+ ##
-[-+].*
-)*)*(Modified|Added): svn:mergeinfo
+([-+].*
+){1,2})*)*(Modified|Added): svn:mergeinfo
 ## \-0,[01] \+0,[01] ##
    (?<dir>Merged|Reverse-merged) (?<from>[^:]+):r([0-9]*[-,])*(?<rev>[0-9]*)
 *$)");
@@ -650,7 +675,7 @@ _____________*
     if (match.hasMatch()) {
         if (match.captured("dir") == "Reverse-merged") {
             qDebug() << "Ignoring SVN rollbacks via mergeinfo";
-            return false;
+            return true;  // parsed ok, but no action to take.
         }
         qDebug() << "Matched" <<  match.captured(0);
         qDebug() << "Matched  1" <<  match.captured(1);
@@ -667,39 +692,8 @@ _____________*
         QString f = "/" + match.captured("path") + "/";
         QString p = match.captured("from") + "/";  // Our rules expect a trailing '/'
         mi->rev = match.captured("rev").toInt(nullptr, 10);
-
-        // There's really just 1 rule file ...
-        foreach (const MatchRuleList matchRules, allMatchRules) {
-            MatchRuleList::ConstIterator match = findMatchRule(matchRules, revnum, p);
-            if (match != matchRules.constEnd()) {
-                const Rules::Match &rule = *match;
-                QString svnprefix, repository, effectiveRepository, branch, path;
-                switch (rule.action) {
-                    case Rules::Match::Export:
-                        splitPathName(rule, p, &svnprefix, &repository, &effectiveRepository, &branch, &path);
-                        mi->from = branch;
-                        break;
-                    default:
-                        qFatal("Rule match had unexpected action on %s", qPrintable(p));
-                        break;
-                }
-            }
-
-            match = findMatchRule(matchRules, revnum, f);
-            if (match != matchRules.constEnd()) {
-                const Rules::Match &rule = *match;
-                QString svnprefix, repository, effectiveRepository, branch, path;
-                switch (rule.action) {
-                    case Rules::Match::Export:
-                        splitPathName(rule, f, &svnprefix, &repository, &effectiveRepository, &branch, &path);
-                        mi->to = branch;
-                        break;
-                    default:
-                        qFatal("Rule match had unexpected action on %s", qPrintable(p));
-                        break;
-                }
-            }
-        }
+        mi->from = match_path_to_branch(p);
+        mi->to = match_path_to_branch(f);
         if (!mi->to.isEmpty() && !mi->from.isEmpty()) {
             return true;
         }
@@ -839,6 +833,7 @@ int SvnRevision::prepareTransactions()
         277786, 188942,
         // These are predominantly mergeinfo bootstraps, deletes, fixups,
         // records-after-the-fact and a whole bunch more.
+        186082, 188940, 188955, 189585, 189587, 189613, 190749, 191931,
         179481, 179511, 179512, 179601, 179683, 179684, 179698, 179982, 179997,
         180006, 180007, 180241, 180243, 180244, 180245, 180402, 180457, 180472,
         180764, 181081, 181290, 181372, 181373, 181378, 181379, 181380, 181408,
@@ -971,6 +966,12 @@ int SvnRevision::prepareTransactions()
     // creative.
     static QMap<int, struct mi> manual_merges = {
         { 182352, { .from = "vendor/sendmail/dist", .rev = 182351, .to = "master" } },
+        // has a bogus path
+        { 189618, { .from = "vendor/top/dist", .rev = 183430, .to = "master" } },
+        // has 3x merges from different subdirs
+        { 200832, { .from = "vendor/tzcode/dist", .rev = 200830, .to = "master" } },
+        // has a bunch of schmutz
+        { 204934, { .from = "vendor/x86emu/dist", .rev = 204933, .to = "master" } },
         // merged vendor/ee/dist *and* vendor/ee/1.5.2
         { 213567, { .from = "vendor/ee/dist", .rev = 213565, .to = "master" } },
         { 225524, { .from = "vendor/openresolv/dist", .rev = 225523, .to = "master" } },
