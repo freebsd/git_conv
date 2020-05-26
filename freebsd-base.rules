@@ -49,6 +49,15 @@ match /projects/doctools/
 min revision 306856
 max revision 306858
 end match
+# Skip partial branch creation (issue 13)
+match /user/nwhitehorn/kboot/
+min revision 276329
+max revision 276329
+end match
+match /projects/bhyve_graphics/
+min revision 300828
+max revision 300828
+end match
 
 # Skip cvs2svn manufactured commits in favor of the fixups.
 match /head/contrib/
