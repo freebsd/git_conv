@@ -488,7 +488,7 @@ private:
     void splitPathName(const Rules::Match &rule, const QString &pathName, QString *svnprefix_p,
                        QString *repository_p, QString *effectiveRepository_p, QString *branch_p, QString *path_p);
     QString match_path_to_branch(const QString& path);
-    bool maybeParseSimpleMergeinfo(const int revnum, struct mi* mi);
+    bool maybeParseSimpleMergeinfo(const int revnum, mergeinfo* mi);
 };
 
 int SvnPrivate::exportRevision(int revnum)
@@ -581,10 +581,13 @@ SvnRevision::match_path_to_branch(const QString& path)
             QString svnprefix, repository, effectiveRepository, prefix;
             switch (rule.action) {
                 case Rules::Match::Export:
+                case Rules::Match::Recurse:
                     splitPathName(rule, path, &svnprefix, &repository, &effectiveRepository, &branch, &prefix);
                     break;
+                case Rules::Match::Ignore:
+                    break;
                 default:
-                    qFatal("Rule match had unexpected action on %s", qPrintable(path));
+                    qFatal("Rule match had unexpected action %d on %s", rule.action, qPrintable(path));
                     break;
             }
         }
@@ -593,7 +596,7 @@ SvnRevision::match_path_to_branch(const QString& path)
 }
 
 
-bool SvnRevision::maybeParseSimpleMergeinfo(const int revnum, struct mi* mi) {
+bool SvnRevision::maybeParseSimpleMergeinfo(const int revnum, mergeinfo* mi) {
     QProcess svn;
     // svn diff -c 179481 --properties-only file:///$PWD/base
     svn.start("svn",
@@ -653,51 +656,61 @@ bool SvnRevision::maybeParseSimpleMergeinfo(const int revnum, struct mi* mi) {
     // ends up with 240326 instead. This reduces the "handled" mergeinfo from
     // 2000 out of 3000 down to 1125. The rest should be hard-coded.
     static QRegularExpression re = QRegularExpression(
-           R"(^(Index: ([\S]+)
+           R"((Index: ([\S]+)
 =============*
 ... ([\S]+).\([^)]+\)
 ... ([\S]+).\([^)]+\)
 
 Property changes on: (?<path>[\S]+)
 _____________*
-((Added|Deleted|Modified): (fbsd|svn):(executable|n?o?keywords|eol-style|mime-type))
+(?<garbage>(Added|Deleted|Modified): (fbsd|svn):(executable|n?o?keywords|eol-style|mime-type)
 ## -[\d,]+ \+[\d,]+ ##
 ([-+].*
 ){1,2})*)*(Modified|Added): svn:mergeinfo
 ## \-0,[01] \+0,[01] ##
    (?<dir>Merged|Reverse-merged) (?<from>[^:]+):r([0-9]*[-,])*(?<rev>[0-9]*)
-*$)");
+*)");
     if (!re.isValid()) {
-        qWarning() << re.errorString();
+        qWarning() << "Error in regular expression" << re.errorString();
         exit(1);
     }
-    QRegularExpressionMatch match = re.match(result);
-    if (match.hasMatch()) {
+    //QRegularExpressionMatch match = re.match(result);
+    QString tmp = result;
+    QRegularExpressionMatchIterator i = re.globalMatch(result);
+    QSet<mergeinfo> mi_list;
+    while (i.hasNext()) {
+        mergeinfo mi;
+        QRegularExpressionMatch match = i.next();
         if (match.captured("dir") == "Reverse-merged") {
             qDebug() << "Ignoring SVN rollbacks via mergeinfo";
             return true;  // parsed ok, but no action to take.
         }
         qDebug() << "Matched" <<  match.captured(0);
-        qDebug() << "Matched  1" <<  match.captured(1);
-        qDebug() << "Matched  2" <<  match.captured(2);
-        qDebug() << "Matched  3" <<  match.captured(3);
-        qDebug() << "Matched  4" <<  match.captured(4);
-        qDebug() << "Matched  5" <<  match.captured(5);
-        qDebug() << "Matched  6" <<  match.captured(6);
-        qDebug() << "Matched  7" <<  match.captured(7);
-        qDebug() << "Matched  8" <<  match.captured(8);
-        qDebug() << "Matched  9" <<  match.captured(9);
-        qDebug() << "Matched 10" <<  match.captured(10);
-        qDebug() << "Matched 11" <<  match.captured(11);
+        qDebug() << "Matched garbage" <<  match.captured("garbage");
+        qDebug() << "Matched path" <<  match.captured("path");
+        qDebug() << "Matched dir" <<  match.captured("dir");
+        qDebug() << "Matched from" <<  match.captured("from");
+        qDebug() << "Matched rev" <<  match.captured("rev");
         QString f = "/" + match.captured("path") + "/";
         QString p = match.captured("from") + "/";  // Our rules expect a trailing '/'
-        mi->rev = match.captured("rev").toInt(nullptr, 10);
-        mi->from = match_path_to_branch(p);
-        mi->to = match_path_to_branch(f);
-        if (!mi->to.isEmpty() && !mi->from.isEmpty()) {
-            return true;
+        mi.rev = match.captured("rev").toInt(nullptr, 10);
+        mi.from = match_path_to_branch(p);
+        mi.to = match_path_to_branch(f);
+        if (!mi.to.isEmpty() && !mi.from.isEmpty()) {
+            qDebug() << "mergeinfo" << mi.from << mi.rev << "->" << mi.to;
+            mi_list.insert(mi);
+            tmp.remove(match.captured(0)); // eat the input
+        } else {
+            qDebug("Couldn't parse mergeinfo via rules file for %s or %s", qPrintable(p), qPrintable(f));
         }
-        qDebug("Couldn't parse mergeinfo via rules file for %s or %s", qPrintable(p), qPrintable(f));
+    }
+    if (mi_list.size() == 1 && tmp == "") {
+        *mi = mi_list.values().front();
+        return true;
+    } else if (mi_list.size() > 1) {
+        qDebug() << "Got" << mi_list.size() << "different matches.";
+        qDebug() << "Remaining unparsed MI is" << qPrintable(tmp);
+        return false;
     } else {
       QDir dir;
       if (dir.mkpath("mi")) {
@@ -784,7 +797,7 @@ int SvnRevision::prepareTransactions()
     // Some of them were later added via svn:mergeinfo. Even more had changes
     // imported into head, then later the vendor import was done (?!) and
     // finally the mergeinfo recorded. We're not going to patch that up ...
-    static QMap<int, struct mi> force_merges = {
+    static QMap<int, mergeinfo> force_merges = {
         // Recorded in r265214
         { 264691, { .from = "vendor/openssh/dist", .rev = 264690, .to = "master" } },
         // Recorded in r299540
@@ -819,7 +832,7 @@ int SvnRevision::prepareTransactions()
     // List of revisions to skip as their mergeinfo is complex and irrelevant in
     // terms of git.
     static QSet<int> skip_mergeinfo = {
-        196075, 179468, 244485, 244487, 262833, 262834, 355814, 193205,
+        196075, 179468, 244485, 244487, 262833, 262834, 355814, 193205, 253716,
         // self-referential mergeinfo
         180475, 181836, 181837, 183229, 286109, 288439, 228777, 228776,
         // These are branch creations or head → project IFCs where a whole
@@ -964,7 +977,7 @@ int SvnRevision::prepareTransactions()
 
     // Things we patch up manually as the SVN history around them is ...
     // creative.
-    static QMap<int, struct mi> manual_merges = {
+    static QMap<int, mergeinfo> manual_merges = {
         { 182352, { .from = "vendor/sendmail/dist", .rev = 182351, .to = "master" } },
         // has a bogus path
         { 189618, { .from = "vendor/top/dist", .rev = 183430, .to = "master" } },
@@ -986,7 +999,7 @@ int SvnRevision::prepareTransactions()
     };
 
     bool parse_ok = false;
-    struct mi mi = { .from = "", .rev = -1, .to = "" };
+    mergeinfo mi = { .from = "", .rev = -1, .to = "" };
     if (manual_merges.contains(revnum)) {
         const auto& val = manual_merges.value(revnum);
         mi = val;

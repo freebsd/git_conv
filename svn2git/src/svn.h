@@ -25,11 +25,23 @@
 
 class Repository;
 
-struct mi {
+struct mergeinfo {
     QString from;
     int rev;
     QString to;
 };
+
+inline bool operator==(const mergeinfo &m1, const mergeinfo &m2)
+{
+    return m1.from == m2.from
+        && m1.rev == m2.rev
+        && m1.to == m2.to;
+}
+
+inline uint qHash(const mergeinfo &key, uint seed)
+{
+    return qHash(key.from, seed) ^ key.rev ^ qHash(key.to, seed);
+}
 
 class SvnPrivate;
 class Svn
