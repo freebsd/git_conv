@@ -687,11 +687,11 @@ _____________*
             return true;  // parsed ok, but no action to take.
         }
         qDebug() << "Matched" <<  match.captured(0);
-        qDebug() << "Matched garbage" <<  match.captured("garbage");
-        qDebug() << "Matched path" <<  match.captured("path");
-        qDebug() << "Matched dir" <<  match.captured("dir");
-        qDebug() << "Matched from" <<  match.captured("from");
-        qDebug() << "Matched rev" <<  match.captured("rev");
+        qDebug() << "=== Matched garbage" <<  match.captured("garbage");
+        qDebug() << "=== Matched path" <<  match.captured("path");
+        qDebug() << "=== Matched dir" <<  match.captured("dir");
+        qDebug() << "=== Matched from" <<  match.captured("from");
+        qDebug() << "=== Matched rev" <<  match.captured("rev");
         QString f = "/" + match.captured("path") + "/";
         QString p = match.captured("from") + "/";  // Our rules expect a trailing '/'
         mi.rev = match.captured("rev").toInt(nullptr, 10);
@@ -704,11 +704,17 @@ _____________*
             QSet<mergeinfo>::iterator it = mi_list->begin();
             while (it != mi_list->end()) {
                 if (it->from == mi.from && it->to == mi.to && it->rev < mi.rev) {
-                    mi_list->erase(it);
+                    it = mi_list->erase(it);
+                } else if (it->from == mi.from && it->to == mi.to && it->rev >= mi.rev) {
+                    mi.from = "";
+                    mi.to = "";
+                } else {
+                    ++it;
                 }
-                ++it;
             }
-            mi_list->insert(mi);
+            if (!mi.to.isEmpty() && !mi.from.isEmpty()) {
+                mi_list->insert(mi);
+            }
             tmp.remove(match.captured(0)); // eat the input
         } else {
             qDebug("Couldn't parse mergeinfo via rules file for %s or %s", qPrintable(p), qPrintable(f));
@@ -719,10 +725,10 @@ _____________*
     } else if (mi_list->size() > 1 && tmp == "") {
         qDebug() << "Got" << mi_list->size() << "different matches.";
         return true;
-    } else if (mi_list->size() > 1) {
-        qDebug() << "Got" << mi_list->size() << "different matches.";
+    }
+    qDebug() << "Got" << mi_list->size() << "different matches.";
+    if (!tmp.isEmpty()) {
         qDebug() << "Remaining unparsed MI is" << qPrintable(tmp);
-        return false;
     }
 
     QDir dir;
@@ -1059,15 +1065,17 @@ int SvnRevision::prepareTransactions()
         return EXIT_SUCCESS;
     }
 
-    // This is redundant with the WARN log about the branch copies.
-    //qDebug() << "Ended up with" << mi;
-    for (const auto& mi : mi.values()) {
+    // This is redundant with the WARN log about the branch copies. Make sure
+    // output is sorted and stable for easier diff(1) comparison between runs.
+    auto mi_list = mi.values();
+    std::sort(mi_list.begin(), mi_list.end());
+    qDebug() << "Ended up with" << mi_list;
+    for (const auto& mi : mi_list) {
         if (mi.from.startsWith("user") || mi.from.startsWith("user")) {
             printf(" MONKEYMERGE not merging from user, please inspect me: %s", qPrintable(mi.from));
             continue;
         }
         printf(" MONKEYMERGE IS HAPPENING!");
-        // FIXME: pull up the proper transaction
         Repository::Transaction *txn = transactions.value(repository + mi.to, 0);
         txn = transactions.first();
         txn->noteCopyFromBranch(mi.from, mi.rev);
