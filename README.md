@@ -1,7 +1,33 @@
 # Subversion to Git conversion scripts for the FreeBSD project
 
 These are the scripts and data used for the svn to git conversion of the
-FreeBSD repositories
+FreeBSD repositories. Your help is requested in making sure the produced
+result is an acceptable representation of the current SVN repository. Fixing
+some few historical glitches are in scope if the effort is reasonable. Please
+let us know what you find.
+
+## Gimme the repo!
+
+```
+git clone https://cgit-beta.freebsd.org/src && cd src
+git config --add remote.origin.fetch '+refs/notes/*:refs/notes/*' && git fetch
+```
+
+Same for the `doc` and `ports` repos. You can expect some things to be
+different. Most importantly you should check whether branch and mergepoints
+(especially for vendor branches, but also project branches) are there and make
+sense.
+
+- `user/` branches are never merged back into `master`
+- vendor tags are sometimes branches, sometimes tags, this is WIP.
+- `release/1.0_shipped` et al. are snapshots of the checked out CVS source
+  code, including expanded $Id$ tags.
+- no other tags are expanded
+- various vendor-foo suffixes have been collapsed into 1 vendor namespace,
+  except for a few vendors where merging the userland and kernel bits is not
+  straightforward due to how they interleave with the merge and branch history.
+
+If you would want to run the conversion yourself and play with the rules, read on.
 
 ## Required Software
 
