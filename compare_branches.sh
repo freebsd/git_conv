@@ -310,7 +310,7 @@ case "$type" in
                         ipfilter/dist-old) continue ;;
                         # FIXME: these got the new layout compared to SVN
                         ipfilter/v3-4-16|ipfilter/v3-4-29) continue ;;
-                        # compare against pre-flattening, FIXME: chase up the 2 extra files
+                        # compare against pre-flattening, due to splicing old/new dist, we end up with 2 extra files.
                         ipfilter/3*|ipfilter/v3*|ipfilter/V3*|ipfilter/4*) diff_it -xmlf_ipl.c -xmln_ipl.c $t/$b$s@253466 $t/$b$s; continue ;;
                         ipfilter/*) diff_it $t/$b$s $t/$b$s; continue ;;
                         # compare againts pre-flattening

@@ -299,7 +299,8 @@ match /vendor/llvm-project/llvmorg-10.0.0-0-gd32170dbd5b/
   max revision 359576
 end match
 
-# we have 2 identical vendor branches, one under vendor, the other under vendory-crypto. They have different subdirs though.
+# we have 2 identical vendor branches, one under vendor, the other under
+# vendory-crypto. They have different subdirs though, we merge them.
 match /(vendor)/(telnet)/(dist)/
   repository freebsd-base.git
   branch \1/\2/\3
@@ -527,7 +528,7 @@ match /vendor/tzdata/tzdata2009.
   min revision 197596
   max revision 197596
 end match
-# merges into a tag, advancing it, but it's an emtpy diff (empty dir got deleted)
+# merges into a tag, advancing it, but it's an empty diff (empty dir got deleted)
 match /vendor/ntp/4.2.4p8/
   min revision 200454
   max revision 200454
@@ -962,7 +963,7 @@ match /vendor/NetBSD/
   max revision 248301
 end match
 # This revision reverts a deletion that we skipped earlier, but this causes the
-# git branch to be reset, which we don't want. Sooo, recrse instead ...
+# git branch to be reset, which we don't want. Sooo, recurse instead ...
 match /vendor/patch/dist/$
   min revision 253716
   max revision 253716
@@ -1331,7 +1332,6 @@ match /(vendor-sys)/(ipfilter)/(dist)(-old)?/
   repository freebsd-base.git
   branch \1/\2/\3
   rename sys/contrib /dev/null # old location was sys/netinet
-  # FIXME: chase the rename of mln_ipl.c to mlf_ipl.c ???
 end match
 match /(vendor-sys)/(ipfilter)/(dist)(-old)?/
   min revision 72001
