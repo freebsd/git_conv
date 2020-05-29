@@ -18,6 +18,7 @@
 #ifndef SVN_H
 #define SVN_H
 
+#include <QDebug>
 #include <QHash>
 #include <QList>
 #include <QString>
@@ -31,11 +32,26 @@ struct mergeinfo {
     QString to;
 };
 
+inline QDebug operator<<(QDebug debug, const mergeinfo &mi)
+{
+    QDebugStateSaver saver(debug);
+    debug.nospace() << mi.from << "@" << mi.rev << " -> " << mi.to;
+
+    return debug;
+}
+
 inline bool operator==(const mergeinfo &m1, const mergeinfo &m2)
 {
     return m1.from == m2.from
         && m1.rev == m2.rev
         && m1.to == m2.to;
+}
+
+inline bool operator<(const mergeinfo &m1, const mergeinfo &m2)
+{
+    return m1.from < m2.from ||
+        (m1.from == m2.from && m1.rev < m2.rev) ||
+        (m1.rev == m2.rev && m1.to < m2.to);
 }
 
 inline uint qHash(const mergeinfo &key, uint seed)
