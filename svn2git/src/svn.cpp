@@ -488,7 +488,7 @@ private:
     void splitPathName(const Rules::Match &rule, const QString &pathName, QString *svnprefix_p,
                        QString *repository_p, QString *effectiveRepository_p, QString *branch_p, QString *path_p);
     QString match_path_to_branch(const QString& path);
-    bool maybeParseSimpleMergeinfo(const int revnum, QSet<mergeinfo>* mi_list);
+    bool maybeParseSimpleMergeinfo(const int revnum, QList<mergeinfo>* mi_list);
 };
 
 int SvnPrivate::exportRevision(int revnum)
@@ -597,7 +597,7 @@ SvnRevision::match_path_to_branch(const QString& path)
 
 
 bool
-SvnRevision::maybeParseSimpleMergeinfo(const int revnum, QSet<mergeinfo>* mi_list)
+SvnRevision::maybeParseSimpleMergeinfo(const int revnum, QList<mergeinfo>* mi_list)
 {
     QProcess svn;
     // svn diff -c 179481 --properties-only file:///$PWD/base
@@ -701,7 +701,7 @@ _____________*
             qDebug() << "mergeinfo" << mi.from << mi.rev << "->" << mi.to;
             // Sometimes we get multiple pairs of from/to with different
             // revisions. Use the highest revision always.
-            QSet<mergeinfo>::iterator it = mi_list->begin();
+            auto it = mi_list->begin();
             while (it != mi_list->end()) {
                 if (it->from == mi.from && it->to == mi.to && it->rev < mi.rev) {
                     it = mi_list->erase(it);
@@ -713,20 +713,23 @@ _____________*
                 }
             }
             if (!mi.to.isEmpty() && !mi.from.isEmpty()) {
-                mi_list->insert(mi);
+                mi_list->push_back(mi);
             }
             tmp.remove(match.captured(0)); // eat the input
         } else {
             qDebug("Couldn't parse mergeinfo via rules file for %s or %s", qPrintable(p), qPrintable(f));
         }
     }
+    std::sort(mi_list->begin(), mi_list->end());
     if (mi_list->size() == 1 && tmp == "") {
         return true;
-    } else if (mi_list->size() > 1 && tmp == "") {
-        qDebug() << "Got" << mi_list->size() << "different matches.";
+    } /*else if (mi_list->size() > 1 && tmp == "") {
+        qDebug() << "Got" << mi_list->size() << "different matches:" << *mi_list;
         return true;
+    }*/
+    if (mi_list->size() > 1) {
+        qDebug() << "Got" << mi_list->size() << "different matches:" << *mi_list;
     }
-    qDebug() << "Got" << mi_list->size() << "different matches.";
     if (!tmp.isEmpty()) {
         qDebug() << "Remaining unparsed MI is" << qPrintable(tmp);
     }
@@ -1019,10 +1022,10 @@ int SvnRevision::prepareTransactions()
     };
 
     bool parse_ok = false;
-    QSet<mergeinfo> mi;
+    QList<mergeinfo> mi;
     if (manual_merges.contains(revnum)) {
         const auto& val = manual_merges.value(revnum);
-        mi.insert(val);
+        mi.push_back(val);
         parse_ok = true;
     } else {
         // There are quite a number of revisions touching many branches and having a
@@ -1067,10 +1070,8 @@ int SvnRevision::prepareTransactions()
 
     // This is redundant with the WARN log about the branch copies. Make sure
     // output is sorted and stable for easier diff(1) comparison between runs.
-    auto mi_list = mi.values();
-    std::sort(mi_list.begin(), mi_list.end());
-    qDebug() << "Ended up with" << mi_list;
-    for (const auto& mi : mi_list) {
+    qDebug() << "Ended up with" << mi;
+    for (const auto& mi : mi) {
         if (mi.from.startsWith("user") || mi.from.startsWith("user")) {
             printf(" MONKEYMERGE not merging from user, please inspect me: %s", qPrintable(mi.from));
             continue;
