@@ -78,6 +78,7 @@ public:
         int minRevision;
         int maxRevision;
         bool annotate;
+        bool skip_branchpoint;
 
         enum Action {
             Ignore,
@@ -85,7 +86,7 @@ public:
             Recurse
         } action;
 
-        Match() : minRevision(-1), maxRevision(-1), annotate(false), action(Ignore) { }
+        Match() : minRevision(-1), maxRevision(-1), annotate(false), skip_branchpoint(false), action(Ignore) { }
         bool operator<(const Match other) const {
             if (filename != other.filename)
                 return filename < other.filename;

@@ -141,6 +141,7 @@ void Rules::load(const QString &filename)
     QRegExp matchBranchSubstLine("substitute branch\\s+(.+)$", Qt::CaseInsensitive);
     QRegExp matchRevLine("(min|max) revision (\\d+)", Qt::CaseInsensitive);
     QRegExp matchAnnotateLine("annotated\\s+(\\S+)", Qt::CaseInsensitive);
+    QRegExp matchSkipBranchpointLine("skip_branchpoint\\s+(\\S+)$", Qt::CaseInsensitive);
     QRegExp matchPrefixLine("prefix\\s+(.*)$", Qt::CaseInsensitive);
     QRegExp matchStripLine("strip\\s+(.*)$", Qt::CaseInsensitive);
     QRegExp matchDeleteLine("delete\\s+(.*)$", Qt::CaseInsensitive);
@@ -287,6 +288,9 @@ void Rules::load(const QString &filename)
                     continue;
                 } else if (matchAnnotateLine.exactMatch(line)) {
                     match.annotate = matchAnnotateLine.cap(1) == "true";
+                    continue;
+                } else if (matchSkipBranchpointLine.exactMatch(line)) {
+                    match.skip_branchpoint = matchSkipBranchpointLine.cap(1) == "true";
                     continue;
                 } else if (line == "end match") {
                     if (!match.repository.isEmpty())

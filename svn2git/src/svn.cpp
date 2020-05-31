@@ -1440,6 +1440,14 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
                      << qPrintable(prevrepository) << "branch"
                      << qPrintable(prevbranch) << "subdir"
                      << qPrintable(prevpath);
+            // Sometimes we don't want to record the parent. For example in
+            // revisions where a subdir from head was forked into a vendor
+            // branch. This confuses `git subtree`. TODO(emaste): provide some
+            // more thorough explanation.
+            if (rule.skip_branchpoint) {
+                qWarning() << "Not recording" << qPrintable(current) << "as branchpoint  from" << prevbranch;
+                prevbranch.clear();
+            }
         } else if (preveffectiverepository != effectiveRepository) {
             qWarning() << "WARN:" << qPrintable(current) << "rev" << revnum
                        << "is a cross-repository copy (from repository"
@@ -1520,7 +1528,8 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
     // FIXME: Needs to move into the ruleset ...
     if (path_from != NULL && prevrepository == repository && prevbranch != branch
             && (branch.startsWith("master") || branch.startsWith("head") ||
-                branch.startsWith("projects") || branch.startsWith("user"))
+                branch.startsWith("projects") || branch.startsWith("user") || branch.startsWith("vendor"))
+            && !prevbranch.isEmpty()
             && !prevbranch.startsWith("stable")) {
         QStringList log = QStringList()
                           << "copy from branch" << prevbranch << "to branch"

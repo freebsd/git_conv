@@ -237,6 +237,18 @@ match /(vendor)/(clang|llvm)/(clang|llvm)-([0-9]+)/
   branch refs/tags/\1/\2/\3-r\4
   annotated true
 end match
+# got messed up badly, fix inline and skip the repair
+match /(vendor)/(libc..)/dist/(libc..-release_38-r257836)/
+  min revision 294165
+  max revision 294165
+  repository freebsd-base.git
+  branch refs/tags/\1/\2/\3
+  annotated true
+end match
+match /vendor/libc\+\+/
+  min revision 294601
+  max revision 294601
+end match
 # Imported was r288847 and the commit message says so, the tags then went into
 # existing subdirs. Did I ever tell you how SVN's notions of tags and branches
 # are just tree copies is the bane of my existence?
@@ -602,6 +614,14 @@ end match
 match /vendor/wpa/0.7.3
   max revision 214504
 end match
+# don't branch this off of head, pulling in all history and confusing `git subtree`
+match /(vendor)/(dialog)/(dist)/
+  min revision 217338
+  max revision 217338
+  repository freebsd-base.git
+  branch \1/\2/\3
+  skip_branchpoint true
+end match
 # later tags drop the redundant prefix
 match /(vendor)/(dialog)/dialog-(1.1-[0-9]+)/
   min revision 217339
@@ -794,10 +814,6 @@ match /vendor/libarchive/3.3.2/
   min revision 320925
   max revision 320925
 end match
-# botched import and tag
-match /vendor/acpica/20180105/
-  max revision 327601
-end match
 # wrongly done import, later deleted
 match /vendor/zstd/
   min revision 322780
@@ -807,6 +823,10 @@ end match
 match /(vendor)/(byacc|lua)/
   min revision 326345
   max revision 326351
+end match
+# botched import and tag
+match /vendor/acpica/20180105/
+  max revision 327601
 end match
 # tag, change of SVN metadata that doesn't concern git, tag deletion
 match /vendor/llvm/
@@ -1001,6 +1021,14 @@ match /(vendor)/(NetBSD)/(blacklist|bmake|libc-pwcache|libc-vis|libedit|libexeci
   branch \1/\2/\3/\4
 end match
 
+# skip the branch off of head for this vendor branch
+match /(vendor)/(Juniper)/(libxo)/(dist)/
+  min revision 296962
+  max revision 296962
+  skip_branchpoint true
+  repository freebsd-base.git
+  branch \1/\2/\3/\4
+end match
 match /(vendor)/(Juniper|google)/([^/]+)/([^/]+)/
   repository freebsd-base.git
   branch \1/\2/\3/\4
