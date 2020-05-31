@@ -44,6 +44,7 @@
 #include <svn_types.h>
 #include <svn_version.h>
 
+#include <algorithm>
 #include <QDir>
 #include <QFile>
 #include <QDebug>
@@ -651,13 +652,66 @@ SvnRevision::maybeParseSimpleMergeinfo(const int revnum, QList<mergeinfo>* mi_li
     qDebug() << qPrintable(result);
     qDebug() << "=END=";
     qDebug() << "mergeinfo parsing: del/add/mod=" << del_mi << del_mi_empty << add_mi << add_mi_empty << diff_mi << diff_mi_empty;
+    QString tmp = result;
+
+    // Remove property changes on files/paths that don't have any mergeinfo
+    // changes in them.
+    static QRegularExpression ignore = QRegularExpression(
+           R"(Index: ([\S]+)
+=============*
+... ([\S]+).\([^)]+\)
+... ([\S]+).\([^)]+\)
+
+Property changes on: (?<path>[\S]+)
+_____________*
+((Added|Deleted|Modified): (fbsd|svn):(executable|n?o?keywords|eol-style|mime-type)
+## -[\d,]+ \+[\d,]+ ##
+([-+].*){1,2}
+*)+
+(?=Index|$))");
+    if (!ignore.isValid()) {
+        qWarning() << "Error in regular expression" << ignore.errorString();
+        exit(1);
+    }
+    QRegularExpressionMatchIterator i = ignore.globalMatch(result);
+    while (i.hasNext()) {
+        QRegularExpressionMatch match = i.next();
+        qDebug() << "--- matched properties to ignore" << match.captured(0);
+        tmp.remove(match.captured(0)); // eat the input
+    }
+
+    // Remove property changes on files/paths that deleted empty mergeinfo.
+    // This happens about 300 times. (In fact, sometimes empty mergeinfo is
+    // being added.)
+    static QRegularExpression deletere = QRegularExpression(
+           R"(Index: ([\S]+)
+=============*
+... ([\S]+).\([^)]+\)
+... ([\S]+).\([^)]+\)
+
+Property changes on: (?<path>[\S]+)
+_____________*
+(Added|Deleted): svn:mergeinfo
+## -0,0 \+0,0 ##
+*
+(?=Index|$))");
+    if (!deletere.isValid()) {
+        qWarning() << "Error in regular expression" << deletere.errorString();
+        exit(1);
+    }
+    i = deletere.globalMatch(tmp);
+    while (i.hasNext()) {
+        QRegularExpressionMatch match = i.next();
+        qDebug() << "--- matched properties to ignore" << match.captured(0);
+        tmp.remove(match.captured(0)); // eat the input
+    }
 
     // NOTE: need to use a fully anchored match, otherwise e.g. r238926 gets
     // handled wrong, as it uses the first mergeinfo to deduce the merge-from,
     // which is incorrect and off-by-one! r240415 also merges up to 240357 but
     // ends up with 240326 instead. This reduces the "handled" mergeinfo from
     // 2000 out of 3000 down to 1125. The rest should be hard-coded.
-    static QRegularExpression re = QRegularExpression(
+    static QRegularExpression mire = QRegularExpression(
            R"((Index: ([\S]+)
 =============*
 ... ([\S]+).\([^)]+\)
@@ -672,22 +726,29 @@ _____________*
 ## \-0,[01] \+0,[01] ##
    (?<dir>Merged|Reverse-merged) (?<from>[^:]+):r([0-9]*[-,])*(?<rev>[0-9]*)
 *)");
-    if (!re.isValid()) {
-        qWarning() << "Error in regular expression" << re.errorString();
+    if (!mire.isValid()) {
+        qWarning() << "Error in regular expression" << mire.errorString();
         exit(1);
     }
-    //QRegularExpressionMatch match = re.match(result);
-    QString tmp = result;
-    QRegularExpressionMatchIterator i = re.globalMatch(result);
+    i = mire.globalMatch(tmp);
     while (i.hasNext()) {
         mergeinfo mi;
         QRegularExpressionMatch match = i.next();
-        if (match.captured("dir") == "Reverse-merged") {
-            qDebug() << "Ignoring SVN rollbacks via mergeinfo";
-            return true;  // parsed ok, but no action to take.
+        if (match.captured(0).isEmpty() || match.captured(0) == "\n") {
+            continue;
         }
         qDebug() << "Matched" <<  match.captured(0);
-        qDebug() << "=== Matched garbage" <<  match.captured("garbage");
+        if (match.captured("dir") == "Reverse-merged") {
+            qDebug() << "=== Ignoring SVN rollbacks via mergeinfo";
+            tmp.remove(match.captured(0)); // eat the input
+            continue;  // parsed ok, but no action to take.
+        }
+        if (match.captured("dir") == "" && match.captured("garbage") != "") {
+            qDebug() << "=== Ignoring garbage match";
+            tmp.remove(match.captured(0)); // eat the input
+            continue;
+        }
+        qDebug() << "=== Matched properties" <<  match.captured("garbage");
         qDebug() << "=== Matched path" <<  match.captured("path");
         qDebug() << "=== Matched dir" <<  match.captured("dir");
         qDebug() << "=== Matched from" <<  match.captured("from");
@@ -723,15 +784,34 @@ _____________*
     std::sort(mi_list->begin(), mi_list->end());
     if (mi_list->size() == 1 && tmp == "") {
         return true;
-    } /*else if (mi_list->size() > 1 && tmp == "") {
-        qDebug() << "Got" << mi_list->size() << "different matches:" << *mi_list;
-        return true;
-    }*/
+    } else if (mi_list->size() > 1 && tmp == "") {
+        // Special case the 66 cases where vendor/clang + vendor/llvm + lld,
+        // openmp, etc. are merged in 1 rev. We want to properly record this,
+        // but can't just do it for everything, as there are merges from head
+        // into user/foo or project/bar that also copy a bunch of previously
+        // recorded mergeinfo over.
+        //
+        // It should suffice to simply allow all set-merges as long as all
+        // targets are the master branch, not projects or user or the like.
+        // In fact, there are very few of those to master, most of them go into
+        // projects/clangDDD-import.
+        const bool all_master = std::all_of(mi_list->begin(), mi_list->end(),
+                [](auto const& i) {return i.to == "master";});
+        const bool all_clang_import = std::all_of(mi_list->begin(), mi_list->end(),
+                [](auto const& i) {return i.to.startsWith("projects/clang") && i.to.endsWith("-import");});
+        if (all_master || all_clang_import) {
+            return true;
+        }
+    }
     if (mi_list->size() > 1) {
         qDebug() << "Got" << mi_list->size() << "different matches:" << *mi_list;
     }
     if (!tmp.isEmpty()) {
         qDebug() << "Remaining unparsed MI is" << qPrintable(tmp);
+    }
+    // We parsed everything, but it was probably an SVN rollback.
+    if (tmp.isEmpty() && mi_list->isEmpty()) {
+        return true;
     }
 
     QDir dir;
@@ -1001,6 +1081,8 @@ int SvnRevision::prepareTransactions()
     // Things we patch up manually as the SVN history around them is ...
     // creative.
     static QMap<int, mergeinfo> manual_merges = {
+        // merges from vendor/tzdata/dist *and* vendor/tzdata (sic!)
+        { 181413, { .from = "vendor/tzdata/dist", .rev = 181403, .to = "master" } },
         { 182352, { .from = "vendor/sendmail/dist", .rev = 182351, .to = "master" } },
         // has a bogus path
         { 189618, { .from = "vendor/top/dist", .rev = 183430, .to = "master" } },
