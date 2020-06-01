@@ -1527,8 +1527,11 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
     // in all history.
     // FIXME: Needs to move into the ruleset ...
     if (path_from != NULL && prevrepository == repository && prevbranch != branch
-            && (branch.startsWith("master") || branch.startsWith("head") ||
-                branch.startsWith("projects") || branch.startsWith("user") || branch.startsWith("vendor"))
+            && (branch.startsWith("master") || branch.startsWith("projects") || branch.startsWith("user") || branch.startsWith("vendor"))
+            // If branching into vendor, the source must not be master,
+            // otherwise *all* the history will be pulled into the vendor
+            // branch.
+            && !(branch.startsWith("vendor") && prevbranch == "master")
             && !prevbranch.isEmpty()
             && !prevbranch.startsWith("stable")) {
         QStringList log = QStringList()

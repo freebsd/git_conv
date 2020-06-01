@@ -50,16 +50,36 @@ min revision 306856
 max revision 306858
 end match
 
-# Skip cvs2svn manufactured commits in favor of the fixups.
-match /head/contrib/
-# /head/contrib/patch was fully deleted in r128779
-min revision 128778
-max revision 128778
+# Some cvs2svn tags/branches are basically vendor branches with only a small
+# subset of the files. This can confuse `git subtree`, so snip off their
+# parent, making them stand along vendor branches.
+# This is basically a pppd branch
+match /(cvs2svn)/(branches)/(MACKERAS)/
+  min revision 3010
+  max revision 3010
+  repository freebsd-base.git
+  branch refs/\1/\3
+  skip_branchpoint true
+end match
+# This is a groff branch
+match /(cvs2svn)/(branches)/(PST)/
+  min revision 18139
+  max revision 18139
+  repository freebsd-base.git
+  branch refs/\1/\3
+  skip_branchpoint true
 end match
 
-match /(cvs2svn)/([^/]+)/([^/]+)/
+match /(cvs2svn)/(branches)/([^/]+)/
   repository freebsd-base.git
-  branch \1/\2/\3
+  branch refs/\1/\3
+end match
+
+match /(cvs2svn)/(tags)/([^/]+)/
+  repository freebsd-base.git
+  # FIXME: not happy with this naming, maybe introduce an "archive"
+  branch refs/\1/\2/\3
+  annotated true
 end match
 
 # deleted attempts
@@ -1441,6 +1461,13 @@ match /(vendor|vendor-sys|vendor-crypto)/([^/]+)/([^/]+)/
   repository freebsd-base.git
   # unify the prefix for other branches
   branch vendor/\2/\3
+end match
+
+# /head/contrib/patch was fully deleted in r128779, skip the partial delete,
+# manufactures by cvs2svn
+match /head/contrib/patch/
+  min revision 128778
+  max revision 128778
 end match
 
 match /head/
