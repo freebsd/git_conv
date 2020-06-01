@@ -1196,8 +1196,13 @@ int FastImportRepository::Transaction::commit()
     QByteArray desc = "";
     mark_t i = !!parentmark;        // if parentmark != 0, there's at least one parent
 
+    // TODO(uqs): this happens 43 times in our repo. Inspect why and
+    // potentially let them be proper merges.
+    // r159827 is the last such commit, and it's a vendor tag that copies from
+    // various revisions of the dist branch. It should indeed just have 1
+    // parent.
     if(log.contains("This commit was manufactured by cvs2svn") && merges.count() > 1) {
-        qSort(merges);
+        std::sort(merges.begin(), merges.end());
         repository->fastImport.write("merge :" + QByteArray::number(merges.last()) + "\n");
         merges.pop_back();
         qWarning() << "WARN: Discarding all but the highest merge point as a workaround for cvs2svn created branch/tag"
@@ -1208,23 +1213,23 @@ int FastImportRepository::Transaction::commit()
                 qDebug() << "Skipping marking" << merge << "as a merge point as it matches the parent";
                 continue;
             }
-
-            if (++i > 16) {
-                // FIXME: options:
-                //   (1) ignore the 16 parent limit
-                //   (2) don't emit more than 16 parents
-                //   (3) create another commit on branch to soak up additional parents
-                // we've chosen option (2) for now, since only artificial commits
-                // created by cvs2svn seem to have this issue
-                qWarning() << "WARN: too many merge parents";
-                break;
-            }
+            ++i;
 
             QByteArray m = " :" + QByteArray::number(merge);
             desc += m;
             repository->fastImport.write("merge" + m + "\n");
         }
     }
+    // FIXME: we have 3 revisions in the repo that have more than 16 parents.
+    // All are pull ups from head into a user or project branch. As such, we
+    // could just merge the max. revision of master.
+    // TODO: implement this. In fact, only ever merge in the most recent commit
+    // per branch.
+    if (i > 15) {
+        qWarning() << "WARN: too many merge parents:" << merges.length()
+            << "Please inspect them. Marks are:" << merges;
+    }
+
     // write the file deletions
     if (deletedFiles.contains(""))
         repository->fastImport.write("deleteall\n");
