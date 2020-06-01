@@ -122,6 +122,51 @@ match /(projects)/(graid|multi-fibv6|ofed|pf|suj|zfsd)/([^/]+)/
   branch \1/\2/\3
 end match
 
+# these branch off of head, but they take only a subdir with them, this
+# confuses `git subtree` later on, so skip the branch point creation.
+match /(projects)/(bhyve_graphics)/
+  min revision 300828
+  max revision 300828
+  repository freebsd-base.git
+  branch \1/\2
+  skip_branchpoint true
+end match
+match /(projects)/(etc_ipv6)/
+  min revision 208122
+  max revision 208122
+  repository freebsd-base.git
+  branch \1/\2
+  skip_branchpoint true
+end match
+match /(projects)/(hastd_wan)/
+  min revision 223144
+  max revision 223144
+  repository freebsd-base.git
+  branch \1/\2
+  skip_branchpoint true
+end match
+match /(projects)/(jeff_mbuf2)/
+  min revision 191957
+  max revision 191957
+  repository freebsd-base.git
+  branch \1/\2
+  skip_branchpoint true
+end match
+match /(projects)/(powernv)/
+  min revision 277620
+  max revision 277620
+  repository freebsd-base.git
+  branch \1/\2
+  skip_branchpoint true
+end match
+match /(projects)/(pseries)/
+  min revision 221956
+  max revision 221956
+  repository freebsd-base.git
+  branch \1/\2
+  skip_branchpoint true
+end match
+
 match /(projects)/([^/]+)/
   repository freebsd-base.git
   branch \1/\2
@@ -185,6 +230,141 @@ end match
 match /(user)/(eri)/(pf45)/(head)/
   repository freebsd-base.git
   branch \1/\2/\3
+end match
+
+# these are partial branches off of head, which we snip off, to later not confuse `git subtree`.
+match /(user)/(andre)/(mbuf_staging)/
+  min revision 256282
+  max revision 256282
+  repository freebsd-base.git
+  branch \1/\2/\3
+  skip_branchpoint true
+end match
+match /(user)/(andre)/(routelocking)/
+  min revision 234647
+  max revision 234647
+  repository freebsd-base.git
+  branch \1/\2/\3
+  skip_branchpoint true
+end match
+match /(user)/(attilio)/(membarclean)/
+  min revision 244587
+  max revision 244587
+  repository freebsd-base.git
+  branch \1/\2/\3
+  skip_branchpoint true
+end match
+match /(user)/(delphij)/(libz)/
+  min revision 205302
+  max revision 205302
+  repository freebsd-base.git
+  branch \1/\2/\3
+  skip_branchpoint true
+end match
+match /(user)/(delphij)/(libz-8)/
+  min revision 206926
+  max revision 206926
+  repository freebsd-base.git
+  branch \1/\2/\3
+  skip_branchpoint true
+end match
+match /(user)/(dim)/(merge-test2)/
+  min revision 287632
+  max revision 287632
+  repository freebsd-base.git
+  branch \1/\2/\3
+  skip_branchpoint true
+end match
+match /(user)/(edwin)/(calendar)/
+  min revision 200812
+  max revision 200812
+  repository freebsd-base.git
+  branch \1/\2/\3
+  skip_branchpoint true
+end match
+match /(user)/(edwin)/(ncal)/
+  min revision 204479
+  max revision 204479
+  repository freebsd-base.git
+  branch \1/\2/\3
+  skip_branchpoint true
+end match
+match /(user)/(imp)/(camdoc)/
+  min revision 296049
+  max revision 296049
+  repository freebsd-base.git
+  branch \1/\2/\3
+  skip_branchpoint true
+end match
+match /(user)/(imp)/(config_reorg_sys)/
+  min revision 201537
+  max revision 201537
+  repository freebsd-base.git
+  branch \1/\2/\3
+  skip_branchpoint true
+end match
+match /(user)/(marcel)/(vtc.sys)/
+  min revision 234080
+  max revision 234080
+  repository freebsd-base.git
+  branch \1/\2/\3
+  skip_branchpoint true
+end match
+match /(user)/(mjacob)/(sys)/
+  min revision 227632
+  max revision 227632
+  repository freebsd-base.git
+  branch \1/\2/\3
+  skip_branchpoint true
+end match
+match /(user)/(nwhitehorn)/(bsdinstall_zfspartedit)/
+  min revision 266652
+  max revision 266652
+  repository freebsd-base.git
+  branch \1/\2/\3
+  skip_branchpoint true
+end match
+match /(user)/(nwhitehorn)/(kboot)/
+  min revision 276329
+  max revision 276329
+  repository freebsd-base.git
+  branch \1/\2/\3
+  skip_branchpoint true
+end match
+match /(user)/(nwhitehorn)/(mips_pic_if)/
+  min revision 259687
+  max revision 259687
+  repository freebsd-base.git
+  branch \1/\2/\3
+  skip_branchpoint true
+end match
+match /(user)/(nwhitehorn)/(ppc64-pmap-rework)/
+  min revision 278877
+  max revision 278877
+  repository freebsd-base.git
+  branch \1/\2/\3
+  skip_branchpoint true
+end match
+match /(user)/(nwhitehorn)/(ps3)/
+  min revision 209627
+  max revision 209627
+  repository freebsd-base.git
+  branch \1/\2/\3
+  skip_branchpoint true
+end match
+match /(user)/(nwhitehorn)/(ps3)/
+  min revision 210708
+  max revision 210708
+  repository freebsd-base.git
+  branch \1/\2/\3
+  skip_branchpoint true
+end match
+match /(user)/(sbruno)/(firewire_test)/
+  min revision 227670
+  max revision 227670
+  repository freebsd-base.git
+  branch \1/\2/\3
+  skip_branchpoint true
 end match
 
 match /(user)/([^/]+)/([^/]+)/
