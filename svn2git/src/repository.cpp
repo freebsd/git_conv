@@ -28,6 +28,7 @@
 static const int maxSimultaneousProcesses = 100;
 
 typedef unsigned long long mark_t;
+static const mark_t initialMark = 42000000;
 static const mark_t maxMark = ULONG_MAX;
 
 class FastImportRepository : public Repository
@@ -323,7 +324,7 @@ static QString branchNotesFileName(QString name)
 
 FastImportRepository::FastImportRepository(const Rules::Repository &rule)
     : name(rule.name), prefix(rule.forwardTo), fastImport(name), commitCount(0), outstandingTransactions(0),
-      last_commit_mark(0), next_file_mark(maxMark - 1), processHasStarted(false)
+      last_commit_mark(initialMark), next_file_mark(maxMark - 1), processHasStarted(false)
 {
     foreach (Rules::Repository::Branch branchRule, rule.branches) {
         Branch branch;
@@ -383,7 +384,7 @@ static mark_t lastValidMark(QString name)
         return 0;
 
     qDebug()  << "marksfile " << marksfile.fileName() ;
-    mark_t prev_mark = 0;
+    mark_t prev_mark = initialMark;
 
     int lineno = 0;
     while (!marksfile.atEnd()) {
