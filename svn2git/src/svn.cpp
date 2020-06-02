@@ -1016,6 +1016,14 @@ int SvnRevision::prepareTransactions()
         348723, 349702, 351342, 351392, 352043, 352239, 352254, 352346, 352347,
         352770, 352771, 353352, 353567, 353973, 353974, 353996, 355292, 355903,
         355948, 356095, 356774, 356930, 357060, 357584, 358850, 360666, 360668,
+        // These are partial branch copies, some of them are actually ok, like
+        // the ones from vendor into vendor. FIXME: verify these are still
+        // recorded properly!
+        16730, 14064, 26246, 11816, 15425, 13396, 12893, 13009, 16127, 300828,
+        208122, 223144, 191957, 277620, 221956, 256282, 234647, 244587, 205302,
+        206926, 287632, 200812, 204479, 296049, 201537, 234080, 227632, 266652,
+        276329, 259687, 278877, 209627, 210708, 227670, 328072, 296962, 280454,
+        180458, 217338, 238053,
     };
     if (skip_mergeinfo.contains(revnum)) {
         return EXIT_SUCCESS;
@@ -1445,7 +1453,7 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
             // branch. This confuses `git subtree`. TODO(emaste): provide some
             // more thorough explanation.
             if (rule.skip_branchpoint) {
-                qWarning() << "Not recording" << qPrintable(current) << "as branchpoint  from" << prevbranch;
+                qWarning() << "Not recording" << qPrintable(current) << "as branchpoint from" << prevbranch;
                 prevbranch.clear();
             }
         } else if (preveffectiverepository != effectiveRepository) {
