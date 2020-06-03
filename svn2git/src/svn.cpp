@@ -1472,7 +1472,9 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
             qFatal("This must not happen. Vendor tags will be disconnected.");
             // FIXME: Handle with fast-import 'file rename' facility
             //        ??? Might need special handling when path == / or prevpath == /
-        } else {
+        } else if (!(branch.startsWith("vendor") && prevbranch == "master")) {
+            // We skip e.g. r12116 which branched a vendor branch off of head
+            // by deleting everything.
             if (prevbranch == branch) {
                 // same branch and same repository
                 qDebug() << qPrintable(current) << "rev" << revnum
