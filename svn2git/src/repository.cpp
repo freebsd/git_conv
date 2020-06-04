@@ -56,6 +56,11 @@ public:
         uint datetime;
         int revnum;
 
+        // Not a plain map to preserve order of insertion to retain backwards
+        // compatibility. this should then result in parents being listed in
+        // the order of the svn log -v output, not sorted by from-revision or
+        // from-branch.
+        QMap<QString, int> merge_map;
         QVector<int> merges;
 
         QStringList deletedFiles;
@@ -1028,12 +1033,51 @@ void FastImportRepository::Transaction::noteCopyFromBranch(const QString &branch
             logged_already_.insert(qHash(log));
             qWarning() << "WARN: repository " + repository->name + " branch " + branch + " has some files copied from " + branchFrom + "@" + QByteArray::number(branchRevNum);
         }
+    }
 
-        if (!merges.contains(mark)) {
-            merges.append(mark);
-            qDebug() << "adding" << branchFrom + "@" + QByteArray::number(branchRevNum) << ":" << mark << "as a merge point";
+    // We might have found a better mark sans dist suffix.
+    if (mark > 0) {
+        QByteArray branchRef = branch;
+        if (!branchRef.startsWith("refs/"))
+            branchRef.prepend("refs/heads/");
+
+        // Might not be a merge, we might create the branch from a too old
+        // revision, SVN does this all the time when creating a tag by copying
+        // stuff over, often the top-level dir of the copy will be from an
+        // older revision and the files then come for a newer one (but often
+        // from different ones as well).
+        // This hack is is based on the assumption that resetBranch is only
+        // ever called once per branch creation, i.e. no branch is created
+        // having 2 parents (I think, tbh, I'm not sure what the implications
+        // are.) Anyway, we blast away the branch reset whenever we find a
+        // higher numbered mark (on the same branch).
+        // This revision creates the branch, make sure the mark is the highest possible.
+        if (repository->branches.contains(branch)
+                && revnum == repository->branches[branch].created
+                && repository->resetBranchNames.contains(branchRef)) {
+            const QString rb = repository->resetBranches;
+            const Branch &br = repository->branches[branch];
+            if (br.marks.last() < mark && rb.contains("from branch "+branchFrom)) {
+                qDebug() << "WARN: found branchpoint from lower mark, about to recreate branch from different revision";
+                //qDebug() << "\n" << repository->resetBranches << "\n";
+                repository->resetBranches.clear();
+                repository->createBranch(branch, revnum, branchFrom, branchRevNum);
+                return;
+            }
+        } else if (merge_map.contains(branchFrom)) {
+            const long long old_mark = merge_map[branchFrom];
+            if (old_mark < mark) {
+                qDebug() << "bumping to"
+                    << branchFrom + "@" + QByteArray::number(branchRevNum) << ":" << mark
+                    << "from" << old_mark << "as a merge point";
+                merges.removeOne(old_mark);
+                merges.push_back(mark);
+                merge_map[branchFrom] = mark;
+            }
         } else {
-            //qDebug() << "merge point already recorded";
+            merges.push_back(mark);
+            merge_map[branchFrom] = mark;
+            qDebug() << "adding" << branchFrom + "@" + QByteArray::number(branchRevNum) << ":" << mark << "as a merge point";
         }
     }
 }
@@ -1203,38 +1247,16 @@ int FastImportRepository::Transaction::commit()
     QByteArray desc = "";
     mark_t i = !!parentmark;        // if parentmark != 0, there's at least one parent
 
-    // TODO(uqs): this happens 43 times in our repo. Inspect why and
-    // potentially let them be proper merges.
-    // r159827 is the last such commit, and it's a vendor tag that copies from
-    // various revisions of the dist branch. It should indeed just have 1
-    // parent.
-    if(log.contains("This commit was manufactured by cvs2svn") && merges.count() > 1) {
-        std::sort(merges.begin(), merges.end());
-        repository->fastImport.write("merge :" + QByteArray::number(merges.last()) + "\n");
-        merges.pop_back();
-        qWarning() << "WARN: Discarding all but the highest merge point as a workaround for cvs2svn created branch/tag"
-                      << "Discarded marks:" << merges;
-    } else {
-        foreach (const mark_t merge, merges) {
-            if (merge == parentmark) {
-                qDebug() << "Skipping marking" << merge << "as a merge point as it matches the parent";
-                continue;
-            }
-            ++i;
-
-            QByteArray m = " :" + QByteArray::number(merge);
-            desc += m;
-            repository->fastImport.write("merge" + m + "\n");
+    foreach (const mark_t merge, merges) {
+        if (merge == parentmark) {
+            qDebug() << "Skipping marking" << merge << "as a merge point as it matches the parent";
+            continue;
         }
-    }
-    // FIXME: we have 3 revisions in the repo that have more than 16 parents.
-    // All are pull ups from head into a user or project branch. As such, we
-    // could just merge the max. revision of master.
-    // TODO: implement this. In fact, only ever merge in the most recent commit
-    // per branch.
-    if (i > 15) {
-        qWarning() << "WARN: too many merge parents:" << merges.length()
-            << "Please inspect them. Marks are:" << merges;
+        ++i;
+
+        QByteArray m = " :" + QByteArray::number(merge);
+        desc += m;
+        repository->fastImport.write("merge" + m + "\n");
     }
 
     // write the file deletions

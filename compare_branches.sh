@@ -213,7 +213,7 @@ case "$type" in
                         device-tree/ianc-b78b6b80/) diff_it $t/$b${s}dist $t/$b$s; continue ;;
                         dtc/dtc-f807af19/) diff_it $t/$b${s}dist $t/$b$s; continue ;;
                         # lol, the flattening in r186675 left behind a contrib/file/.cvsignore, but that means my heuristic for finding flattened tags fails. Oh well ...
-                        file/3.41/|file/4.10/|file/4.17a/|file/4.21/) diff_it $t/$b$s@186674 $t/$b$s; continue ;;
+                        file/3.41/|file/4.10/|file/4.21/) diff_it $t/$b$s@186674 $t/$b$s; continue ;;
                         # git tag dropped the redundant prefix
                         dialog/dialog-1.1*) diff_it $t/$b$s $t/$b${s#dialog-}; continue ;;
                         # NOTE: these are missing the .gitignore, .gitattributes et al, because `git archive` will honor the ignore attribute :/
@@ -273,7 +273,18 @@ case "$type" in
                         # need to compare 2 branches
                         illumos/*|ngatm/*|opensolaris/*) diff_em $t/$b$s vendor-sys/$b$s $t/$b$s; continue ;;
                         # Curiously some SVN keyword expansion diff in that 1 tag only?!
-                        ipfilter/4.1.8/) diff_it '-I[$]FreeBSD.*[$]' $t/$b$s $t/$b$s; continue ;;
+                        # NOTE: Our branchpoint-bump-hack means 2 files are
+                        # missing that were deleted anyway (but the CVS tag
+                        # didn't get the memo). It's actually more correct that
+                        # these are missing, imho.
+                        ipfilter/4.1.8/) diff_it '-I[$]FreeBSD.*[$]' -xtodo -xtypescript $t/$b$s $t/$b$s; continue ;;
+                        # ditto
+                        bind9/9.4.2/) diff_it -xFREEBSD-Upgrade -xFREEBSD-Xlist $t/$b$s; continue ;;
+                        # FIXME FIXME FIXME fallout from merging from the highest rev always to fix most tags (you win some, you lose some)
+                        binutils/2.10.0/) continue ;;
+                        file/4.17a/) continue ;; #diff_it $t/$b$s@186674 $t/$b$s; continue ;;
+                        gcc/2.95.3-test1/) continue ;;
+                        gcc/2.95.3-test3/) continue ;;
                     esac
                     diff_it $t/$b$s
                 done

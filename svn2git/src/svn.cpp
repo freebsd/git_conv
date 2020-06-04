@@ -1239,10 +1239,6 @@ int SvnRevision::exportEntry(const char *key, const svn_fs_path_change2_t *chang
         // obviously no longer exists in the current revision
         SVN_ERR(svn_fs_copied_from(&rev_from, &path_from, fs_root, key, revpool));
     }
-    // Yolo, we have a bogus rev_from for vendor/dtc tagging, patch it up right here.
-    if (!strcmp(key, "/vendor/dtc/dtc-6a15eb23") && rev_from == 261201) {
-        rev_from = 261203;
-    }
 
     // Is there mergeinfo attached? Only do this once per revnum
     // We abuse the logged_already hash for this.
@@ -1440,6 +1436,7 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
         }
     }
 
+    //qDebug() << "XXX" << path_from << current << svnprefix << path;
     // current == svnprefix => we're dealing with the contents of the whole branch here
     if (path_from != NULL && current == svnprefix && path.isEmpty()) {
         if (previous != prevsvnprefix) {
@@ -1535,13 +1532,13 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
     // releng, as we only ever cherry-pick changes to those branches.
     // Also, never merge from stable, like was done in SVN r306097, as it pulls
     // in all history.
-    // FIXME: Needs to move into the ruleset ...
+    //qDebug() << "XXX" << path_from << prevbranch << branch;
     if (path_from != NULL && prevrepository == repository && prevbranch != branch
-            && (branch.startsWith("master") || branch.startsWith("projects") || branch.startsWith("user") || branch.startsWith("vendor"))
+            && (branch.startsWith("master") || branch.startsWith("projects") || branch.startsWith("user") || branch.startsWith("vendor") || branch.startsWith("refs/tags/vendor"))
             // If branching into vendor, the source must not be master,
             // otherwise *all* the history will be pulled into the vendor
             // branch.
-            && !(branch.startsWith("vendor") && prevbranch == "master")
+            && !((branch.startsWith("vendor") || branch.startsWith("refs/tags/vendor")) && prevbranch == "master")
             && !prevbranch.isEmpty()
             && !prevbranch.startsWith("stable")) {
         QStringList log = QStringList()
