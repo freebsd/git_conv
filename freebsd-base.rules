@@ -11,6 +11,11 @@ match /projects/suj/rev.txt
 end match
 match /user/GUIDELINES.txt
 end match
+# Ignore the deletion of a bunch of .cvsignore from old branches, needlessly advancing them.
+match /(?!head/)
+min revision 250544
+max revision 250544
+end match
 # Skip empty test-commit, that I'm unable to svnsync, maybe it's corrupted?
 match /head/
 min revision 179587
