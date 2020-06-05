@@ -156,7 +156,7 @@ Releases prior to 5.3-RELEASE are omitting the secure/ and crypto/ subdirs."
     git add -fN .
     GIT_COMMITTER_DATE="$c_date" GIT_COMMITTER_NAME="$c_committer" GIT_COMMITTER_EMAIL="$c_email" git commit -q -a --author="$c_auth" --date="$c_date" -m "$c_msg" -m "$msg"
     # TODO: what's in a name?
-    GIT_COMMITTER_DATE="$c_date" GIT_COMMITTER_NAME="$c_committer" GIT_COMMITTER_EMAIL="$c_email" git tag -a -f -m "Tag $rel as shipped." release/${tag}_shipped $commit
+    GIT_COMMITTER_DATE="$c_date" GIT_COMMITTER_NAME="$c_committer" GIT_COMMITTER_EMAIL="$c_email" git tag -a -f -m "Tag $rel as it was shipped on the ISOs." release/${tag}_shipped $commit
 
     cd ../..
     ##GIT_DIR=$PWD/.git git worktree remove --force wrk
