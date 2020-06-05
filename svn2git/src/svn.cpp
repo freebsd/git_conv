@@ -935,7 +935,7 @@ int SvnRevision::prepareTransactions()
     // terms of git.
     static QSet<int> skip_mergeinfo = {
         196075, 179468, 244485, 244487, 262833, 262834, 355814, 193205, 253716,
-        184527,
+        184527, 268229,
         // self-referential mergeinfo
         180475, 181836, 181837, 183229, 286109, 288439, 228777, 228776,
         // These are branch creations or head → project IFCs where a whole
