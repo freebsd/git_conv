@@ -513,7 +513,6 @@ match /vendor/llvm-project/
   min revision 355986
   max revision 355987
 end match
-# TODO: record the following copies as merges: 355944, 355945, 355947
 # premature tag
 match /vendor/llvm-project/llvmorg-10.0.0-0-gd32170dbd5b/
   min revision 359337
@@ -521,7 +520,7 @@ match /vendor/llvm-project/llvmorg-10.0.0-0-gd32170dbd5b/
 end match
 
 # we have 2 identical vendor branches, one under vendor, the other under
-# vendory-crypto. They have different subdirs though, we merge them.
+# vendor-crypto. They have different subdirs though, we merge them.
 match /(vendor)/(telnet)/(dist)/
   repository freebsd-base.git
   branch \1/\2/\3
@@ -1138,7 +1137,7 @@ match /vendor/
 min revision 282585
 max revision 282585
 end match
-# Re-tag a bunch of erronous tags
+# Re-tag a bunch of erroneous tags
 match /(vendor)/(NetBSD)/(libc-vis)/(20121412)(a?)/
   min revision 244230
   max revision 248298
@@ -1177,27 +1176,57 @@ match /(vendor)/(patch)/(dist)/
   repository freebsd-base.git
   branch \1/misc-GNU/\2/\3
 end match
+match /(vendor)/(awk|bc|bison|cpio|cvs|patch|tar|texinfo)/((?!dist)[^/]+)/
+  repository freebsd-base.git
+  branch refs/tags/\1/misc-GNU/\2/\3
+  annotated true
+end match
 match /(vendor)/(awk|bc|bison|cpio|cvs|patch|tar|texinfo)/([^/]+)/
   repository freebsd-base.git
   branch \1/misc-GNU/\2/\3
+end match
+match /(vendor)/gnu-(sort)/((?!dist)[^/]+)/
+  repository freebsd-base.git
+  branch refs/tags/\1/misc-GNU/\2/\3
+  annotated true
 end match
 match /(vendor)/gnu-(sort)/([^/]+)/
   repository freebsd-base.git
   branch \1/misc-GNU/\2/\3
 end match
+match /(vendor)/(misc-GNU)/(awk|bc|bison|cpio|cvs|patch|tar|texinfo)/((?!dist)[^/]+)/
+  repository freebsd-base.git
+  branch refs/tags/\1/\2/\3/\4
+  annotated true
+end match
 match /(vendor)/(misc-GNU)/(awk|bc|bison|cpio|cvs|patch|tar|texinfo)/([^/]+)/
   repository freebsd-base.git
   branch \1/\2/\3/\4
 end match
+match /(vendor)/(misc-GNU)/gnu-(sort)/((?!dist)[^/]+)/
+  repository freebsd-base.git
+  branch refs/tags/\1/\2/\3/\4
+  annotated true
+end match
 match /(vendor)/(misc-GNU)/gnu-(sort)/([^/]+)/
   repository freebsd-base.git
   branch \1/\2/\3/\4
+end match
+match /(vendor)/(lukemftpd?|sort)/((?!dist)[^/]+)/
+  repository freebsd-base.git
+  branch refs/tags/\1/NetBSD/\2/\3
+  annotated true
 end match
 match /(vendor)/(lukemftpd?|sort)/([^/]+)/
   repository freebsd-base.git
   branch \1/NetBSD/\2/\3
 end match
 # 4-levels for some of them
+match /(vendor)/(NetBSD)/(blacklist|bmake|libc-pwcache|libc-vis|libedit|libexecinfo|lukemftpd?|mknod|mtree|softfloat|sort|tests|unvis|vis|xlint)/((?!dist)[^/]+)/
+  repository freebsd-base.git
+  branch refs/tags/\1/\2/\3/\4
+  annotated true
+end match
 match /(vendor)/(NetBSD)/(blacklist|bmake|libc-pwcache|libc-vis|libedit|libexecinfo|lukemftpd?|mknod|mtree|softfloat|sort|tests|unvis|vis|xlint)/([^/]+)/
   repository freebsd-base.git
   branch \1/\2/\3/\4
@@ -1210,6 +1239,11 @@ match /(vendor)/(Juniper)/(libxo)/(dist)/
   skip_branchpoint true
   repository freebsd-base.git
   branch \1/\2/\3/\4
+end match
+match /(vendor)/(Juniper|google)/([^/]+)/((?!dist)[^/]+)/
+  repository freebsd-base.git
+  branch refs/tags/\1/\2/\3/\4
+  annotated true
 end match
 match /(vendor)/(Juniper|google)/([^/]+)/([^/]+)/
   repository freebsd-base.git
@@ -1230,6 +1264,11 @@ match /vendor/zlib/
   max revision 311264
 end match
 # zlib, libz, what's the difference?
+match /(vendor)/(libz)/((?!dist)[^/]+)/
+  repository freebsd-base.git
+  branch refs/tags/\1/zlib/\3
+  annotated true
+end match
 match /(vendor)/(libz)/([^/]+)/
   repository freebsd-base.git
   branch \1/zlib/\3
@@ -1246,6 +1285,11 @@ match /vendor/edk2/
   max revision 314880
 end match
 
+match /(vendor)/(mandoc|mdocml)/((?!dist)[^/]+)/
+  repository freebsd-base.git
+  branch refs/tags/\1/mandoc/\3
+  annotated true
+end match
 match /(vendor)/(mandoc|mdocml)/([^/]+)/
   repository freebsd-base.git
   branch \1/mandoc/\3
@@ -1363,6 +1407,12 @@ match /vendor-cddl/(opensolaris)/([^/]+)/(sys/)?cddl/contrib/opensolaris/
   branch vendor/\1/\2
   max revision 194441
 end match
+match /vendor-sys/(opensolaris)/((?!dist)[^/]+)/
+  repository freebsd-base.git
+  branch refs/tags/vendor/\1/\2
+  annotated true
+  min revision 194445
+end match
 match /vendor-sys/(opensolaris)/([^/]+)/
   repository freebsd-base.git
   branch vendor/\1/\2
@@ -1444,6 +1494,11 @@ match /vendor-sys/illumos/dist/
   max revision 267932
 end match
 
+match /vendor(?:-sys)?/(illumos)/((?!dist)[^/]+)/
+  repository freebsd-base.git
+  branch refs/tags/vendor/\1/\2
+  annotated true
+end match
 match /vendor(?:-sys)?/(illumos)/([^/]+)/
   repository freebsd-base.git
   branch vendor/\1/\2
@@ -1466,6 +1521,11 @@ match /vendor/ngatm/1.1/
 end match
 match /vendor/ngatm/1.2/
   max revision 146534
+end match
+match /vendor(?:-sys)?/(ngatm)/((?!dist)[^/]+)/
+  repository freebsd-base.git
+  branch refs/tags/vendor/\1/\2
+  annotated true
 end match
 match /vendor(?:-sys)?/(ngatm)/([^/]+)/
   repository freebsd-base.git
@@ -1600,9 +1660,7 @@ end match
 # TODO: merge sys and non-sys for ipfilter?
 
 # We have some conflicting vendor names here, e.g. illumos, opensolaris, ngatm, pf, ipfilter.
-# NOTE: not a zero-length lookahead match, so only works up to 3 chars, as that
-# happens to be the minimum tag chars x.y
-match /(vendor-sys)/(ipfilter|ngatm|pf)/([^d][^i][^/]+)/
+match /(vendor-sys)/(ipfilter|ngatm|pf)/((?!dist)[^/]+)/
   repository freebsd-base.git
   branch refs/tags/\1/\2/\3
   annotated true
@@ -1613,7 +1671,7 @@ match /(vendor-sys)/(ipfilter|ngatm|pf)/([^/]+)/
 end match
 
 # Turn non-dist directories into annotated tags.
-match /(vendor|vendor-sys|vendor-crypto)/([r-z][^/]+)/([^d][^i][^/]+)/
+match /(vendor|vendor-sys|vendor-crypto)/([r-z][^/]+)/((?!dist)[^/]+)/
   repository freebsd-base.git
   branch refs/tags/vendor/\2/\3
   annotated true
@@ -1626,7 +1684,7 @@ match /(vendor|vendor-sys|vendor-crypto)/([^/]+)/([^/]+)/
 end match
 
 # /head/contrib/patch was fully deleted in r128779, skip the partial delete,
-# manufactures by cvs2svn
+# manufactured by cvs2svn
 match /head/contrib/patch/
   min revision 128778
   max revision 128778
