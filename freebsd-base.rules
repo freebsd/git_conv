@@ -1671,7 +1671,7 @@ match /(vendor-sys)/(ipfilter|ngatm|pf)/([^/]+)/
 end match
 
 # Turn non-dist directories into annotated tags.
-match /(vendor|vendor-sys|vendor-crypto)/([r-z][^/]+)/((?!dist)[^/]+)/
+match /(vendor|vendor-sys|vendor-crypto)/([^/]+)/((?!dist)[^/]+)/
   repository freebsd-base.git
   branch refs/tags/vendor/\2/\3
   annotated true
