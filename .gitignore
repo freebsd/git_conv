@@ -5,6 +5,9 @@ diff_*
 freebsd-base.git
 freebsd-doc.git
 freebsd-ports.git
+log-base
+log-doc
+log-ports
 log-freebsd-base.git
 log-freebsd-base.git.old
 log-freebsd-doc.git
