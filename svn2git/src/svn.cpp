@@ -1549,9 +1549,13 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
             qDebug() << "copy from branch" << prevbranch << "to branch"
                      << branch << "@rev" << rev_from;
         }
-        merge_from_rev_ = rev_from;
-        merge_from_branch_ = prevbranch;
-        txn->noteCopyFromBranch (prevbranch, rev_from);
+        if (rule.skip_branchpoint) {
+            qWarning() << "Not recording" << qPrintable(current) << "as branchpoint from" << prevbranch;
+        } else {
+            merge_from_rev_ = rev_from;
+            merge_from_branch_ = prevbranch;
+            txn->noteCopyFromBranch (prevbranch, rev_from);
+        }
     }
 
     if (change->change_kind == svn_fs_path_change_replace && path_from == NULL) {

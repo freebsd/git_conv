@@ -401,6 +401,60 @@ end match
 match /vendor/Juniper/libxo/(.svnignore|import.sh)
 end match
 
+# Much like the cvs2svn branches, some of these are vendor branches only and
+# shouldn't fork off of the mainline.
+match /(vendor)/(pppd)/(dist)/
+  min revision 3011
+  repository freebsd-base.git
+  branch \1/\2/\3
+  skip_branchpoint true
+end match
+
+# Ok, routed vendor is special. Till r17843 everything was imported under dist.
+# After that, things were imported into both dist2 *and* dist_v_2_21. The
+# prefix was different though, so we can just delete the old prefix.
+# But first: don't fork it off of master
+match /(vendor)/(SGI)/(dist)/
+  min revision 16005
+  repository freebsd-base.git
+  branch \1/\2/\3
+  skip_branchpoint true
+end match
+match /(vendor)/(SGI)/(dist)(2|_v_2_21)/
+  min revision 18316
+  max revision 18316
+  repository freebsd-base.git
+  branch \1/\2/\3
+  # Look, r18316 does *not* import a routed.h, which I'm pretty sure is wrong.
+  # The next revision, r19880 brings it back again. It's what is in SVN, though.
+  # We could just `delete usr.sbin/routed` here and that would be good enough,
+  # but it would drop the routed.h due to how the ordering of operations works
+  # out. So go the extra mile instead. You're welcome.
+  delete usr.sbin/routed/rttrace
+  delete usr.sbin/routed/Makefile.inc
+  rename usr.sbin/routed/routed.h sbin/routed/routed.h
+  rename usr.sbin/routed/Makefile /dev/null
+  rename usr.sbin/routed/defs.h /dev/null
+  rename usr.sbin/routed/if.c /dev/null
+  rename usr.sbin/routed/input.c /dev/null
+  rename usr.sbin/routed/main.c /dev/null
+  rename usr.sbin/routed/output.c /dev/null
+  rename usr.sbin/routed/parms.c /dev/null
+  rename usr.sbin/routed/pathnames.h /dev/null
+  rename usr.sbin/routed/radix.c /dev/null
+  rename usr.sbin/routed/radix.h /dev/null
+  rename usr.sbin/routed/rdisc.c /dev/null
+  rename usr.sbin/routed/routed.8 /dev/null
+  rename usr.sbin/routed/rtquery /dev/null
+  rename usr.sbin/routed/table.c /dev/null
+  rename usr.sbin/routed/trace.c /dev/null
+end match
+match /(vendor)/(SGI)/(dist)(2|_v_2_21)/
+  repository freebsd-base.git
+  branch \1/\2/\3
+  delete usr.sbin/routed
+end match
+
 # fixup trailing dot, skip the rename revs
 match /vendor/(clang|llvm)/(clang|llvm)-(r73070)\./
   repository freebsd-base.git
