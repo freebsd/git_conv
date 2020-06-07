@@ -60,6 +60,14 @@ match /cvs2svn/
   min revision 260580
   max revision 260580
 end match
+
+# NOTE ATTENTION ACHTUNG: I'm working my way backwards through all the
+# revisions that pulled in stuff from /cvs2svn/branches into head and see if
+# they can't be patched up better. So far, it seems that the later ones were
+# either mistakes or one-offs that could well just have been regular commits
+# into head to begin with. Some look like bogus "fell of the vendor branch"
+# issues in CVS.
+
 # Some cvs2svn tags/branches are basically vendor branches with only a small
 # subset of the files. This can confuse `git subtree`, so snip off their
 # parent, making them stand along vendor branches.
@@ -71,11 +79,17 @@ match /(cvs2svn)/(branches)/(MACKERAS)/
   branch vendor/pppd/dist  # sic, this is all about pppd
   skip_branchpoint true
 end match
-# See r4374, /cvs2svn/branches/unlabeled-1.1.1 also should be in here for that rev only.
 match /(vendor/pppd/dist|cvs2svn/branches/MACKERAS|cvs2svn/branches/chat)/
   min revision 3011
   repository freebsd-base.git
   branch vendor/pppd/dist
+  skip_branchpoint true
+end match
+match /(cvs2svn)/(branches)/(unlabeled-1.1.1)/
+  min revision 4374
+  max revision 4374
+  repository freebsd-base.git
+  branch vendor/pppd/dist  # sic, this is all about pppd
   skip_branchpoint true
 end match
 
@@ -88,15 +102,83 @@ match /(cvs2svn)/(branches)/(PST)/
   skip_branchpoint true
 end match
 
-match /(cvs2svn)/(branches)/([^/]+)/
+# openssl manpages, committed to branch and insta-manufactured to head, twice
+match /cvs2svn/branches/FREEBSD/
+  min revision 96593
+  max revision 100946
   repository freebsd-base.git
-  branch \1/\3
+  branch master
+end match
+match /head/
+  min revision 96594
+  max revision 96594
+end match
+match /head/
+  min revision 100947
+  max revision 100947
+end match
+# single groff import that immediately went into head, as usual the "branch"
+# commit has the better log message.
+match /cvs2svn/branches/TEXFM/
+  repository freebsd-base.git
+  branch master
+end match
+match /head/
+  min revision 104896
+  max revision 104896
+end match
+# never used for anything, ignore the branch copy and tag as well.
+match /cvs2svn/branches/KORTY/
+end match
+match /cvs2svn/tags/PAM_SSH_1_7/
+end match
+# new branch, a binary files was committed, cvs2svn merges it into head, then
+# 90 seconds later it is being deleted. Make it so it never happened.
+match /.*/ksetest$
+  min revision 111519
+  max revision 111522
+end match
+match /cvs2svn/branches/davidxu/
+  min revision 111519
+  max revision 111519
+  repository freebsd-base.git
+  branch master
+end match
+match /
+  min revision 111520
+  max revision 111522
 end match
 
-match /(cvs2svn)/(tags)/([^/]+)/
+# just 1 commit in r117783 that was immediately manufactured by cvs2svn into
+# head. Make the original (and its author) and message show up instead. Ignore
+# the following patch up and the useless tag.
+match /cvs2svn/branches/LIBTHR_ALPHA_INIT/
   repository freebsd-base.git
-  branch refs/tags/\1/\3
-  annotated true
+  branch master
+end match
+match /head/
+  min revision 117784
+  max revision 117785
+end match
+match /cvs2svn/tags/LIBTHR_ALPHA/
+end match
+
+# wrong vendor imports, were later patched up, but the original imports have the
+# better commit messages.
+match /cvs2svn/branches/unlabeled-1.1.1/
+  # there are no further commits between r43007 and r136632 on this branch
+  min revision 43007
+  max revision 136632
+  repository freebsd-base.git
+  branch vendor/tzdata/dist
+end match
+
+# tip from OpenBSD, imported, manufactured, then merge conflicts resolved. Inline it all.
+match /cvs2svn/branches/bsd/
+  min revision 161751
+  max revision 161751
+  repository freebsd-base.git
+  branch master
 end match
 
 # deleted attempts
@@ -1740,6 +1822,17 @@ match /(vendor|vendor-sys|vendor-crypto)/([^/]+)/([^/]+)/
   repository freebsd-base.git
   # unify the prefix for other branches
   branch vendor/\2/\3
+end match
+
+match /(cvs2svn)/(branches)/([^/]+)/
+  repository freebsd-base.git
+  branch refs/\1/\2/\3
+end match
+
+match /(cvs2svn)/(tags)/([^/]+)/
+  repository freebsd-base.git
+  branch refs/\1/\2/\3
+  annotated true
 end match
 
 # /head/contrib/patch was fully deleted in r128779, skip the partial delete,
