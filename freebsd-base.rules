@@ -68,9 +68,17 @@ match /(cvs2svn)/(branches)/(MACKERAS)/
   min revision 3010
   max revision 3010
   repository freebsd-base.git
-  branch \1/\3
+  branch vendor/pppd/dist  # sic, this is all about pppd
   skip_branchpoint true
 end match
+# See r4374, /cvs2svn/branches/unlabeled-1.1.1 also should be in here for that rev only.
+match /(vendor/pppd/dist|cvs2svn/branches/MACKERAS|cvs2svn/branches/chat)/
+  min revision 3011
+  repository freebsd-base.git
+  branch vendor/pppd/dist
+  skip_branchpoint true
+end match
+
 # This is a groff branch
 match /(cvs2svn)/(branches)/(PST)/
   min revision 18139
@@ -198,6 +206,9 @@ match /(user)/(kmacy)/
   min revision 196075
   max revision 196075
 end match
+# svn merge tests, they result in a left-over tag somehow, ignore them
+match /user/dim/merge-test2?/
+end match
 # ignore stuff, no branch for these
 match /user/gad/README.txt
 end match
@@ -239,6 +250,9 @@ end match
 match /(user)/(eri)/(pf45)/(head)/
   repository freebsd-base.git
   branch \1/\2/\3
+end match
+# ignore random dirs
+match /(user)/(eri)/(net|netinet)/
 end match
 
 # these are partial branches off of head, which we snip off, to later not confuse `git subtree`.
@@ -399,15 +413,6 @@ end match
 match /vendor/NetBSD/((libc-)?(un)?vis|libexecinfo)/FreeBSD-Upgrade
 end match
 match /vendor/Juniper/libxo/(.svnignore|import.sh)
-end match
-
-# Much like the cvs2svn branches, some of these are vendor branches only and
-# shouldn't fork off of the mainline.
-match /(vendor)/(pppd)/(dist)/
-  min revision 3011
-  repository freebsd-base.git
-  branch \1/\2/\3
-  skip_branchpoint true
 end match
 
 # Ok, routed vendor is special. Till r17843 everything was imported under dist.

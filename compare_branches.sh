@@ -280,6 +280,17 @@ case "$type" in
                         ipfilter/4.1.8/) diff_it '-I[$]FreeBSD.*[$]' -xtodo -xtypescript $t/$b$s $t/$b$s; continue ;;
                         # ditto
                         bind9/9.4.2/) diff_it -xFREEBSD-Upgrade -xFREEBSD-Xlist $t/$b$s; continue ;;
+                        # we spliced the 3 routed vendor branches into 1, just compare the latest SVN one
+                        SGI/dist/|SGI/dist2/) continue ;;
+                        # the splicing means we actually have Makefiles!, sadly need to skip them all, also in the tags
+                        SGI/dist_v_2_21/) diff_it -xMakefile $t/$b$s $t/${b}dist; continue ;;
+                        # we resurrected a missing header here
+                        SGI/vjs_960912/) diff_it -xrouted.h $t/$b$s; continue ;;
+                        SGI/*/) diff_it -xMakefile $t/$b$s; continue ;;
+                        # splicing MACKERAS and pppd leads to 2 extra files
+                        pppd/2.1.2/) diff_it -xslcompress.c -xslcompress.h $t/$b$s; continue ;;
+                        # have a bunch of extra files, we could diff_em together with the old cvs2svn branch @260580, though.
+                        pppd/2.2/|pppd/2.3.0/|pppd/2.3.1/|pppd/2.3.11/|pppd/2.3.3/|pppd/2.3.5/|pppd/dist/) continue ;;
                         # FIXME FIXME FIXME fallout from merging from the highest rev always to fix most tags (you win some, you lose some)
                         binutils/2.10.0/) continue ;;
                         file/4.17a/) continue ;; #diff_it $t/$b$s@186674 $t/$b$s; continue ;;
@@ -321,7 +332,11 @@ case "$type" in
                         ipfilter/dist-old) continue ;;
                         # FIXME: these got the new layout compared to SVN
                         ipfilter/v3-4-16|ipfilter/v3-4-29) continue ;;
-                        # compare against pre-flattening, due to splicing old/new dist, we end up with 2 extra files.
+                        # compare against pre-flattening, due to splicing
+                        # old/new dist, we end up with 2 extra files. I think
+                        # this is more correct, it looks like the files have
+                        # fallen off the CVS vendor branch. They are in dist,
+                        # they should be in the tag.
                         ipfilter/3*|ipfilter/v3*|ipfilter/V3*|ipfilter/4*) diff_it -xmlf_ipl.c -xmln_ipl.c $t/$b$s@253466 $t/$b$s; continue ;;
                         ipfilter/*) diff_it $t/$b$s $t/$b$s; continue ;;
                         # compare againts pre-flattening
@@ -332,16 +347,40 @@ case "$type" in
                 done
             done
         done
-        #for t in projects; do
-        #    for b in `svn ls $SVN/$t`; do
-        #        diff_it $t/$b
-        #    done
-        #done
-        #for u in `svn ls $SVN/user`; do
-        #    for b in `svn ls $SVN/user/$u`; do
-        #        diff_it user/$u$b
-        #    done
-        #done
+        for t in projects; do
+            for b in `svn ls $SVN/$t | grep '/$'`; do
+                case $b in
+                    graid/|multi-fibv6/|ofed/|pf/|suj/|zfsd/)
+                        for s in `svn ls $SVN/$t/$b | grep '/$'`; do
+                            diff_it $t/$b$s
+                        done
+                        continue
+                        ;;
+                    # empty SVN dir
+                    pkgtools/) continue ;;
+                esac
+                diff_it $t/$b
+            done
+        done
+        for u in `svn ls $SVN/user`; do
+            case "$u" in
+                eri/) diff_it user/${u}pf45/head user/${u}pf45; continue ;;
+                # not converted, nothing in there really
+                gad/) continue ;;
+            esac
+            for b in `svn ls $SVN/user/$u | grep '/$'`; do
+                case $b in
+                    gssapi/|xenhvm/)
+                        for s in `svn ls $SVN/user/$u$b | grep '/$'`; do
+                            diff_it user/$u$b$s
+                        done
+                        continue
+                        ;;
+                    git_conv/) continue ;;
+                esac
+                diff_it user/$u$b
+            done
+        done
         ;;
     doc)
         for u in `svn ls $SVN/user`; do
