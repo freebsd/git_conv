@@ -75,9 +75,9 @@ extract() {
     (
         cd wrk
         for d in bin sbin usr.bin usr.sbin gnu/usr.bin release/sysinstall lib/libpam/modules/pam_krb5 lib/libpam/modules/pam_kerberosIV sys/i386/boot/biosboot sys/libkern; do
-            test -d $d && make -C $d -k MACHINE_ARCH=i386 cleandir || true
+            test -d $d && make -C $d -k MACHINE_ARCH=i386 cleandir >/dev/null || true
         done
-        make -C usr.bin/vi -k MACHINE_ARCH=i386 RELEASE_BUILD_FIXIT=1 cleandir || true
+        make -C usr.bin/vi -k MACHINE_ARCH=i386 RELEASE_BUILD_FIXIT=1 cleandir >/dev/null || true
     )
     set +e
 }
@@ -158,9 +158,9 @@ Releases prior to 5.3-RELEASE are omitting the secure/ and crypto/ subdirs."
     # TODO: what's in a name?
     GIT_COMMITTER_DATE="$c_date" GIT_COMMITTER_NAME="$c_committer" GIT_COMMITTER_EMAIL="$c_email" git tag -a -f -m "Tag $rel as it was shipped on the ISOs." release/${tag}_shipped $commit
 
-    cd ../..
-    ##GIT_DIR=$PWD/.git git worktree remove --force wrk
-    #rm -rf wrk
+    cd ..
+    GIT_DIR=$REPO git worktree remove --force wrk
+    cd ..
     set +e
 }
 
