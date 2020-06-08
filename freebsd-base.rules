@@ -61,6 +61,104 @@ match /cvs2svn/
   max revision 260580
 end match
 
+# Don't let ppp appear before this revision. 5.x never had it, SVN is lying.
+match /(head|stable/5|releng/5..)/etc/rc.d/ppp$
+  max revision 151840
+end match
+match /head/
+  min revision 151841
+  max revision 151841
+  rename etc/rc.d/ppp-user etc/rc.d/ppp
+  repository freebsd-base.git
+  branch master
+end match
+# this is the old file deletion, which we now need to skip as we've done the
+# move above. Doing it this way allows git blame to work properly.
+match /head/
+  min revision 151844
+  max revision 151844
+end match
+# NOTE: release 5.x ISOs as on the ftp archive are fake and have both files.
+# 5.5 seems a true archive copy of the ISO though and *doesn't* have the new
+# file again.
+match /stable/6/etc/rc.d/ppp$
+  max revision 154656
+end match
+match /(stable)/(6)/
+  min revision 154657
+  max revision 154657
+  rename etc/rc.d/ppp-user etc/rc.d/ppp
+  repository freebsd-base.git
+  branch \1/\2
+end match
+
+
+# REPO COPIES ARE THE DEVIL!
+# So here's what cvs2svn produced (not its fault, mind you).
+# r8869 | cvs2svn | 1995-05-30 07:50:54 +0200 (Tue, 30 May 1995) | 2 lines
+#    A /stable/2.0.5 (from /head:8852)
+# r8882 | cvs2svn | 1995-05-30 10:29:08 +0200 (Tue, 30 May 1995) | 1 line
+#    A /releng/2.0.5 (from /head:8881)
+# r9211 | cvs2svn | 1995-06-13 20:05:17 +0200 (Tue, 13 Jun 1995) | 1 line
+#    A /stable/2.1 (from /head:9202)
+# r19327 | cvs2svn | 1996-11-02 11:41:29 +0100 (Sat, 02 Nov 1996) | 1 line
+#    A /stable/2.2 (from /head:19320)
+# r42951 | cvs2svn | 1999-01-21 01:55:31 +0100 (Thu, 21 Jan 1999) | 1 line
+#    A /stable/3 (from /head:42948)
+# r57955 | cvs2svn | 2000-03-13 05:59:44 +0100 (Mon, 13 Mar 2000) | 1 line
+#    A /stable/4 (from /head:57954)
+# r57956 | cvs2svn | 2000-03-13 05:59:45 +0100 (Mon, 13 Mar 2000) | 1 line
+#    A /releng/4.4 (from /stable/4:57955)
+# r57960 | cvs2svn | 2000-03-13 05:59:49 +0100 (Mon, 13 Mar 2000) | 1 line
+#    A /releng/4.5 (from /stable/4:57955)
+# r63491 | cvs2svn | 2000-07-19 08:22:02 +0200 (Wed, 19 Jul 2000) | 1 line
+#    A /releng/4.6 (from /stable/4:63490)
+# r66473 | cvs2svn | 2000-09-30 04:49:38 +0200 (Sat, 30 Sep 2000) | 1 line
+#    A /releng/4.7 (from /stable/4:66472)
+# r75750 | cvs2svn | 2001-04-21 02:04:30 +0200 (Sat, 21 Apr 2001) | 1 line
+#    A /releng/4.3 (from /stable/4:75749)
+# r101416 | cvs2svn | 2002-08-06 10:24:47 +0200 (Tue, 06 Aug 2002) | 1 line
+#    A /releng/4.11 (from /stable/4:101415)
+# r101418 | cvs2svn | 2002-08-06 10:24:49 +0200 (Tue, 06 Aug 2002) | 1 line
+#    A /releng/4.9 (from /stable/4:101415)
+# r107811 | cvs2svn | 2002-12-13 07:54:34 +0100 (Fri, 13 Dec 2002) | 1 line
+#    A /releng/5.0 (from /head:107810)
+# r108855 | cvs2svn | 2003-01-07 05:28:56 +0100 (Tue, 07 Jan 2003) | 1 line
+#    A /releng/4.10 (from /stable/4:108854)
+# r111744 | cvs2svn | 2003-03-02 17:42:41 +0100 (Sun, 02 Mar 2003) | 1 line
+#    A /releng/4.8 (from /stable/4:111743)
+# r115436 | cvs2svn | 2003-05-31 13:28:29 +0200 (Sat, 31 May 2003) | 1 line
+#    A /releng/5.1 (from /head:115435)
+# r123193 | cvs2svn | 2003-12-07 04:02:28 +0100 (Sun, 07 Dec 2003) | 1 line
+#    A /releng/5.2 (from /head:123192)
+# r133968 | cvs2svn | 2004-08-18 18:37:05 +0200 (Wed, 18 Aug 2004) | 1 line
+#    A /stable/5 (from /head:133920)
+# r133969 | cvs2svn | 2004-08-18 18:37:06 +0200 (Wed, 18 Aug 2004) | 1 line
+#    A /releng/5.3 (from /stable/5:133968)
+# r133971 | cvs2svn | 2004-08-18 18:37:08 +0200 (Wed, 18 Aug 2004) | 1 line
+#    A /releng/5.4 (from /stable/5:133968)
+# r147906 | cvs2svn | 2005-07-11 06:14:43 +0200 (Mon, 11 Jul 2005) | 1 line
+#    A /stable/6 (from /head:147905)
+# r147907 | cvs2svn | 2005-07-11 06:14:44 +0200 (Mon, 11 Jul 2005) | 1 line
+#    A /releng/6.0 (from /stable/6:147906)
+# r147908 | cvs2svn | 2005-07-11 06:14:45 +0200 (Mon, 11 Jul 2005) | 1 line
+#    A /releng/6.1 (from /stable/6:147906)
+# r147921 | cvs2svn | 2005-07-11 06:14:58 +0200 (Mon, 11 Jul 2005) | 1 line
+#    A /releng/6.2 (from /stable/6:147906)
+# r147922 | cvs2svn | 2005-07-11 06:14:59 +0200 (Mon, 11 Jul 2005) | 1 line
+#    A /releng/6.3 (from /stable/6:147906)
+# r158462 | cvs2svn | 2006-05-12 03:09:20 +0200 (Fri, 12 May 2006) | 1 line
+#    A /releng/5.5 (from /stable/5:158461)
+# r172506 | cvs2svn | 2007-10-10 18:59:15 +0200 (Wed, 10 Oct 2007) | 1 line
+#    A /stable/7 (from /head:172505)
+# r172507 | cvs2svn | 2007-10-10 18:59:16 +0200 (Wed, 10 Oct 2007) | 1 line
+#    A /releng/7.0 (from /stable/7:172506)
+#
+# Yes, 4.3 gets created after 4.7 and 4.11 obviously before 4.10 and 4.8.
+# releng/5.1 and 5.2 off of head are ok, I think. stable/5 was created after
+# that.
+# This is likely due to CVS repo-copies and moves.
+
 # NOTE ATTENTION ACHTUNG: I'm working my way backwards through all the
 # revisions that pulled in stuff from /cvs2svn/branches into head and see if
 # they can't be patched up better. So far, it seems that the later ones were
