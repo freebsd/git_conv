@@ -1826,12 +1826,12 @@ end match
 
 match /(cvs2svn)/(branches)/([^/]+)/
   repository freebsd-base.git
-  branch refs/\1/\2/\3
+  branch \1/\2/\3
 end match
 
 match /(cvs2svn)/(tags)/([^/]+)/
   repository freebsd-base.git
-  branch refs/\1/\2/\3
+  branch refs/tags/\1/\2/\3
   annotated true
 end match
 
