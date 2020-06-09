@@ -1092,12 +1092,17 @@ void FastImportRepository::Transaction::deleteFile(const QString &path)
 
 void FastImportRepository::Transaction::renameFile(const QString &from, const QString &to)
 {
+    // Due to rule order and export ordering, SVN might have caused a file
+    // deletion, but we later want to rename it to something else to patch up
+    // CVS repo copies and the like. So undelete the files before renaming
+    // them.
     QString fromNoSlash = repository->prefix + from;
     QString toNoSlash = repository->prefix + to;
     if (fromNoSlash.endsWith('/'))
       fromNoSlash.chop(1);
     if (toNoSlash.endsWith('/'))
       toNoSlash.chop(1);
+    deletedFiles.removeOne(fromNoSlash);
     renamedFiles.append(QPair<QString, QString>(fromNoSlash, toNoSlash));
 }
 
