@@ -9,7 +9,7 @@ let us know what you find.
 ## Gimme the repo!
 
 ```
-git clone https://cgit-beta.freebsd.org/src && cd src
+git clone https://cgit-beta.freebsd.org/src.git && cd src
 git config --add remote.origin.fetch '+refs/notes/*:refs/notes/*' && git fetch
 ```
 
