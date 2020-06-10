@@ -1016,9 +1016,10 @@ int SvnRevision::prepareTransactions()
         348723, 349702, 351342, 351392, 352043, 352239, 352254, 352346, 352347,
         352770, 352771, 353352, 353567, 353973, 353974, 353996, 355292, 355903,
         355948, 356095, 356774, 356930, 357060, 357584, 358850, 360666, 360668,
+        // flotsam and jetsam
+        330503, 344427, 345068, 355951,
         // These are partial branch copies, some of them are actually ok, like
-        // the ones from vendor into vendor. FIXME: verify these are still
-        // recorded properly!
+        // the ones from vendor into vendor.
         16730, 14064, 26246, 11816, 15425, 13396, 12893, 13009, 16127, 300828,
         208122, 223144, 191957, 277620, 221956, 256282, 234647, 244587, 205302,
         206926, 287632, 200812, 204479, 296049, 201537, 234080, 227632, 266652,
@@ -1088,7 +1089,7 @@ int SvnRevision::prepareTransactions()
 
     // Things we patch up manually as the SVN history around them is ...
     // creative.
-    static QMap<int, mergeinfo> manual_merges = {
+    static QMultiMap<int, mergeinfo> manual_merges = {
         // merges from vendor/tzdata/dist *and* vendor/tzdata (sic!)
         { 181413, { .from = "vendor/tzdata/dist", .rev = 181403, .to = "master" } },
         { 182352, { .from = "vendor/sendmail/dist", .rev = 182351, .to = "master" } },
@@ -1106,16 +1107,45 @@ int SvnRevision::prepareTransactions()
         { 229413, { .from = "vendor/compiler-rt/dist", .rev = 229411, .to = "master" } },
         // merged /dist and tag
         { 302321, { .from = "vendor/Juniper/libxo/dist", .rev = 302314, .to = "master" } },
+        { 321864, { .from = "vendor-sys/ena-com/dist", .rev = 321861, .to = "master" } },
+
+        { 328777, { .from = "master", .rev = 328776, .to = "user/markj/netdump" } },
+        { 331318, { .from = "master", .rev = 323082, .to = "projects/bsd_rdma_4_9_stable_11" } },
+        { 337309, { .from = "vendor/llvm/dist-release_70", .rev = 337308, .to = "projects/clang700-import" } },
+        { 337310, { .from = "vendor/clang/dist-release_70", .rev = 337309, .to = "projects/clang700-import" } },
+        { 337313, { .from = "vendor/compiler-rt/dist-release_70", .rev = 337312, .to = "projects/clang700-import" } },
+        { 344951, { .from = "vendor/clang/dist-release_80", .rev = 344949, .to = "master" } },
+        { 344951, { .from = "vendor/compiler-rt/dist-release_80", .rev = 344950, .to = "master" } },
+        { 344951, { .from = "vendor/libc++/dist-release_80", .rev = 344950, .to = "master" } },
+        { 344951, { .from = "vendor/lld/dist-release_80", .rev = 344950, .to = "master" } },
+        { 344951, { .from = "vendor/lldb/dist-release_80", .rev = 344950, .to = "master" } },
+        { 344951, { .from = "vendor/llvm/dist-release_80", .rev = 344949, .to = "master" } },
+        { 345725, { .from = "master", .rev = 345724, .to = "projects/capsicum-test" } },
+        { 351708, { .from = "vendor/compiler-rt/dist-release_90", .rev = 351683, .to = "projects/clang900-import" } },
+        { 351708, { .from = "vendor/libc++/dist-release_90", .rev = 351683, .to = "projects/clang900-import" } },
+        { 351708, { .from = "vendor/llvm-libunwind/dist-release_90", .rev = 351683, .to = "projects/clang900-import" } },
+        { 351708, { .from = "vendor/clang/dist-release_90", .rev = 351683, .to = "projects/clang900-import" } },
+        { 351708, { .from = "vendor/lld/dist-release_90", .rev = 351683, .to = "projects/clang900-import" } },
+        { 351708, { .from = "vendor/lld/dist-release_90", .rev = 351683, .to = "projects/clang900-import" } },
+        { 351708, { .from = "vendor/lldb/dist-release_90", .rev = 351683, .to = "projects/clang900-import" } },
+        { 351708, { .from = "vendor/llvm/dist-release_90", .rev = 351683, .to = "projects/clang900-import" } },
+        { 351708, { .from = "vendor/llvm-openmp/dist-release_90", .rev = 351683, .to = "projects/clang900-import" } },
+        { 355957, { .from = "vendor/llvm-project/master", .rev = 355956, .to = "master" } },
+        { 356931, { .from = "master", .rev = 357178, .to = "projects/clang1000-import" } },
+        { 357179, { .from = "master", .rev = 357178, .to = "projects/clang1000-import" } },
         // These 2 were merged from "/vendor" (sic! no subdir)
         { 357636, { .from = "vendor/NetBSD/tests/dist", .rev = 357635, .to = "master" } },
         { 357688, { .from = "vendor/NetBSD/tests/dist", .rev = 357687, .to = "master" } },
+        { 357966, { .from = "master", .rev = 357965, .to = "projects/clang1000-import" } },
+        { 358131, { .from = "master", .rev = 358130, .to = "projects/clang1000-import" } },
+        // I have no words ...
+        { 361802, { .from = "vendor/edk2/dist", .rev = 361765, .to = "master" } },
     };
 
     bool parse_ok = false;
     QList<mergeinfo> mi;
     if (manual_merges.contains(revnum)) {
-        const auto& val = manual_merges.value(revnum);
-        mi.push_back(val);
+        mi = manual_merges.values(revnum);
         parse_ok = true;
     } else {
         // There are quite a number of revisions touching many branches and having a
