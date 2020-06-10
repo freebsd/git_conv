@@ -90,17 +90,17 @@ for r; do
     case $tag in
         2.*) extra_flags='-x eBones -x secure' ;;
         3.*) extra_flags='-x secure -x crypto -x kerberosIV' ;;
-        4.*) extra_flags='-x crypto -x kerberosIV -x kerberos5 -x secure' ;;
-        5.*) extra_flags='-x crypto -x kerberos5 -x secure -x .cvsignore' ;;
+        4.*) extra_flags='-x secure -x crypto -x kerberosIV -x kerberos5' ;;
+        5.*) extra_flags='-x secure -x crypto -x kerberos5 -x .cvsignore' ;;
     esac
     case $r in
         11.0-RELEASE)
-            git clone -b release/11.0.1 $REPO $S/a.git 2>/dev/null
-            git clone -b release/${tag}_shipped $REPO $S/b.git 2>/dev/null
+            git clone -b release/${tag}_cvs $REPO $S/a.git 2>/dev/null
+            git clone -b release/11.0.1 $REPO $S/b.git 2>/dev/null
             ;;
         *)
-            git clone -b release/$tag $REPO $S/a.git 2>/dev/null
-            git clone -b release/${tag}_shipped $REPO $S/b.git 2>/dev/null
+            git clone -b release/${tag}_cvs $REPO $S/a.git 2>/dev/null
+            git clone -b release/$tag $REPO $S/b.git 2>/dev/null
             ;;
     esac
     diff -ruN -I'[$](Header|Id|FreeBSD).*[$]' -I',v [0-9].* Exp( .LBL.)?[->";)*/ ]*.?$' -x .git -x .cvsignore `echo $extra_flags` $S/a.git $S/b.git | tee diff_$tag

@@ -12,13 +12,24 @@
 
 : ${BASE=${PWD}}
 
+TYPE=${1:-base}
+REPO=${2:-$BASE/freebsd-base.git}
 SOURCE=ftp://ftp-archive.freebsd.org/pub/FreeBSD-Archive/old-releases/i386
 # more content can be had from the ISO images
 # http://ftp-archive.freebsd.org/pub/FreeBSD-Archive/old-releases/i386/ISO-IMAGES/1.0/1.0-disc1.iso
 # http://ftp-archive.freebsd.org/pub/FreeBSD-Archive/old-releases/i386/ISO-IMAGES/FreeBSD-1.1-RELEASE/cd1.iso
 # http://ftp-archive.freebsd.org/pub/FreeBSD-Archive/old-releases/i386/ISO-IMAGES/FreeBSD-1.1.5.1/cd1.iso
-TYPE=${1:-base}
-REPO=${2:-$BASE/freebsd-base.git}
+
+# NOTE NOTE NOTE
+# Most of these images are fake and have obviously been created by checking out
+# a CVS tree long after the release was actually created. This means that
+# repo-copied files appear twice on them. For example 5.1--5.4 have
+# etc/rc.d/ppp but this has only for 6.0 been renamed from etc/rc.d/ppp-user to
+# etc/rc.d/ppp. But these old images have both files! What's more, their
+# NETWORKING clearly references ppp-user, not ppp. Only the 5.5 image seems to
+# be a true image, as it doesn't have etc/rc.d/ppp
+# We keep the others here still, as at least you get the CVS keywords expanded.
+# NOTE NOTE NOTE
 
 fetch_archive() {
     local r dest
@@ -156,10 +167,10 @@ Releases prior to 5.3-RELEASE are omitting the secure/ and crypto/ subdirs."
     git add -fN .
     GIT_COMMITTER_DATE="$c_date" GIT_COMMITTER_NAME="$c_committer" GIT_COMMITTER_EMAIL="$c_email" git commit -q -a --author="$c_auth" --date="$c_date" -m "$c_msg" -m "$msg"
     # TODO: what's in a name?
-    GIT_COMMITTER_DATE="$c_date" GIT_COMMITTER_NAME="$c_committer" GIT_COMMITTER_EMAIL="$c_email" git tag -a -f -m "Tag $rel as it was shipped on the ISOs." release/${tag}_shipped $commit
+    GIT_COMMITTER_DATE="$c_date" GIT_COMMITTER_NAME="$c_committer" GIT_COMMITTER_EMAIL="$c_email" git tag -a -f -m "Tag $rel as it was shipped on the ISOs." release/${tag}_cvs $commit
 
     cd ..
-    GIT_DIR=$REPO git worktree remove --force wrk
+    #GIT_DIR=$REPO git worktree remove --force wrk
     cd ..
     set +e
 }
