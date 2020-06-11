@@ -816,11 +816,29 @@ _____________*
 
     QDir dir;
     if (dir.mkpath("mi")) {
+        QProcess svn2;
+        svn2.start("svn",
+                QStringList() << "log"
+                << "-vc" << QString::number(revnum)
+                << svn_repo_path);
+
+        if (!svn2.waitForFinished(-1)) {
+            fprintf(stderr, "svn fork terminated abnormally for rev %d\n", revnum);
+            exit(1);
+        }
+        const QString svn_log = QString(svn2.readAll());
+
         // This should create only about 3k files or so.
         QFile file(QString("mi/r%1.txt").arg(revnum));
         if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
             QTextStream out(&file);
             out << qPrintable(result);
+            out << "\n";
+            out << qPrintable(svn_log);
+            foreach (mergeinfo mi, *mi_list) {
+                out << "\n { " + QString::number(revnum) + ", { " << mi << " } },";
+            }
+            out << "\n";
         }
     }
     mi_list->clear();

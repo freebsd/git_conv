@@ -40,6 +40,13 @@ inline QDebug operator<<(QDebug debug, const mergeinfo &mi)
     return debug;
 }
 
+inline QTextStream& operator<<(QTextStream& out, const mergeinfo &mi)
+{
+    out << ".from = \"" << mi.from << "\", .rev = " + QString::number(mi.rev) + ", .to = \"" << mi.to << "\"";
+
+    return out;
+}
+
 inline bool operator==(const mergeinfo &m1, const mergeinfo &m2)
 {
     return m1.from == m2.from
