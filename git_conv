@@ -260,12 +260,15 @@ svn2git()
 
     if $first_run; then
 	(
-	    ./tag_archived_src.sh && ./fix_bogus_tags.sh
+	    case "$TYPE" in
+		base) ./tag_archived_src.sh && ./fix_bogus_tags.sh ;;
+	    esac
 	    cd $target
 	    echo "Compacting, showing before and after numbers:"
 	    # Takes much longer, but compresses better:
 	    #du -sh .; git gc --aggressive --prune=now --force; du -sh .
 	    du -sh .; git repack -adf; du -sh .
+	    git log --date=short --pretty="format:%ai %an %d %t %N%B" > ../$TYPE-gitlog
 	    # Takes many hours ...
 	    #cd $BASE
 	    #./compare_archive_tags.sh && ./compare_branches.sh
