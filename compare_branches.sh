@@ -376,7 +376,10 @@ case "$type" in
                         done
                         continue
                         ;;
-                    git_conv/) continue ;;
+                    # missing the .git in git
+                    git_conv/) diff_it -x.git -xconfig user/$u$b; continue ;;
+                    # has the bogus /etc/rc.d/ppp repo-copied script
+                    head_146698/) diff_it -xppp user/$u$b; continue ;;
                 esac
                 diff_it user/$u$b
             done
