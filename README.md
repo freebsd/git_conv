@@ -31,7 +31,7 @@ If you would want to run the conversion yourself and play with the rules, read o
 
 ## Required Software
 
-`pkg install qmake qt5-core subversion git shlock`
+`pkg install qt5-qmake qt5-core subversion git shlock`
 
 (for Debian: `apt install qt5-qmake qtbase5-dev libapr1-dev libsvn-dev subversion git shlock`)
 
