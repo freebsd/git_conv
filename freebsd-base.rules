@@ -1201,6 +1201,7 @@ match /(vendor)/(NetBSD)/(libedit)/2016-01-16/
   branch refs/tags/\1/\2/\3/2016-01-30
   annotated true
 end match
+# skip rename of previous
 match /vendor/NetBSD/libedit/
   min revision 296551
   max revision 296551
@@ -1938,6 +1939,11 @@ end match
 match /head/contrib/patch/
   min revision 128778
   max revision 128778
+end match
+# Don't delete and revert ipfilter, it messes up git blame
+match /head/
+  min revision 288682
+  max revision 288683
 end match
 
 match /head/
