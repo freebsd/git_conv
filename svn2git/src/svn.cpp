@@ -664,7 +664,7 @@ SvnRevision::maybeParseSimpleMergeinfo(const int revnum, QList<mergeinfo>* mi_li
 
 Property changes on: (?<path>[\S]+)
 _____________*
-((Added|Deleted|Modified): (fbsd|svn):(executable|n?o?keywords|eol-style|mime-type)
+((Added|Deleted|Modified): (fbsd|svn):(executable|n?o?keywords|notbinary|eol-style|mime-type)
 ## -[\d,]+ \+[\d,]+ ##
 ([-+].*){1,2}
 *)+
@@ -1034,15 +1034,21 @@ int SvnRevision::prepareTransactions()
         348723, 349702, 351342, 351392, 352043, 352239, 352254, 352346, 352347,
         352770, 352771, 353352, 353567, 353973, 353974, 353996, 355292, 355903,
         355948, 356095, 356774, 356930, 357060, 357584, 358850, 360666, 360668,
-        // flotsam and jetsam
-        295380, 298095, 298396, 306097, 320515, 330503, 344427, 345068, 355951,
+        // flotsam and jetsam, often simple file renames by necessity need to copy the mergeinfo around :/
+        184541, 185386, 185429, 185578, 185632, 185633, 185919, 185633, 185637,
+        186441, 187190, 187620, 188544, 188633, 188939, 188998, 189361, 190581,
+        190633, 191984, 192744, 193441, 193532, 194340, 195124, 201980, 202056,
+        204857, 205081, 207951, 209161, 210709, 210710, 212035, 225520, 226780,
+        228773, 228775, 230184, 231853, 240786, 241808, 242451, 242487, 243600,
+        243600, 252125, 254305, 256861, 262606, 281994, 281996, 287043, 289134,
+        289151, 289158, 289172, 291115, 295380, 298095, 298396, 306097, 320515,
+        330503, 344427, 345068, 355951,
         // These are partial branch copies, some of them are actually ok, like
         // the ones from vendor into vendor.
-        16730, 14064, 26246, 11816, 15425, 13396, 12893, 13009, 16127, 300828,
-        208122, 223144, 191957, 277620, 221956, 256282, 234647, 244587, 205302,
-        206926, 287632, 200812, 204479, 296049, 201537, 234080, 227632, 266652,
-        276329, 259687, 278877, 209627, 210708, 227670, 328072, 296962, 280454,
-        180458, 217338, 238053,
+        180458, 191957, 200812, 201537, 204479, 205302, 206926, 208122, 209627,
+        210708, 217338, 221956, 223144, 227632, 227670, 234080, 234647, 238053,
+        244587, 256282, 259687, 266652, 276329, 277620, 278877, 280454, 287632,
+        296049, 296962, 300828, 328072,
     };
     if (skip_mergeinfo.contains(revnum)) {
         return EXIT_SUCCESS;
@@ -1111,19 +1117,151 @@ int SvnRevision::prepareTransactions()
         // merges from vendor/tzdata/dist *and* vendor/tzdata (sic!)
         { 181413, { .from = "vendor/tzdata/dist", .rev = 181403, .to = "master" } },
         { 182352, { .from = "vendor/sendmail/dist", .rev = 182351, .to = "master" } },
+        { 184966, { .from = "stable/7", .rev = 184965, .to = "user/dfr/gssapi/7" } },
+        { 184968, { .from = "stable/6", .rev = 184967, .to = "user/dfr/gssapi/6" } },
+        { 185590, { .from = "stable/7", .rev = 185562, .to = "projects/releng_7_xen" } },
+        { 185850, { .from = "stable/7", .rev = 185849, .to = "projects/releng_7_xen" } },
+        { 185863, { .from = "stable/7", .rev = 185862, .to = "user/dfr/gssapi/7" } },
+        { 185865, { .from = "stable/6", .rev = 185863, .to = "user/dfr/gssapi/6" } },
+        { 186421, { .from = "stable/7", .rev = 186420, .to = "projects/releng_7_xen" } },
+        { 186989, { .from = "stable/7", .rev = 186962, .to = "projects/vap7" } },
+        { 187111, { .from = "stable/7", .rev = 187108, .to = "projects/vap7" } },
+        { 187115, { .from = "stable/7", .rev = 187106, .to = "projects/vap7" } },
+        { 187303, { .from = "master", .rev = 187302, .to = "user/thompsa/usb" } },
+        { 187503, { .from = "master", .rev = 187342, .to = "user/sam/wifi" } },
+        { 187745, { .from = "master", .rev = 187743, .to = "user/sam/wifi" } },
+        { 188430, { .from = "stable/7", .rev = 188429, .to = "projects/tcp_cc_7.x" } },
+        { 188542, { .from = "master", .rev = 180140, .to = "projects/vap7" } },
+        { 189614, { .from = "user/dfr/xenhvm/6", .rev = 189451, .to = "user/dfr/xenhvm/7" } },
         // has a bogus path
         { 189618, { .from = "vendor/top/dist", .rev = 183430, .to = "master" } },
+        { 190861, { .from = "stable/7", .rev = 190860, .to = "projects/tcp_cc_7.x" } },
+        { 190952, { .from = "master", .rev = 190951, .to = "projects/tcp_cc_8.x" } },
+        { 192480, { .from = "master", .rev = 192361, .to = "user/kmacy/ZFS_MFC" } },
+        { 194455, { .from = "master", .rev = 194453, .to = "user/gnn/fasttrap" } },
+        { 195123, { .from = "user/kmacy/releng_7_2_fcs", .rev = 194517, .to = "user/kmacy/head_ppacket" } },
+        { 197858, { .from = "stable/8", .rev = 197854, .to = "projects/capabilities8" } },
+        { 198336, { .from = "stable/8", .rev = 198334, .to = "projects/capabilities8" } },
         // has 3x merges from different subdirs
         { 200832, { .from = "vendor/tzcode/dist", .rev = 200830, .to = "master" } },
+        { 201785, { .from = "stable/8", .rev = 201781, .to = "projects/capabilities8" } },
+        { 203702, { .from = "master", .rev = 200930, .to = "user/eri/pf45" } },
         // has a bunch of schmutz
         { 204934, { .from = "vendor/x86emu/dist", .rev = 204933, .to = "master" } },
+        { 205644, { .from = "master", .rev = 205643, .to = "projects/ppc64" } },
+        { 205719, { .from = "master", .rev = 205718, .to = "user/jmallett/octeon" } },
+        { 206719, { .from = "master", .rev = 206718, .to = "user/jmallett/octeon" } },
+        { 207810, { .from = "master", .rev = 184124, .to = "user/imp/masq" } },
+        { 209629, { .from = "projects/ppc64", .rev = 209628, .to = "user/nwhitehorn/ps3" } },
+        { 211724, { .from = "master", .rev = 211721, .to = "user/edwin/calendar" } },
+        { 213534, { .from = "vendor/llvm/dist", .rev = 213533, .to = "master" } },
+        { 213534, { .from = "vendor/clang/dist", .rev = 213533, .to = "master" } },
         // merged vendor/ee/dist *and* vendor/ee/1.5.2
         { 213567, { .from = "vendor/ee/dist", .rev = 213565, .to = "master" } },
+        { 216020, { .from = "stable/6", .rev = 216017, .to = "projects/releng_6_xen" } },
+        { 216270, { .from = "stable/7", .rev = 216269, .to = "projects/stable_7_xen" } },
+        { 217945, { .from = "stable/7", .rev = 217943, .to = "projects/graid/7" } },
+        { 218876, { .from = "master", .rev = 218875, .to = "projects/altix" } },
+        { 219743, { .from = "master", .rev = 219742, .to = "projects/altix" } },
+        { 220150, { .from = "vendor/gcc/dist", .rev = 219451, .to = "master" } },
+        { 221399, { .from = "master", .rev = 221396, .to = "projects/largeSMP" } },
+        { 221562, { .from = "master", .rev = 221557, .to = "projects/largeSMP" } },
+        { 221717, { .from = "master", .rev = 221716, .to = "projects/largeSMP" } },
+        { 221872, { .from = "master", .rev = 221870, .to = "projects/largeSMP" } },
+        { 222548, { .from = "master", .rev = 222547, .to = "projects/largeSMP" } },
+        { 222862, { .from = "master", .rev = 222861, .to = "user/hrs/ipv6" } },
+        { 223758, { .from = "projects/largeSMP", .rev = 223757, .to = "master" } },
         { 225524, { .from = "vendor/openresolv/dist", .rev = 225523, .to = "master" } },
+        { 225870, { .from = "master", .rev = 225869, .to = "user/attilio/vmcontention" } },
+        { 226982, { .from = "master", .rev = 226981, .to = "user/attilio/vmcontention" } },
         { 229307, { .from = "releng/9.0", .rev = 229306, .to = "refs/tags/release/9.0.0" } },
         // merged /dist and tag
         { 229413, { .from = "vendor/compiler-rt/dist", .rev = 229411, .to = "master" } },
-        // merged /dist and tag
+        { 231852, { .from = "projects/multi-fibv6/head", .rev = 231848, .to = "master" } },
+        { 231877, { .from = "stable/8", .rev = 231871, .to = "projects/multi-fibv6/8" } },
+        { 232293, { .from = "stable/8", .rev = 232292, .to = "projects/multi-fibv6/8" } },
+        { 232555, { .from = "stable/9", .rev = 232554, .to = "projects/multi-fibv6/9" } },
+        { 232993, { .from = "stable/7", .rev = 232985, .to = "projects/multi-fibv6/7" } },
+        { 233959, { .from = "master", .rev = 233958, .to = "user/attilio/vmcontention" } },
+        { 238268, { .from = "master", .rev = 238266, .to = "user/attilio/vmc-playground" } },
+        { 238422, { .from = "vendor/illumos/dist", .rev = 238417, .to = "master" } },
+        { 240141, { .from = "vendor/atf/dist", .rev = 240140, .to = "master" } },
+        { 240517, { .from = "vendor/byacc/dist", .rev = 240505, .to = "master" } },
+        { 241973, { .from = "vendor/acpica/dist", .rev = 241747, .to = "master" } },
+        { 242102, { .from = "vendor/NetBSD/bmake/dist", .rev = 242094, .to = "master" } },
+        { 242150, { .from = "master", .rev = 242149, .to = "user/andre/tcp_workqueue" } },
+        { 242513, { .from = "master", .rev = 242511, .to = "projects/efika_mx" } },
+        { 242912, { .from = "master", .rev = 242911, .to = "user/andre/tcp_workqueue" } },
+        { 246444, { .from = "user/attilio/vmcontention", .rev = 246443, .to = "user/attilio/vmc-playground" } },
+        { 246449, { .from = "master", .rev = 242525, .to = "projects/bmake" } },
+        { 246457, { .from = "user/attilio/vmcontention", .rev = 246456, .to = "user/attilio/vmc-playground" } },
+        { 246481, { .from = "user/attilio/vmcontention", .rev = 246480, .to = "user/attilio/vmc-playground" } },
+        { 246572, { .from = "master", .rev = 246571, .to = "user/attilio/vmcontention" } },
+        { 246573, { .from = "user/attilio/vmcontention", .rev = 246572, .to = "user/attilio/vmc-playground" } },
+        { 246639, { .from = "master", .rev = 246638, .to = "user/attilio/vmcontention" } },
+        { 246640, { .from = "user/attilio/vmcontention", .rev = 246639, .to = "user/attilio/vmc-playground" } },
+        { 247354, { .from = "user/attilio/vmcontention", .rev = 247352, .to = "user/attilio/vmc-playground" } },
+        { 247362, { .from = "user/attilio/vmcontention", .rev = 247361, .to = "user/attilio/vmc-playground" } },
+        { 247401, { .from = "master", .rev = 247400, .to = "user/attilio/vmobj-rwlock" } },
+        { 247402, { .from = "master", .rev = 247401, .to = "user/attilio/vmcontention" } },
+        { 247403, { .from = "user/attilio/vmcontention", .rev = 247402, .to = "user/attilio/vmc-playground" } },
+        { 248191, { .from = "master", .rev = 248189, .to = "user/attilio/vmobj-readlock" } },
+        { 248206, { .from = "user/attilio/vmcontention", .rev = 248205, .to = "user/attilio/vmobj-readlock" } },
+        { 248229, { .from = "user/attilio/vmcontention", .rev = 248228, .to = "user/attilio/vmobj-readlock" } },
+        { 248302, { .from = "vendor/NetBSD/libc-vis/dist", .rev = 247132, .to = "master" } },
+        { 249190, { .from = "master", .rev = 249189, .to = "projects/counters" } },
+        { 249280, { .from = "master", .rev = 249278, .to = "user/attilio/vmobj-readlock" } },
+        { 249482, { .from = "master", .rev = 249481, .to = "projects/camlock" } },
+        { 249706, { .from = "master", .rev = 249704, .to = "user/attilio/jeff-numa" } },
+        { 250621, { .from = "vendor/flex/dist", .rev = 250620, .to = "projects/flex-sf" } },
+        { 250631, { .from = "master", .rev = 250630, .to = "user/adrian/net80211_tx" } },
+        { 250934, { .from = "user/attilio/vmcontention", .rev = 250933, .to = "user/attilio/vmobj-readlock" } },
+        { 251062, { .from = "user/attilio/vmcontention", .rev = 251060, .to = "user/attilio/vmobj-readlock" } },
+        { 251082, { .from = "master", .rev = 251079, .to = "user/attilio/vmobj-readlock" } },
+        { 251956, { .from = "vendor/subversion/dist", .rev = 251955, .to = "master" } },
+        { 252030, { .from = "master", .rev = 252028, .to = "user/attilio/vmobj-readlock" } },
+        { 253942, { .from = "master", .rev = 253940, .to = "user/attilio/vmobj-readlock" } },
+        { 253943, { .from = "master", .rev = 253940, .to = "user/attilio/vmobj-fullread" } },
+        { 253955, { .from = "master", .rev = 253953, .to = "user/attilio/vmobj-readlock" } },
+        { 254110, { .from = "master", .rev = 254109, .to = "user/attilio/vmcontention" } },
+        { 254111, { .from = "master", .rev = 254109, .to = "user/attilio/vmobj-readlock" } },
+        { 254145, { .from = "master", .rev = 254141, .to = "user/attilio/vmobj-readlock" } },
+        { 254188, { .from = "master", .rev = 254185, .to = "user/attilio/vmobj-readlock" } },
+        // FIXME: should now work automagic
+        //{ 254225, { .from = "vendor/nvi/dist", .rev = 254211, .to = "master" } },
+        { 254635, { .from = "master", .rev = 254081, .to = "projects/bhyve_npt_pmap" } },
+        { 254788, { .from = "master", .rev = 254787, .to = "projects/camlock" } },
+        { 255033, { .from = "vendor/NetBSD/libexecinfo/dist", .rev = 255026, .to = "master" } },
+        { 261431, { .from = "vendor/libyaml/dist", .rev = 261430, .to = "master" } },
+        { 265153, { .from = "master", .rev = 265152, .to = "projects/random_number_generator" } },
+        { 265226, { .from = "master", .rev = 265225, .to = "projects/random_number_generator" } },
+        { 268482, { .from = "master", .rev = 268481, .to = "projects/random_number_generator" } },
+        { 269851, { .from = "vendor/sqlite3/dist", .rev = 269850, .to = "master" } },
+        { 274350, { .from = "master", .rev = 274349, .to = "projects/ifnet" } },
+        { 275327, { .from = "master", .rev = 275326, .to = "projects/sendfile" } },
+        { 275364, { .from = "master", .rev = 275363, .to = "projects/clang350-import" } },
+        { 276641, { .from = "vendor/NetBSD/vis/dist", .rev = 276640, .to = "master" } },
+        { 277809, { .from = "master", .rev = 277803, .to = "projects/clang360-import" } },
+        { 277869, { .from = "vendor/amd/dist", .rev = 277866, .to = "master" } },
+        { 277896, { .from = "master", .rev = 277895, .to = "projects/clang360-import" } },
+        { 277984, { .from = "master", .rev = 277983, .to = "user/dchagin/lemul" } },
+        { 277999, { .from = "master", .rev = 277998, .to = "projects/clang360-import" } },
+        { 279575, { .from = "master", .rev = 279574, .to = "user/marcel/libvdsk" } },
+        { 279717, { .from = "master", .rev = 279716, .to = "projects/cxl_iscsi" } },
+        { 280030, { .from = "master", .rev = 280029, .to = "projects/clang360-import" } },
+        { 282069, { .from = "master", .rev = 282068, .to = "user/ngie/more-tests" } },
+        { 286694, { .from = "master", .rev = 286693, .to = "projects/clang-trunk" } },
+        { 287722, { .from = "master", .rev = 287721, .to = "projects/iosched" } },
+        { 288329, { .from = "master", .rev = 288328, .to = "user/ngie/more-tests" } },
+        // FIXME we skip the rev, might need to .rev from 288681
+        { 288684, { .from = "master", .rev = 288683, .to = "user/ngie/more-tests" } },
+        { 288955, { .from = "master", .rev = 288954, .to = "user/ngie/more-tests2" } },
+        { 289123, { .from = "vendor/dma/dist", .rev = 289122, .to = "master" } },
+        { 289133, { .from = "master", .rev = 289132, .to = "user/ngie/more-tests2" } },
+        { 289135, { .from = "master", .rev = 289134, .to = "user/ngie/more-tests2" } },
+        { 292630, { .from = "stable/10", .rev = 292629, .to = "user/ngie/stable-10-libnv" } },
+        { 292857, { .from = "stable/10", .rev = 292856, .to = "user/ngie/stable-10-libnv" } },
+        { 292886, { .from = "stable/10", .rev = 292885, .to = "user/ngie/stable-10-libnv" } },
         { 292909, { .from = "stable/10", .rev = 292908, .to = "user/ngie/stable-10-libnv" } },
         { 292974, { .from = "stable/10", .rev = 292973, .to = "user/ngie/stable-10-libnv" } },
         { 292977, { .from = "stable/10", .rev = 292976, .to = "user/ngie/stable-10-libnv" } },
@@ -1224,6 +1362,7 @@ int SvnRevision::prepareTransactions()
 
     const QString to = to_branches_.values().front();
     // TODO: scan through all merges into vendor to make sure they DTRT.
+    // TODO: check whether there are vendor -> project or vendor -> user merges, they are likely bogus.
     // r229307 re-tagged 9.0 release, allow it to be a proper merge from releng
     if (to != "master" && !to.startsWith("projects/") && !to.startsWith("user/")
             && !to.startsWith("vendor/") && !to.startsWith("vendor-sys/")
@@ -1614,6 +1753,14 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
     // releng, as we only ever cherry-pick changes to those branches.
     // Also, never merge from stable, like was done in SVN r306097, as it pulls
     // in all history.
+    // TODO: random file renames in head might copy mergeinfo around, if that
+    // then matches "vendor", we're screwed and another merge will be reported.
+    // Same goes for project branches that MFH and copy random stuff with them.
+    // I need to analyze whether this happens and how often it does. We
+    // probably want to blacklist vendor merges and allow them only into head
+    // (and vendor for the few cases where they were renamed).
+    // TODO: r248449 pulls in a massive history from user, check whether we
+    // really want all those MFC commits to pollute our mainline.
     //qDebug() << "XXX" << path_from << prevbranch << branch;
     if (path_from != NULL && prevrepository == repository && prevbranch != branch
             && (branch.startsWith("master") || branch.startsWith("projects") || branch.startsWith("user") || branch.startsWith("vendor") || branch.startsWith("refs/tags/vendor"))
