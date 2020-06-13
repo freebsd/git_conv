@@ -18,16 +18,65 @@ different. Most importantly you should check whether branch and mergepoints
 (especially for vendor branches, but also project branches) are there and make
 sense.
 
+Neither `vendor`, `user` or `projects` branches are "visible" by default.
+`backups` refs are deleted branches and `cvs2svn` contains some of the detritus
+left over from the CVS days and the cvs2svn conversion.
+
+```
+git config --add remote.origin.fetch '+refs/vendor/*:refs/vendor/*'
+git config --add remote.origin.fetch '+refs/vendor-sys/*:refs/vendor-sys/*'
+git config --add remote.origin.fetch '+refs/projects/*:refs/projects/*'
+git config --add remote.origin.fetch '+refs/user/*:refs/user/*'
+git config --add remote.origin.fetch '+refs/backups/*:refs/backups/*'
+git config --add remote.origin.fetch '+refs/cvs2svn/*:refs/cvs2svn/*'
+git fetch
+```
+
+Note that `projects` and `user` branches also exist for the `doc` repo and
+`ports` has `projects` as well. vendor(-sys), cvs2svn and backups are exclusive
+to the `src` repo though.
+
 - `user/` branches are never merged back into `master`
-- vendor tags are sometimes branches, sometimes tags, this is WIP.
-- `release/1.0_shipped` et al. are snapshots of the checked out CVS source
+- `vendor` **tags** were never flattened post-creation, as that would advance
+  them off of the mainline branch and make them invisible to a simple `git log`
+- `release/1.0_cvs` et al. are snapshots of the checked out CVS source
   code, including expanded $Id$ tags.
 - no other tags are expanded
 - various vendor-foo suffixes have been collapsed into 1 vendor namespace,
   except for a few vendors where merging the userland and kernel bits is not
   straightforward due to how they interleave with the merge and branch history.
 
-If you would want to run the conversion yourself and play with the rules, read on.
+## How to analyze the results
+
+Here are some tips that were deemed useful in making sense of resulting
+history. Please add a "graph notes log" alias to your `.gitconfig`:
+```
+[alias]
+  gnlog = log --graph --pretty=format:'%Cred%h %C(green)%t %Creset %C(red)%ad %Creset-%C(yellow)%d%Creset %s %n      %N %-GG' --date=short
+```
+
+### Show the full tree of a vendor area
+
+```
+git gnlog `git show-ref|grep vendor/sendmail|cut -d" " -f1`
+```
+
+### Find a certain SVN revision on master
+
+```
+git show -p `git log --format=%h --notes --grep=revision=294706`
+```
+
+### Show how/where/when a vendor branch was merged into master over time
+
+```
+git gnlog vendor/zstd/dist master
+```
+(but you'll need to search in the massive output for where the vendor branch is
+being merged, if you know a better way to represent this, please let us know!)
+
+
+If you want to run the conversion yourself and play with the rules, read on.
 
 ## Required Software
 
@@ -68,15 +117,13 @@ intermediate data. The final `src` repo size should be around 1.7GiB.
 
 ## What you get
 
-While the conversion will try to convert all branches (except for some truly
-degenerate cases), we will only publish a small set of branches in the official
-repo, the _other_ branches will be published to an _archive_ repo.
-
-- src will have: master, stable/N, releng/N, release/N.M, vendor/\*
+- src will have: master, stable/N, releng/N, release/N.M
 - doc will have: master, release/N.M
 - ports will have: master, branches/YYYYQx
 
-In the future, _project_ branches will be individual forks of the repos.
+In the future, _project_ branches will be individual forks of the repos. The
+`vendor` area is not visible by default, as it's only relevant for maintainers
+of contrib software.
 
 Further information and documentation can be found on the Wiki sites at
 https://github.com/freebsd/git_conv/wiki
