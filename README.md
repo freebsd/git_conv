@@ -75,6 +75,12 @@ git gnlog vendor/zstd/dist master
 (but you'll need to search in the massive output for where the vendor branch is
 being merged, if you know a better way to represent this, please let us know!)
 
+### Look for commits with more than 5 parents and log them
+
+```
+git log --format='%H %P' --all|awk '{if (NF > 5) { print NF " " $0}}'|sort -rn|cut -d" " -f2|xargs -n1 -I% git snlog -n 1 %
+```
+
 
 If you want to run the conversion yourself and play with the rules, read on.
 

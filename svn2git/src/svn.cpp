@@ -889,7 +889,7 @@ int SvnRevision::prepareTransactions()
     // path/rule matching and issue them once.
     for (const auto& rbp : deletions_.toStdMap()) {
         const QString& repo_branch = rbp.first;
-        // FIXME: must exist, for now. might have to relax this requirement ...
+        // NOTE: must exist, for now. might have to relax this requirement ...
         Repository::Transaction *txn = transactions[repo_branch];
         for (const auto& path : rbp.second) {
             if(ruledebug)
@@ -899,7 +899,7 @@ int SvnRevision::prepareTransactions()
     }
     for (const auto& rbp : renames_.toStdMap()) {
         const QString& repo_branch = rbp.first;
-        // FIXME: must exist, for now. might have to relax this requirement ...
+        // NOTE: must exist, for now. might have to relax this requirement ...
         Repository::Transaction *txn = transactions[repo_branch];
         for (const auto& from_to : rbp.second.toStdMap()) {
             if(ruledebug)
@@ -1227,8 +1227,6 @@ int SvnRevision::prepareTransactions()
         { 254111, { .from = "master", .rev = 254109, .to = "user/attilio/vmobj-readlock" } },
         { 254145, { .from = "master", .rev = 254141, .to = "user/attilio/vmobj-readlock" } },
         { 254188, { .from = "master", .rev = 254185, .to = "user/attilio/vmobj-readlock" } },
-        // FIXME: should now work automagic
-        //{ 254225, { .from = "vendor/nvi/dist", .rev = 254211, .to = "master" } },
         { 254635, { .from = "master", .rev = 254081, .to = "projects/bhyve_npt_pmap" } },
         { 254788, { .from = "master", .rev = 254787, .to = "projects/camlock" } },
         { 255033, { .from = "vendor/NetBSD/libexecinfo/dist", .rev = 255026, .to = "master" } },
@@ -1253,7 +1251,6 @@ int SvnRevision::prepareTransactions()
         { 286694, { .from = "master", .rev = 286693, .to = "projects/clang-trunk" } },
         { 287722, { .from = "master", .rev = 287721, .to = "projects/iosched" } },
         { 288329, { .from = "master", .rev = 288328, .to = "user/ngie/more-tests" } },
-        // FIXME we skip the rev, might need to .rev from 288681
         { 288684, { .from = "master", .rev = 288683, .to = "user/ngie/more-tests" } },
         { 288955, { .from = "master", .rev = 288954, .to = "user/ngie/more-tests2" } },
         { 289123, { .from = "vendor/dma/dist", .rev = 289122, .to = "master" } },
@@ -1361,8 +1358,63 @@ int SvnRevision::prepareTransactions()
     }
 
     const QString to = to_branches_.values().front();
-    // TODO: scan through all merges into vendor to make sure they DTRT.
-    // TODO: check whether there are vendor -> project or vendor -> user merges, they are likely bogus.
+    // NOTE: there are various vendor imports into project branches and some
+    // into user branches as the focus was on importing that into head. So far,
+    // I couldn't find a case where some bogus mergeinfo was copied and an
+    // erroneous "vendor import" recorded.
+    // As of writing, the list is this:
+    // % grep -o "copy from branch.*vendor.*to.*(user|projects)/[^\"]*" log-base|sed 's/clang[0-9]*-import/clangXYZ-import/'|sort -u
+    // copy from branch "refs/tags/vendor/google/googletest/1.8.1" to branch "projects/import-googletest-1.8.1
+    // copy from branch "refs/tags/vendor/hyperv/20130502" to branch "projects/hyperv
+    // copy from branch "refs/tags/vendor/llvm-project/master" to branch "projects/clangXYZ-import
+    // copy from branch "refs/tags/vendor/llvm-project/release-10.x" to branch "projects/clangXYZ-import
+    // copy from branch "refs/tags/vendor/pjdfstest/abf03c3a47745d4521b0e4aa141317553ca48f91" to branch "user/ngie/add-pjdfstest
+    // copy from branch "user/keramida/vendor" to branch "user/keramida/tzcode
+    // copy from branch "vendor/NetBSD/bmake/dist" to branch "projects/bmake
+    // copy from branch "vendor/NetBSD/tests/dist" to branch "projects/netbsd-tests-update-12
+    // copy from branch "vendor/NetBSD/tests/dist" to branch "projects/netbsd-tests-upstream-01-2017
+    // copy from branch "vendor/acpica/dist" to branch "projects/acpica_20090521
+    // copy from branch "vendor/binutils/dist" to branch "projects/binutils-2.17
+    // copy from branch "vendor/clang/dist" to branch "projects/clang-trunk
+    // copy from branch "vendor/clang/dist" to branch "projects/clangXYZ-import
+    // copy from branch "vendor/clang/dist" to branch "projects/clangbsd
+    // copy from branch "vendor/clang/dist" to branch "projects/clangbsd-import
+    // copy from branch "vendor/compiler-rt/dist" to branch "projects/clangXYZ-import
+    // copy from branch "vendor/compiler-rt/dist" to branch "user/ed/compiler-rt
+    // copy from branch "vendor/elftoolchain/dist" to branch "projects/elftoolchain
+    // copy from branch "vendor/elftoolchain/dist" to branch "projects/elftoolchain-update-r3130
+    // copy from branch "vendor/flex/dist" to branch "projects/flex-sf
+    // copy from branch "vendor/google/capsicum-test/dist" to branch "projects/capsicum-test
+    // copy from branch "vendor/google/googletest/dist" to branch "projects/import-googletest-1.10.0
+    // copy from branch "vendor/heirloom-doctools/dist" to branch "projects/doctools
+    // copy from branch "vendor/hyperv/dist" to branch "projects/hyperv
+    // copy from branch "vendor/illumos/dist" to branch "projects/libzfs_core
+    // copy from branch "vendor/illumos/dist" to branch "user/delphij/zfs-arc-rebase
+    // copy from branch "vendor/illumos/dist" to branch "user/delphij/zfs-lz4
+    // copy from branch "vendor/libc++/dist" to branch "projects/clangXYZ-import
+    // copy from branch "vendor/libevent/dist" to branch "projects/openssl111
+    // copy from branch "vendor/lld/dist" to branch "projects/clangXYZ-import
+    // copy from branch "vendor/lld/dist" to branch "projects/lld-import
+    // copy from branch "vendor/lldb/dist" to branch "projects/clang-trunk
+    // copy from branch "vendor/lldb/dist" to branch "projects/clangXYZ-import
+    // copy from branch "vendor/lldb/dist" to branch "projects/lldb-r201577
+    // copy from branch "vendor/lldb/dist-release_90" to branch "projects/clangXYZ-import
+    // copy from branch "vendor/llvm-openmp/dist" to branch "projects/clangXYZ-import
+    // copy from branch "vendor/llvm/dist" to branch "projects/clang-trunk
+    // copy from branch "vendor/llvm/dist" to branch "projects/clangXYZ-import
+    // copy from branch "vendor/llvm/dist" to branch "projects/clangbsd
+    // copy from branch "vendor/llvm/dist" to branch "projects/clangbsd-import
+    // copy from branch "vendor/lua/dist" to branch "projects/lua-bootloader
+    // copy from branch "vendor/ncurses/dist" to branch "user/rafan/ncurses
+    // copy from branch "vendor/opensolaris/dist" to branch "user/gnn/fasttrap
+    // copy from branch "vendor/openssl/dist" to branch "projects/openssl-1.0.2
+    // copy from branch "vendor/openssl/dist" to branch "projects/openssl111
+    // copy from branch "vendor/openssl/dist" to branch "projects/openssl_098_merge_8
+    // copy from branch "vendor/serf/dist" to branch "projects/openssl111
+    // copy from branch "vendor/tre/dist" to branch "user/gabor/tre-integration
+    // copy from branch "vendor/tzcode/dist" to branch "user/keramida/vendor
+    // copy from branch "vendor/zlib/dist" to branch "user/delphij/libz
+
     // r229307 re-tagged 9.0 release, allow it to be a proper merge from releng
     if (to != "master" && !to.startsWith("projects/") && !to.startsWith("user/")
             && !to.startsWith("vendor/") && !to.startsWith("vendor-sys/")
@@ -1752,22 +1804,22 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
     // branches for the FreeBSD repositories. Never merge into stable or
     // releng, as we only ever cherry-pick changes to those branches.
     // Also, never merge from stable, like was done in SVN r306097, as it pulls
-    // in all history.
-    // TODO: random file renames in head might copy mergeinfo around, if that
-    // then matches "vendor", we're screwed and another merge will be reported.
-    // Same goes for project branches that MFH and copy random stuff with them.
-    // I need to analyze whether this happens and how often it does. We
-    // probably want to blacklist vendor merges and allow them only into head
-    // (and vendor for the few cases where they were renamed).
-    // TODO: r248449 pulls in a massive history from user, check whether we
-    // really want all those MFC commits to pollute our mainline.
+    // in all history. Never merge from user as well, as it full of MFCs and
+    // pointless back and forth merges, e.g. r248449
     //qDebug() << "XXX" << path_from << prevbranch << branch;
     if (path_from != NULL && prevrepository == repository && prevbranch != branch
             && (branch.startsWith("master") || branch.startsWith("projects") || branch.startsWith("user") || branch.startsWith("vendor") || branch.startsWith("refs/tags/vendor"))
             // If branching into vendor, the source must not be master,
             // otherwise *all* the history will be pulled into the vendor
             // branch.
+            // NOTE(uqs): we allow vendor → vendor "merges" or rather
+            // branchpoints for the 2-3 cases where a vendor was just renamed.
+            // There's also r185205 which is basically a pure copy of a vendor
+            // area, so that one is fine.
             && !((branch.startsWith("vendor") || branch.startsWith("refs/tags/vendor")) && prevbranch == "master")
+            // Don't merge the mess that is various user branches into head.
+            // They'll just end up as cherry picks instead.
+            && !(branch.startsWith("master") && prevbranch.startsWith("user"))
             && !prevbranch.isEmpty()
             && !prevbranch.startsWith("stable")) {
         QStringList log = QStringList()

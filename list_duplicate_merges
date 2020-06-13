@@ -1,0 +1,22 @@
+#!/bin/sh
+
+svn=${1:-base}
+git=${2:-freebsd-base.git}
+branch=${3:-master}
+
+# I'm sure there's a pithy 3-liner that can do this, but oh well.
+# I want to check whether a random revision that copied stuff within head
+# around also copied mergeinfo around and somehow that causes a new mergefrom
+# to be recorded.
+#
+# It should be a simple as comparing all refs under vendor with all the parents
+# in the master line and spotting duplicates.
+
+export GIT_DIR=$git
+git show-ref | egrep "/vendor(-sys)?/" | cut -d" " -f2 | xargs git log --format=%H | sort > vendor_refs
+
+git log --format="%H %P" --reverse master | awk 'NF>2' > master_refs
+
+fgrep -f vendor_refs master_refs | cut -d" " -f2- | tr " " "\n" | sort | uniq -c | awk '$1>1 {print $2}' > dupe_parents
+
+fgrep -f dupe_parents master_refs | cut -d" " -f1 | xargs -n1 git snlog -n1
