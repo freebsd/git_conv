@@ -271,14 +271,6 @@ match /cvs2svn/branches/unlabeled-1.1.1/
   branch vendor/tzdata/dist
 end match
 
-# tip from OpenBSD, imported, manufactured, then merge conflicts resolved. Inline it all.
-match /cvs2svn/branches/bsd/
-  min revision 161751
-  max revision 161751
-  repository freebsd-base.git
-  branch master
-end match
-
 # deleted attempts
 match /release/8.4.0/
   min revision 250625
@@ -1934,6 +1926,16 @@ match /(cvs2svn)/(tags)/([^/]+)/
   annotated true
 end match
 
+# record the fact that tip(1) was merged from vendor. The later merge in
+# r161754 is sadly mis-attributed to r161752, but we don't bother patching that
+# up.
+match /head/
+  min revision 88276
+  max revision 88276
+  repository freebsd-base.git
+  branch master
+  branchpoint cvs2svn/branches/bsd@88273
+end match
 # /head/contrib/patch was fully deleted in r128779, skip the partial delete,
 # manufactured by cvs2svn
 match /head/contrib/patch/

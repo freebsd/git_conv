@@ -1897,6 +1897,11 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
                                  epoch, log);
     }
 
+    if (!rule.branchpoint.isEmpty() && rule.branchpoint != "none") {
+        const auto pair = rule.branchpoint.splitRef('@');
+        txn->noteCopyFromBranch(pair[0].toString(), pair[1].toInt());
+    }
+
     // These are a once per-rev actions, but we end up here for every path that
     // has matched. That is, we emit tons and tons of redundant deletes into
     // the fast-import stream. We can't drain the list either, as the rule
