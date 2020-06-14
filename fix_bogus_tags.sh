@@ -26,7 +26,7 @@ rewrite_tag()
     # NOTE: grabs only the 2nd line (with the tag) and then re-edits the note
     # to drop the extra newline in the middle.
     git notes append -m "`git notes show $old_commit|tail -1`" "$tag^{commit}"
-    EDITOR="sed -i'' -e '/^$/d'" git notes edit "$tag^{commit}"
+    EDITOR="sed -i.bak -e '/^$/d'" git notes edit "$tag^{commit}"
 }
 
 git --git-dir=$git for-each-ref --format='%(refname:short)' refs/tags |
