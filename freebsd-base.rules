@@ -199,6 +199,18 @@ match /(cvs2svn)/(branches)/(PST)/
   branch \1/\2/\3
   branchpoint none
 end match
+# Only contains usr.sbin/ppp for NETGRAPH frobbing. It seems that it's made 99%
+# of MFC commits and I couldn't easily find whether it got ever merged back.
+match /(cvs2svn)/(branches)/(NETGRAPH)/
+  min revision 66901
+  max revision 66901
+  repository freebsd-base.git
+  branch \1/\2/\3
+  branchpoint none
+end match
+# created in r92208, never used for anything
+match /cvs2svn/branches/IMP_CB_MERGE/
+end match
 
 # openssl manpages, committed to branch and insta-manufactured to head, twice
 match /cvs2svn/branches/FREEBSD/
@@ -246,7 +258,6 @@ match /
   min revision 111520
   max revision 111522
 end match
-
 # just 1 commit in r117783 that was immediately manufactured by cvs2svn into
 # head. Make the original (and its author) and message show up instead. Ignore
 # the following patch up and the useless tag.
@@ -260,7 +271,25 @@ match /head/
 end match
 match /cvs2svn/tags/LIBTHR_ALPHA/
 end match
-
+# file fell of the regular branch. r128605 was then manufactured to "create"
+# RELENG_4_10. Must be a repo-copy at play here, likely from r127627
+match /cvs2svn/branches/unlabeled-1.1.2.122.2/
+  min revision 128603
+  max revision 128603
+  repository freebsd-base.git
+  branch releng/4.10
+end match
+# proper commit message went into branch, then was manufactured into head
+match /cvs2svn/branches/JOERG/
+  min revision 129330
+  max revision 129330
+  repository freebsd-base.git
+  branch master
+end match
+match /head/
+  min revision 129331
+  max revision 129331
+end match
 # wrong vendor imports, were later patched up, but the original imports have the
 # better commit messages.
 match /cvs2svn/branches/unlabeled-1.1.1/
@@ -1527,7 +1556,6 @@ match /(vendor)/(mandoc|mdocml)/([^/]+)/
   branch \1/mandoc/\3
 end match
 
-# TODO(uqs): figure this out somehow
 # Pull up a chair, let me tell you a story. There was the opensolaris vendor,
 # first imported under vendor-cddl and everything was great. r194442 then split
 # this between vendor and vendor-sys for the userland and kernel parts
@@ -1569,7 +1597,7 @@ end match
 #X#  min revision 238446
 #X#  max revision 238447
 #X#end match
-#X## XXX TODO: skipping the deletion here, but the following rev will still reset
+#X## NOTE: skipping the deletion here, but the following rev will still reset
 #X## the git branch, resulting in a backup tag and not recording the "parent"
 #X## properly. Probably needs a serious hack into the git fast-import stream.
 #X#match /vendor.*/
@@ -1676,6 +1704,7 @@ end match
 
 # Copy the kernel bits over carefully, w/o clobbering stuff in the existing
 # common/ subdir.
+# TODO(uqs): this messes up the path in the notes, see if we can do better with skip_branchpoint et al.
 match /vendor-sys/(illumos)/(dist)/(OPENSOLARIS.LICENSE|common/[^/]+/|uts/)
   min revision 238570
   max revision 238570
@@ -1941,6 +1970,11 @@ end match
 match /head/contrib/patch/
   min revision 128778
   max revision 128778
+end match
+# adds a needless merge and deletion
+match /head/
+  min revision 235378
+  max revision 235379
 end match
 # Don't delete and revert ipfilter, it messes up git blame
 match /head/
