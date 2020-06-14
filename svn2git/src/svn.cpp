@@ -1722,7 +1722,7 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
             // revisions where a subdir from head was forked into a vendor
             // branch. This confuses `git subtree`. TODO(emaste): provide some
             // more thorough explanation.
-            if (rule.skip_branchpoint) {
+            if (rule.branchpoint == "none") {
                 qWarning() << "Not recording" << qPrintable(current) << "as branchpoint from" << prevbranch;
                 prevbranch.clear();
             }
@@ -1830,7 +1830,7 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
             qDebug() << "copy from branch" << prevbranch << "to branch"
                      << branch << "@rev" << rev_from;
         }
-        if (rule.skip_branchpoint) {
+        if (rule.branchpoint == "none") {
             qWarning() << "Not recording" << qPrintable(current) << "as branchpoint from" << prevbranch;
         } else {
             merge_from_rev_ = rev_from;
