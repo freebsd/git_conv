@@ -1063,8 +1063,7 @@ int SvnRevision::prepareTransactions()
         183226, 183430, 183431, 183432, 183433, 183654, 183714, 183910, 184330,
         184425, 184521, 184562, 185160, 185305, 185307, 185402, 185539, 185626,
         185631, 186256, 186261, 186535, 186934, 187064, 187220, 187258, 187962,
-        // we keep these to test the code that finds them
-        //189628, 189705, 193734, 194143, 194148, 194150, 194153, 194155, 194157,
+        189628, 189705, 193734, 194143, 194148, 194150, 194153, 194155, 194157,
         194159, 194674, 196280, 196696, 197352, 197509, 198498, 203325, 205176,
         282800, 282913, 283041, 283078, 283177, 283180, 283608, 283619, 283621,
         283626, 283628, 284185, 284187, 284235, 284244, 284396, 284678, 284680,
@@ -1076,8 +1075,7 @@ int SvnRevision::prepareTransactions()
         // mergeinfo, whatever that is.
         190634, 194300, 196219, 196322, 196330, 196698, 198048, 198052, 198057,
         198058, 199096, 199141, 202103, 202105, 253750, 259935, 261839, 262486,
-        // we keep these to test the code that finds them
-        //276402, 293215, 298094, 337607, 349592,
+        276402, 293215, 298094, 337607, 349592,
         // Other mergeinfo that copies everything from head around
         296962,
     };
@@ -1119,6 +1117,7 @@ int SvnRevision::prepareTransactions()
         { 182352, { .from = "vendor/sendmail/dist", .rev = 182351, .to = "master" } },
         { 184966, { .from = "stable/7", .rev = 184965, .to = "user/dfr/gssapi/7" } },
         { 184968, { .from = "stable/6", .rev = 184967, .to = "user/dfr/gssapi/6" } },
+        { 185198, { .from = "master", .rev = 185082, .to = "projects/releng_7_xen" } },
         { 185590, { .from = "stable/7", .rev = 185562, .to = "projects/releng_7_xen" } },
         { 185850, { .from = "stable/7", .rev = 185849, .to = "projects/releng_7_xen" } },
         { 185863, { .from = "stable/7", .rev = 185862, .to = "user/dfr/gssapi/7" } },
