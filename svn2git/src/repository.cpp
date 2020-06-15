@@ -66,6 +66,7 @@ public:
         QStringList deletedFiles;
         QList<QPair<QString, QString>> renamedFiles;
         QByteArray modifiedFiles;
+        QByteArray resetFromTree;
 
         inline Transaction() {}
     public:
@@ -96,6 +97,8 @@ public:
     void reloadBranches();
     int createBranch(const QString &branch, int revnum,
                      const QString &branchFrom, int revFrom);
+    int createBranch(const QString &branch, int revnum,
+                     const QString &tree_hash, Repository::Transaction* txn);
     int deleteBranch(const QString &branch, int revnum);
     Repository::Transaction *newTransaction(const QString &branch, const QString &svnprefix, int revnum);
 
@@ -207,6 +210,10 @@ public:
     int createBranch(const QString &branch, int revnum,
                      const QString &branchFrom, int revFrom)
     { return repo->createBranch(branch, revnum, branchFrom, revFrom); }
+
+    int createBranch(const QString &branch, int revnum,
+                     const QString &tree_hash, Repository::Transaction* txn)
+    { return repo->createBranch(branch, revnum, tree_hash, txn); }
 
     int deleteBranch(const QString &branch, int revnum)
     { return repo->deleteBranch(branch, revnum); }
@@ -670,6 +677,34 @@ int FastImportRepository::createBranch(const QString &branch, int revnum,
     return resetBranch(branch, revnum, mark, branchFromRef, branchFromDesc);
 }
 
+int FastImportRepository::createBranch(const QString &branch, int revnum,
+                                       const QString &tree_hash, Repository::Transaction* txn)
+{
+    qDebug() << "Creating branch:" << branch << "without parent (from tree" << tree_hash << ")";
+
+    // Preserve note
+    //branchNotes[branch] = branchNotes.value(tree_hash);
+
+    QByteArray branchRef = branch.toUtf8();
+    if (!branchRef.startsWith("refs/"))
+        branchRef.prepend("refs/heads/");
+
+    Branch &br = branches[branch];
+    br.created = revnum;
+    br.commits.append(revnum);
+    //br.marks.append(mark);
+
+    QByteArray cmd = "reset " + branchRef + /*"\nfrom " + resetTo + */"\n\n"
+                     "progress SVN r" + QByteArray::number(revnum)
+                     + " branch " + branch.toUtf8() + " = " + tree_hash.toUtf8()
+                     + "\n\n";
+    resetBranches.append(cmd);
+    resetBranchNames.insert(branchRef);
+    ((FastImportRepository::Transaction *)txn)->resetFromTree.append("M 040000 " + tree_hash.toUtf8() + " \n");
+
+    return EXIT_SUCCESS;
+}
+
 int FastImportRepository::deleteBranch(const QString &branch, int revnum)
 {
     static QByteArray null_sha(40, '0');
@@ -995,6 +1030,10 @@ void FastImportRepository::Transaction::noteCopyFromBranch(const QString &branch
         qWarning() << "WARN: Cannot merge inside a branch";
         return;
     }
+    // We are resetting the branch from a nameless tree, don't spew out warnings.
+    if (!resetFromTree.isEmpty()) {
+        return;
+    }
     static QByteArray dummy;
     long long mark = repository->markFrom(branchFrom, branchRevNum, dummy);
     Q_ASSERT(dummy.isEmpty());
@@ -1262,6 +1301,17 @@ int FastImportRepository::Transaction::commit()
         QByteArray m = " :" + QByteArray::number(merge);
         desc += m;
         repository->fastImport.write("merge" + m + "\n");
+    }
+    // If we suppress the branchpoint, we still need to start out with the
+    // previous tree, all we want is to suppress the creation of a parent.
+    // Basically we want what `merge` does, except in reverse, an `unmerge` so
+    // to speak. We can do this by providing the data from the previous tree
+    // via mark first. Sadly, again, that mark is a commit mark and fast-import
+    // isn't clever enough to treat a commit mark as just taking the tree of
+    // that commit. We use the tree-hash instead, which should be fairly
+    // stable.
+    if (resetFromTree.size() > 0) {
+        repository->fastImport.write(resetFromTree);
     }
 
     // write the file deletions

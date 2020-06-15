@@ -173,9 +173,12 @@ end match
 match /(cvs2svn)/(branches)/(MACKERAS)/
   min revision 3010
   max revision 3010
-  repository freebsd-base.git
-  branch vendor/pppd/dist  # sic, this is all about pppd
-  branchpoint none
+  # files will come back with r3012 and a better commit message.
+end match
+# both manufactured commits obsoleted by r3068 with the right commit message
+match /(cvs2svn/branches/MACKERAS|vendor/pppd/dist)/
+  min revision 3066
+  max revision 3067
 end match
 match /(vendor/pppd/dist|cvs2svn/branches/MACKERAS|cvs2svn/branches/chat)/
   min revision 3011
@@ -206,7 +209,8 @@ match /(cvs2svn)/(branches)/(NETGRAPH)/
   max revision 66901
   repository freebsd-base.git
   branch \1/\2/\3
-  branchpoint none
+  # git log --format=none@%T --notes --grep='revision=66900$'
+  branchpoint none@70ae643eb6340c78f40c375830898f626e07e456
 end match
 # created in r92208, never used for anything
 match /cvs2svn/branches/IMP_CB_MERGE/
@@ -273,6 +277,7 @@ match /cvs2svn/tags/LIBTHR_ALPHA/
 end match
 # file fell of the regular branch. r128605 was then manufactured to "create"
 # RELENG_4_10. Must be a repo-copy at play here, likely from r127627
+# FIXME: this results in something weird still ... check up on it after fixing the branchpoints for real
 match /cvs2svn/branches/unlabeled-1.1.2.122.2/
   min revision 128603
   max revision 128603
@@ -1656,6 +1661,11 @@ match /vendor-cddl/(opensolaris)/(20080410a?)/(sys/)?cddl/contrib/opensolaris/
   repository freebsd-base.git
   branch refs/tags/vendor/\1/\2
   annotated true
+end match
+match /vendor-cddl/opensolaris/dist/
+  # this one is redundant with r179191 (which got merged to head)
+  min revision 179193
+  max revision 179193
 end match
 match /vendor-cddl/(opensolaris)/(20080410a?)/
   action recurse

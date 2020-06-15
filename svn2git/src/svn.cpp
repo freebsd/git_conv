@@ -1708,7 +1708,7 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
         }
     }
 
-    //qDebug() << "XXX" << path_from << current << svnprefix << path;
+    //qDebug() << "XXX" << path_from << ":" << current << svnprefix << path << prevbranch << branch << "XXX";
     // current == svnprefix => we're dealing with the contents of the whole branch here
     if (path_from != NULL && current == svnprefix && path.isEmpty()) {
         if (previous != prevsvnprefix) {
@@ -1721,8 +1721,8 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
             // revisions where a subdir from head was forked into a vendor
             // branch. This confuses `git subtree`. TODO(emaste): provide some
             // more thorough explanation.
-            if (rule.branchpoint == "none") {
-                qWarning() << "Not recording" << qPrintable(current) << "as branchpoint from" << prevbranch;
+            if (rule.branchpoint.startsWith("none")) {
+                qWarning() << "Not recording" << qPrintable(current) << "as branchpoint from" << prevbranch << "rev" << rev_from;
                 prevbranch.clear();
             }
         } else if (preveffectiverepository != effectiveRepository) {
@@ -1758,8 +1758,36 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
                          << qPrintable(prevbranch);
             }
 
-            if (repo->createBranch(branch, revnum, prevbranch, rev_from) == EXIT_FAILURE)
-                return EXIT_FAILURE;
+            if (!rule.branchpoint.isEmpty()) {
+                const auto pair = rule.branchpoint.splitRef('@');
+                qWarning() << "Not recording" << qPrintable(current) << "as branchpoint from" << prevbranch << "rev" << rev_from;
+                prevbranch.clear();
+                if (pair.size() != 2) {
+                    qFatal("Please provide none@<treehash> or otherbranch@ref for this sort of branch creation!");
+                } else {
+                    Repository::Transaction *txn = transactions.value(repository + branch, 0);
+                    if (!txn) {
+                        txn = repo->newTransaction(branch, svnprefix, revnum);
+                        if (!txn)
+                            return EXIT_FAILURE;
+
+                        transactions.insert(repository + branch, txn);
+                    }
+                    if (pair[0] == "none") {
+                        qDebug() << "Creating branch from" << __FILE__ << __LINE__;
+                        if (repo->createBranch(branch, revnum, pair[1].toString(), txn) == EXIT_FAILURE)
+                            return EXIT_FAILURE;
+                    } else {
+                        qDebug() << "Creating branch from" << __FILE__ << __LINE__;
+                        if (repo->createBranch(branch, revnum, pair[0].toString(), pair[1].toString().toInt()) == EXIT_FAILURE)
+                            return EXIT_FAILURE;
+                    }
+                }
+            } else {
+                qDebug() << "Creating branch from" << __FILE__ << __LINE__;
+                if (repo->createBranch(branch, revnum, prevbranch, rev_from) == EXIT_FAILURE)
+                    return EXIT_FAILURE;
+            }
 
             if(CommandLineParser::instance()->contains("svn-branches")) {
                 Repository::Transaction *txn = transactions.value(repository + branch, 0);
@@ -1805,7 +1833,6 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
     // Also, never merge from stable, like was done in SVN r306097, as it pulls
     // in all history. Never merge from user as well, as it full of MFCs and
     // pointless back and forth merges, e.g. r248449
-    //qDebug() << "XXX" << path_from << prevbranch << branch;
     if (path_from != NULL && prevrepository == repository && prevbranch != branch
             && (branch.startsWith("master") || branch.startsWith("projects") || branch.startsWith("user") || branch.startsWith("vendor") || branch.startsWith("refs/tags/vendor"))
             // If branching into vendor, the source must not be master,
@@ -1819,6 +1846,9 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
             // Don't merge the mess that is various user branches into head.
             // They'll just end up as cherry picks instead.
             && !(branch.startsWith("master") && prevbranch.startsWith("user"))
+            // this stops IFCs from being recorded, as there isn't much value in them.
+            // So master -> project is a cherrypick, not a merge.
+            //&& !(branch.startsWith("projects") && prevbranch.startsWith("master"))
             && !prevbranch.isEmpty()
             && !prevbranch.startsWith("stable")) {
         QStringList log = QStringList()
@@ -1829,8 +1859,8 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
             qDebug() << "copy from branch" << prevbranch << "to branch"
                      << branch << "@rev" << rev_from;
         }
-        if (rule.branchpoint == "none") {
-            qWarning() << "Not recording" << qPrintable(current) << "as branchpoint from" << prevbranch;
+        if (rule.branchpoint.startsWith("none")) {
+            qWarning() << "Not recording" << qPrintable(current) << "as branchpoint from" << prevbranch << "rev" << rev_from;
         } else {
             merge_from_rev_ = rev_from;
             merge_from_branch_ = prevbranch;
@@ -1863,7 +1893,16 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
             }
         }
 
-        txn->deleteFile(path);
+        // When we're frobbing things, don't "deleteall" in the fast-import stream. This happens with an emtpy path.
+        if (path == NULL && rule.branchpoint.startsWith("none@")) {
+            const auto pair = rule.branchpoint.splitRef('@');
+            qDebug() << "Creating branch from" << __FILE__ << __LINE__;
+            if (repo->createBranch(branch, revnum, pair[1].toString(), txn) == EXIT_FAILURE)
+                return EXIT_FAILURE;
+        } else if (path == NULL && rule.branchpoint == "none") {
+        } else {
+            txn->deleteFile(path);
+        }
 
         // Add GitIgnore with svn:ignore
         int ignoreSet = false;
@@ -1898,7 +1937,11 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
 
     if (!rule.branchpoint.isEmpty() && rule.branchpoint != "none") {
         const auto pair = rule.branchpoint.splitRef('@');
-        txn->noteCopyFromBranch(pair[0].toString(), pair[1].toInt());
+        if (pair.size() != 2) {
+            qFatal("Please provide branch@<revnum> for this sort of merge record!");
+        } else {
+            txn->noteCopyFromBranch(pair[0].toString(), pair[1].toInt());
+        }
     }
 
     // These are a once per-rev actions, but we end up here for every path that

@@ -126,6 +126,8 @@ public:
     virtual void reloadBranches() = 0;
     virtual int createBranch(const QString &branch, int revnum,
                              const QString &branchFrom, int revFrom) = 0;
+    virtual int createBranch(const QString &branch, int revnum,
+                             const QString &tree_hash, Transaction* txn) = 0;
     virtual int deleteBranch(const QString &branch, int revnum) = 0;
     virtual Repository::Transaction *newTransaction(const QString &branch, const QString &svnprefix, int revnum) = 0;
 
