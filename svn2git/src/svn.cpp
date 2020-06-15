@@ -913,12 +913,12 @@ int SvnRevision::prepareTransactions()
     if (!svn_repo_path.endsWith("base") || revnum < 179447)
         return EXIT_SUCCESS;
 
-    const QString repository = "freebsd-base.git";
+    static const QString repository = "freebsd-base.git";
     // Force a bunch of merges, even though SVN never properly recorded them.
     // Some of them were later added via svn:mergeinfo. Even more had changes
     // imported into head, then later the vendor import was done (?!) and
     // finally the mergeinfo recorded. We're not going to patch that up ...
-    static QMap<int, mergeinfo> force_merges = {
+    static const QMap<int, mergeinfo> force_merges = {
         // Recorded in r265214
         { 264691, { .from = "vendor/openssh/dist", .rev = 264690, .to = "master" } },
         // Recorded in r299540
@@ -930,7 +930,7 @@ int SvnRevision::prepareTransactions()
     };
     if (force_merges.contains(revnum)) {
         const auto& mi = force_merges.value(revnum);
-        const QString svnprefix = "";
+        static const QString svnprefix = "";
         const QString& branch = mi.to;
         Repository::Transaction *txn = transactions.value(repository + branch, 0);
         if (!txn) {
@@ -951,7 +951,7 @@ int SvnRevision::prepareTransactions()
 
     // List of revisions to skip as their mergeinfo is complex and irrelevant in
     // terms of git.
-    static QSet<int> skip_mergeinfo = {
+    static const QSet<int> skip_mergeinfo = {
         196075, 179468, 244485, 244487, 262833, 262834, 355814, 193205, 253716,
         184527, 268229,
         // self-referential mergeinfo
@@ -1057,7 +1057,7 @@ int SvnRevision::prepareTransactions()
     // List of revisions to skip as their mergeinfo is empty and consists of
     // -0,0 +0,0 changes only. We hardcode the list here as it a) never changes
     // and so we can b) skip a whole lot of forking into svn(1).
-    static QSet<int> empty_mergeinfo = {
+    static const QSet<int> empty_mergeinfo = {
         179566, 179790, 180332, 181027, 181074, 181522, 181524, 181601, 181738,
         181739, 181740, 181741, 181872, 181905, 182044, 182326, 182724, 183198,
         183226, 183430, 183431, 183432, 183433, 183654, 183714, 183910, 184330,
@@ -1111,7 +1111,7 @@ int SvnRevision::prepareTransactions()
 
     // Things we patch up manually as the SVN history around them is ...
     // creative.
-    static QMultiMap<int, mergeinfo> manual_merges = {
+    static const QMultiMap<int, mergeinfo> manual_merges = {
         // merges from vendor/tzdata/dist *and* vendor/tzdata (sic!)
         { 181413, { .from = "vendor/tzdata/dist", .rev = 181403, .to = "master" } },
         { 182352, { .from = "vendor/sendmail/dist", .rev = 182351, .to = "master" } },
