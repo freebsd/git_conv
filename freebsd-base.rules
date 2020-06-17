@@ -267,11 +267,6 @@ match /(releng)/BETA_2_0/
   branch \1/2.0b
 end match
 
-match /(stable|releng)/([0-9.]+)/
-  repository freebsd-base.git
-  branch \1/\2
-end match
-
 # special nesting for these
 match /(projects)/(graid|multi-fibv6|ofed|pf|suj|zfsd)/([^/]+)/
   repository freebsd-base.git
@@ -956,6 +951,11 @@ match /vendor/expat/[^d][^/]*/
   min revision 200365
   max revision 200391
 end match
+# no flatten for you! no svn metadata changes that are diff neutral but advance the tag either.
+match /vendor/one-true-awk/(?!dist)[^/]+/
+  min revision 201936
+  max revision 201938
+end match
 match /vendor/groff/[^d][^/]*/
   min revision 202347
   max revision 202347
@@ -1268,14 +1268,12 @@ match /(vendor)/(opencsd)/dist/
   branch refs/tags/\1/\2/a1961c91b02a92f3c6ed8b145c636ac4c5565aca
   annotated true
 end match
-
 # skip vendor deletions, we want the named branches so that the merge points
 # have a "name" attached to them.
 match /vendor/
   min revision 358837
   max revision 358847
 end match
-
 # something was missing ...
 match /(vendor)/(1.14)/
   repository freebsd-base.git
@@ -1896,6 +1894,11 @@ match /(cvs2svn)/(tags)/([^/]+)/
   repository freebsd-base.git
   branch refs/tags/\1/\2/\3
   annotated true
+end match
+
+match /(stable|releng)/([0-9.]+)/
+  repository freebsd-base.git
+  branch \1/\2
 end match
 
 # record the fact that tip(1) was merged from vendor. The later merge in
