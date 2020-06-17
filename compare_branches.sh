@@ -12,6 +12,7 @@ test -z "$type" && exit 1
 
 SVN=file:///$PWD/$type
 GIT=$PWD/freebsd-$type.git
+export GIT_DIR=$GIT
 S=$PWD/scratch
 mkdir -p scratch
 
@@ -66,7 +67,7 @@ diff_it() {
     set -e
     cd $S && rm -rf s g
     svn export --ignore-keywords -q $SVN/$from s &
-    GIT_DIR=$GIT git archive --format=tar --prefix=g/ $to | tar xf -
+    git archive --format=tar --prefix=g/ $to | tar xf -
     wait
     test -d s || exit 1
     test -d g || exit 1
@@ -144,7 +145,7 @@ diff_em() {
     # and would end up with a diff.
     svn export --force --ignore-keywords -q $SVN/$from1 s
     svn export --force --ignore-keywords -q $SVN/$from2 s
-    GIT_DIR=$GIT git archive --format=tar --prefix=g/ $to | tar xf -
+    git archive --format=tar --prefix=g/ $to | tar xf -
     test -d s || exit 1
     test -d g || exit 1
     #flags='-I[$]FreeBSD.*[$]'
@@ -186,8 +187,22 @@ diff_it head master
 
 case "$type" in
     base)
+        git log --format="%h %N" master|egrep '^[^s].*=/head/;' | sed -e 's/ .*=/ /' | awk 'NR % 1000 == 0' | \
+            while read ref rev; do
+                if [ $rev -le 79320 ]; then
+                    # FIXME: ipfilter renames
+                    continue;
+                elif [ $rev -le 151841 ]; then
+                    # ppp-user -> ppp repo-copy was corrected
+                    diff_it -xppp head@$rev $ref
+                else
+                    diff_it head@$rev $ref
+                fi
+            done
+
         diff_it releng/ALPHA_2_0 releng/2.0a
         diff_it releng/BETA_2_0 releng/2.0b
+
         for t in release stable releng; do
             for b in `svn ls $SVN/$t | grep -v A_2_0`; do
                 diff_it $t/$b
