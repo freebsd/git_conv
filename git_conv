@@ -261,7 +261,10 @@ svn2git()
     if $first_run; then
 	(
 	    case "$TYPE" in
-		base) ./tag_archived_src.sh && ./fix_bogus_tags.sh ;;
+		base)
+                    ./tag_archived_src.sh
+                    ./fix_bogus_tags.sh
+                    ;;
 	    esac
 	    cd $target
 	    echo "Compacting, showing before and after numbers:"
@@ -345,8 +348,8 @@ fi
 
 if [ -n "$do_svn2git" ]; then
     case "$TYPE" in
-	base) svn2git $RULES_DIR/freebsd-base.rules ${REPO_base} github ;;
-	doc) svn2git $RULES_DIR/freebsd-doc.rules ${REPO_doc} github ;;
-	ports) svn2git $RULES_DIR/freebsd-ports.rules ${REPO_ports} github ;;
+	base) svn2git $RULES_DIR/freebsd-base.rules ${REPO_base} freebsd ;;
+	doc) svn2git $RULES_DIR/freebsd-doc.rules ${REPO_doc} freebsd ;;
+	ports) svn2git $RULES_DIR/freebsd-ports.rules ${REPO_ports} freebsd ;;
     esac
 fi
