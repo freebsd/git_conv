@@ -1,6 +1,7 @@
 #!/bin/sh
 
 git=${1:-freebsd-base.git}
+export GIT_DIR=$git
 
 # Fix a whole bunch of svn vendor tags, that are created bogusly and result in
 # an extra commit that hangs off the mainline branch. See
@@ -11,7 +12,6 @@ rewrite_tag()
 {
     local tag
     tag=$1
-    export GIT_DIR=$git
 
     c_auth=`git cat-file tag $tag | sed -n '/^tagger/s/^tagger //; s/ [0-9 +]*$//p'`
     c_date=`git cat-file tag $tag | sed -n '/^tagger/s/^tagger //p' | egrep -o '[0-9]* [+0-9]*$'`
