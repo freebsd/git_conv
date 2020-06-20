@@ -1701,14 +1701,23 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
         if (prevmatch != matchRules.constEnd()) {
             splitPathName(*prevmatch, previous, &prevsvnprefix, &prevrepository,
                           &preveffectiverepository, &prevbranch, &prevpath);
+            if (ruledebug) {
+                //qDebug() << "found prevmatch:" << *prevmatch;
+            }
+            if (preveffectiverepository.isEmpty() || prevrepository.isEmpty()) {
+                qWarning() << "Matching the from of a SVN copy yielded no resulting repository! recurse rule?";
+            }
 
         } else {
             qWarning() << "WARN: SVN reports a \"copy from\" @" << revnum << "from" << path_from << "@" << rev_from << "but no matching rules found! Ignoring copy, treating as a modification";
             path_from = NULL;
         }
     }
-
-    //qDebug() << "XXX" << path_from << ":" << current << svnprefix << path << prevbranch << branch << "XXX";
+#if 0
+    qDebug() << "XXX" << path_from << ":" << current << svnprefix << path << prevbranch << branch << "XXX";
+    qDebug() << "current" << svnprefix << repository << effectiveRepository << branch << path;
+    qDebug() << "previous" << previous << prevsvnprefix << prevrepository << preveffectiverepository << prevbranch << prevpath;
+#endif
     // current == svnprefix => we're dealing with the contents of the whole branch here
     if (path_from != NULL && current == svnprefix && path.isEmpty()) {
         if (previous != prevsvnprefix) {
@@ -1722,7 +1731,7 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
             // branch. This confuses `git subtree`. TODO(emaste): provide some
             // more thorough explanation.
             if (rule.branchpoint.startsWith("none")) {
-                qWarning() << "Not recording" << qPrintable(current) << "as branchpoint from" << prevbranch << "rev" << rev_from;
+                qWarning() << "Not recording1" << qPrintable(current) << "as branchpoint from" << prevbranch << "rev" << rev_from;
                 prevbranch.clear();
             }
         } else if (preveffectiverepository != effectiveRepository) {
@@ -1760,7 +1769,7 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
 
             if (!rule.branchpoint.isEmpty()) {
                 const auto pair = rule.branchpoint.splitRef('@');
-                qWarning() << "Not recording" << qPrintable(current) << "as branchpoint from" << prevbranch << "rev" << rev_from;
+                qWarning() << "Not recording2" << qPrintable(current) << "as branchpoint from" << prevbranch << "rev" << rev_from;
                 prevbranch.clear();
                 if (pair.size() != 2) {
                     qFatal("Please provide none@<treehash> or otherbranch@ref for this sort of branch creation!");
@@ -1860,7 +1869,7 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
                      << branch << "@rev" << rev_from;
         }
         if (rule.branchpoint.startsWith("none")) {
-            qWarning() << "Not recording" << qPrintable(current) << "as branchpoint from" << prevbranch << "rev" << rev_from;
+            qWarning() << "Not recording3" << qPrintable(current) << "as branchpoint from" << prevbranch << "rev" << rev_from;
         } else {
             merge_from_rev_ = rev_from;
             merge_from_branch_ = prevbranch;
