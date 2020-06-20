@@ -86,9 +86,9 @@ extract() {
     (
         cd wrk
         for d in bin sbin usr.bin usr.sbin gnu/usr.bin release/sysinstall lib/libpam/modules/pam_krb5 lib/libpam/modules/pam_kerberosIV sys/i386/boot/biosboot sys/libkern; do
-            test -d $d && make -C $d -k MACHINE_ARCH=i386 cleandir >/dev/null || true
+            test -d $d && make -C $d -k MACHINE_ARCH=i386 cleandir >/dev/null 2>&1 || true
         done
-        make -C usr.bin/vi -k MACHINE_ARCH=i386 RELEASE_BUILD_FIXIT=1 cleandir >/dev/null || true
+        make -C usr.bin/vi -k MACHINE_ARCH=i386 RELEASE_BUILD_FIXIT=1 cleandir >/dev/null 2>&1 || true
     )
     set +e
 }
