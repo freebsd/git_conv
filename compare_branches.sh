@@ -84,7 +84,11 @@ diff_it() {
             diff -ruN --strip-trailing-cr `echo $flags` s g/*/ >/dev/null || {
                 if [ 1 -eq `ls -1 g/*/|wc -l` ] ; then
                     diff -ruN --strip-trailing-cr `echo $flags` s g/*/*/ >/dev/null || {
-                        echo "diffs found in SVN $from vs git $to, bailing out" >&2; exit 1;
+                        if [ 1 -eq `ls -1 g/*/*/|wc -l` ] ; then
+                            diff -ruN --strip-trailing-cr `echo $flags` s g/*/*/*/ >/dev/null || {
+                                echo "diffs found in SVN $from vs git $to, bailing out" >&2; exit 1;
+                            }
+                        fi
                     }
                 fi
             }
@@ -191,6 +195,7 @@ case "$type" in
             while read ref rev; do
                 if [ $rev -le 79320 ]; then
                     # FIXME: ipfilter renames
+                    #diff_it head@$rev $ref
                     continue;
                 elif [ $rev -le 151841 ]; then
                     # ppp-user -> ppp repo-copy was corrected
@@ -279,11 +284,9 @@ case "$type" in
                         ngatm/1.1.1/) diff_it -xsys $t/$b$s ;;
                         # NOTE: exists only in userland, need to skip kernel bits.
                         opensolaris/20080410b/|opensolaris/20100802/) diff_it -xuts $t/$b$s ;;
-                        # FIXME has a diff due to the merge, probably can't be helped.
+                        # These are handled in the vendor-sys loop below
                         illumos/20100818/) continue ;;
-                        # FIXME needs investigation!
                         opensolaris/20080410/) continue ;;
-                        # FIXME: git is missing a handful of files
                         opensolaris/20080410a/) continue ;;
                         # need to compare 2 branches
                         illumos/*|ngatm/*|opensolaris/*) diff_em $t/$b$s vendor-sys/$b$s $t/$b$s; continue ;;
@@ -335,18 +338,21 @@ case "$type" in
                         ath/0.9.14*|ath/0.9.16*|ath/0.9.4*|ath/0.9.5*|ath/0.9.6*) diff_it $t/$b$s@182296 vendor/$b$s; continue ;;
                         # svn can't checkout the README at the pre-flattened revision :/ git has it, checked manually.
                         ath/0.9.17.2|ath/0.9.20.3) diff_it -xREADME $t/$b$s@182296 vendor/$b$s; continue ;;
-                        # FIXME has a diff due to the merge, probably can't be helped.
-                        illumos/20100818) continue ;;
-                        # FIXME needs investigation!
-                        opensolaris/20080410) continue ;;
-                        # FIXME: git is missing a handful of files
-                        opensolaris/20080410a) continue ;;
-                        # need to compare 2 branches, basically already handled above anyway
+                        # git is different, because the tag includes r238575 from the sys branch (plus manpages)
+                        # This is bogus anyway, as it has files with copyrights in 2011 and 2012, looks like the tag gone wrong, maybe 20120718 was intended?
+                        illumos/20100818) diff_em -xman vendor/illumos/20100818 vendor-sys/illumos/dist@238575 vendor/$b$s; continue ;;
+                        # The original SVN tag of this was omitting r178528 from the userland bits and tagged r178525 instead.
+                        opensolaris/20080410) diff_em vendor-cddl/opensolaris/dist/cddl/contrib/opensolaris@178528 $t/$b$s vendor/$b$s; continue ;;
+                        # git is missing the uts/ tree, as we tagged from 178530 and not r194442 or r194452
+                        opensolaris/20080410a) diff_it vendor/$b$s vendor/$b$s; continue ;;
+                        # need to compare 2 branches, basically already handled above for vendor (not vendor-sys) anyway
                         illumos/*|ngatm/*|opensolaris/*) diff_em $t/$b$s vendor/$b$s vendor/$b$s; continue ;;
                         # this was merged into the proper dist branch
                         ipfilter/dist-old) continue ;;
-                        # FIXME: these got the new layout compared to SVN
-                        ipfilter/v3-4-16|ipfilter/v3-4-29) continue ;;
+                        # these got the new layout compared to SVN
+                        ipfilter/v3-4-16) diff_it -xmlf_ipl.c -xmln_ipl.c $t/$b$s/sys $t/$b$s; continue ;;
+                        # duplicate tag, "3-4-29" is the real one.
+                        ipfilter/v3-4-29) continue ;;
                         # compare against pre-flattening, due to splicing
                         # old/new dist, we end up with 2 extra files. I think
                         # this is more correct, it looks like the files have
