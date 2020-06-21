@@ -33,13 +33,15 @@ sudo mount -o async,noatime /dev/$md0 $S
 sudo chown $USER $S
 
 diff_it() {
-    local from to r flags
+    local from to r flags remove
     set -e
-    while getopts "I:x:" OPT; do
+    while getopts "I:x:r:" OPT; do
         case "$OPT" in
             I) flags="$flags -I$OPTARG"
                 ;;
             x) flags="$flags -x$OPTARG"
+                ;;
+            r) remove="$OPTARG"
                 ;;
         esac
     done
@@ -71,6 +73,9 @@ diff_it() {
     wait
     test -d s || exit 1
     test -d g || exit 1
+    if [ -n "$remove" ]; then
+        rm -rf `eval echo $remove`
+    fi
     #flags='-I[$]FreeBSD.*[$]'
     # Some tag flattenings "lost" their original .cvsignore, ignore such diffs.
     flags="$flags -x.cvsignore"
@@ -193,10 +198,8 @@ case "$type" in
     base)
         git log --format="%h %N" master|egrep '^[^s].*=/head/;' | sed -e 's/ .*=/ /' | awk 'NR % 1000 == 0' | \
             while read ref rev; do
-                if [ $rev -le 79320 ]; then
-                    # FIXME: ipfilter renames
-                    #diff_it head@$rev $ref
-                    continue;
+                if [ $rev -lt 77859 ]; then
+                    diff_it -r's/sys/contrib/ipfilter/netinet' head@$rev $ref
                 elif [ $rev -le 151841 ]; then
                     # ppp-user -> ppp repo-copy was corrected
                     diff_it -xppp head@$rev $ref

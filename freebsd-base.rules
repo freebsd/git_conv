@@ -847,7 +847,7 @@ match /vendor/tzcode/[^d][^/]*/
   max revision 183402
 end match
 match /vendor/top/[^d][^/]*/
-  min revision 183433
+  min revision 183431
   max revision 183433
 end match
 match /vendor/pf/[^d][^/]*/
@@ -1645,25 +1645,23 @@ end match
 
 # Copy the kernel bits over carefully, w/o clobbering stuff in the existing
 # common/ subdir.
-# TODO(uqs): this messes up the path in the notes, see if we can do better with skip_branchpoint et al.
-match /vendor-sys/(illumos)/(dist)/(OPENSOLARIS.LICENSE|common/[^/]+/|uts/)
-  min revision 238570
-  max revision 238570
-  repository freebsd-base.git
-  branch vendor/\1/\2
-  prefix \3
-end match
-match /vendor-sys/illumos/dist/
+match /vendor-sys/(illumos)/(dist)/(common/)*$
   min revision 238570
   max revision 238570
   action recurse
 end match
-# we'll take the copy from r238579 instead.
-match /vendor-sys/illumos/20100818
+match /vendor-sys/(illumos)/(dist)/
+  min revision 238570
+  max revision 238570
+  repository freebsd-base.git
+  branch vendor/\1/\2
+end match
+
+# we'll take the tag from r238579 instead.
+match /vendor(-sys)*/illumos/20100818/
   min revision 238571
   max revision 238571
 end match
-
 # Skip deletion and make the following re-copy surgical.
 match /vendor/illumos/dist/
   min revision 238576
@@ -1674,19 +1672,18 @@ end match
 # into the man/ dir only. The history would look weird though.
 # The missing manpages were later brought back in r238580 and r238581, so this
 # will sort itself out. The tag 20100818 is not quite right though, ¯\_(ツ)_/¯
-match /vendor/(illumos)/(dist)/(OPENSOLARIS.LICENSE|common/[^/]+/|cmd/|head/|lib/|tools/)
-  min revision 238577
-  max revision 238577
-  repository freebsd-base.git
-  branch vendor/\1/\2
-  prefix \3
-end match
-match /vendor/illumos/dist/
+match /vendor/(illumos)/(dist)/(common/)*$
   min revision 238577
   max revision 238577
   action recurse
 end match
-# tag will be created in r238585 instead
+match /vendor/(illumos)/(dist)/
+  min revision 238577
+  max revision 238577
+  repository freebsd-base.git
+  branch vendor/\1/\2
+end match
+# tag will be created in r238585 from /vendor/ instead
 match /vendor-sys/illumos/20120614/
 end match
 # file got added twice, deleted once. Skip 2 revisions
@@ -1695,7 +1692,6 @@ match /vendor-sys/illumos/dist/
   min revision 267930
   max revision 267932
 end match
-
 match /vendor(?:-sys)?/(illumos)/((?!dist)[^/]+)/
   repository freebsd-base.git
   branch refs/tags/vendor/\1/\2
@@ -1785,13 +1781,61 @@ match /vendor-sys/ipfilter/dist-old/
 end match
 # ipfilter sys code was repocopied around, first it lived in
 # sys/netinet/ then it was moved to sys/contrib/ipfilter/netinet/
-# r77859 deleted the leftover copies in /sys and r72006 was the last revision
-# to touch the files in both places. Luckily all the files.
-# This will make the files spring into existence under the new location with
-# r72006 and the old files will be deleted with r77859. Because the files are
-# not moved within 1 git commit, the rename detection does not triggere here :/
+# r77859 deleted the leftover copies in /sys
 match /head/sys/contrib/ipfilter/netinet/
-  max revision 72005
+  max revision 77858
+end match
+match /stable/4/
+  min revision 77855
+  max revision 77855
+  repository freebsd-base.git
+  branch stable/4
+  rename sys/netinet/fil.c sys/contrib/ipfilter/netinet/fil.c
+  rename sys/netinet/ip_auth.c sys/contrib/ipfilter/netinet/ip_auth.c
+  rename sys/netinet/ip_auth.h sys/contrib/ipfilter/netinet/ip_auth.h
+  rename sys/netinet/ip_compat.h sys/contrib/ipfilter/netinet/ip_compat.h
+  rename sys/netinet/ip_fil.c sys/contrib/ipfilter/netinet/ip_fil.c
+  rename sys/netinet/ip_fil.h sys/contrib/ipfilter/netinet/ip_fil.h
+  rename sys/netinet/ip_frag.c sys/contrib/ipfilter/netinet/ip_frag.c
+  rename sys/netinet/ip_frag.h sys/contrib/ipfilter/netinet/ip_frag.h
+  rename sys/netinet/ip_ftp_pxy.c sys/contrib/ipfilter/netinet/ip_ftp_pxy.c
+  rename sys/netinet/ip_log.c sys/contrib/ipfilter/netinet/ip_log.c
+  rename sys/netinet/ip_nat.c sys/contrib/ipfilter/netinet/ip_nat.c
+  rename sys/netinet/ip_nat.h sys/contrib/ipfilter/netinet/ip_nat.h
+  rename sys/netinet/ip_proxy.c sys/contrib/ipfilter/netinet/ip_proxy.c
+  rename sys/netinet/ip_proxy.h sys/contrib/ipfilter/netinet/ip_proxy.h
+  rename sys/netinet/ip_raudio_pxy.c sys/contrib/ipfilter/netinet/ip_raudio_pxy.c
+  rename sys/netinet/ip_rcmd_pxy.c sys/contrib/ipfilter/netinet/ip_rcmd_pxy.c
+  rename sys/netinet/ip_state.c sys/contrib/ipfilter/netinet/ip_state.c
+  rename sys/netinet/ip_state.h sys/contrib/ipfilter/netinet/ip_state.h
+  rename sys/netinet/ipl.h sys/contrib/ipfilter/netinet/ipl.h
+  rename sys/netinet/mlfk_ipl.c sys/contrib/ipfilter/netinet/mlfk_ipl.c
+end match
+match /head/
+  min revision 77859
+  max revision 77859
+  repository freebsd-base.git
+  branch master
+  rename sys/netinet/fil.c sys/contrib/ipfilter/netinet/fil.c
+  rename sys/netinet/ip_auth.c sys/contrib/ipfilter/netinet/ip_auth.c
+  rename sys/netinet/ip_auth.h sys/contrib/ipfilter/netinet/ip_auth.h
+  rename sys/netinet/ip_compat.h sys/contrib/ipfilter/netinet/ip_compat.h
+  rename sys/netinet/ip_fil.c sys/contrib/ipfilter/netinet/ip_fil.c
+  rename sys/netinet/ip_fil.h sys/contrib/ipfilter/netinet/ip_fil.h
+  rename sys/netinet/ip_frag.c sys/contrib/ipfilter/netinet/ip_frag.c
+  rename sys/netinet/ip_frag.h sys/contrib/ipfilter/netinet/ip_frag.h
+  rename sys/netinet/ip_ftp_pxy.c sys/contrib/ipfilter/netinet/ip_ftp_pxy.c
+  rename sys/netinet/ip_log.c sys/contrib/ipfilter/netinet/ip_log.c
+  rename sys/netinet/ip_nat.c sys/contrib/ipfilter/netinet/ip_nat.c
+  rename sys/netinet/ip_nat.h sys/contrib/ipfilter/netinet/ip_nat.h
+  rename sys/netinet/ip_proxy.c sys/contrib/ipfilter/netinet/ip_proxy.c
+  rename sys/netinet/ip_proxy.h sys/contrib/ipfilter/netinet/ip_proxy.h
+  rename sys/netinet/ip_raudio_pxy.c sys/contrib/ipfilter/netinet/ip_raudio_pxy.c
+  rename sys/netinet/ip_rcmd_pxy.c sys/contrib/ipfilter/netinet/ip_rcmd_pxy.c
+  rename sys/netinet/ip_state.c sys/contrib/ipfilter/netinet/ip_state.c
+  rename sys/netinet/ip_state.h sys/contrib/ipfilter/netinet/ip_state.h
+  rename sys/netinet/ipl.h sys/contrib/ipfilter/netinet/ipl.h
+  rename sys/netinet/mlfk_ipl.c sys/contrib/ipfilter/netinet/mlfk_ipl.c
 end match
 
 # For the vendor area, r72001 imported things into two places and the
@@ -1860,6 +1904,47 @@ match /(vendor-sys)/(ipfilter)/(dist)(-old)?/
   branch \1/\2/\3
 end match
 # TODO: merge sys and non-sys for ipfilter?
+
+# FIX VARIOUS CVS2SVN TAG ODDITIES CAUSED BY SLIPPING TAGS
+#
+# Before: the tag was slipped and cvs2svn got confused
+#
+# * c3805f6b60b 62d5c2fd0ac  2010-03-08 - (tag: vendor/openssh/5.4p1) Tag OpenSSH 5.4p1
+# |       svn path=/vendor-crypto/openssh/5.4p1/; revision=204864
+# | svn path=/vendor-crypto/openssh/5.4p1/; revision=204864; tag=vendor/openssh/5.4p1
+# |
+# | * f2d6adfba36 62d5c2fd0ac  2010-03-08 - Forgot to remove dead files
+# |/        svn path=/vendor-crypto/openssh/dist/; revision=204863
+# |
+# * abacebb0f37 f3af5b582d9  2010-03-08 - Vendor import of OpenSSH 5.4p1
+#         svn path=/vendor-crypto/openssh/dist/; revision=204861
+#
+# After: running fix_bogus_tags to hoist the tag up one notch:
+#
+# * f2d6adfba36c 62d5c2fd0acd  2010-03-08 - (tag: vendor/openssh/5.4p1) Forgot to remove dead files
+# |       svn path=/vendor-crypto/openssh/dist/; revision=204863
+# | svn path=/vendor-crypto/openssh/5.4p1/; revision=204864; tag=vendor/openssh/5.4p1
+# |
+# * abacebb0f379 f3af5b582d9a  2010-03-08 - Vendor import of OpenSSH 5.4p1
+# |       svn path=/vendor-crypto/openssh/dist/; revision=204861
+
+
+match /(vendor)-crypto/(openssh)/(5.4p1)/
+  min revision 204864
+  max revision 204864
+  repository freebsd-base.git
+  branch refs/tags/\1/\2/\3
+  branchpoint vendor/openssh/dist@204863
+  annotated true
+end match
+match /(vendor)-crypto/(openssh)/(5.8p2)/
+  min revision 221485
+  max revision 221485
+  repository freebsd-base.git
+  branch refs/tags/\1/\2/\3
+  branchpoint vendor/openssh/dist@221484
+  annotated true
+end match
 
 # We have some conflicting vendor names here, e.g. illumos, opensolaris, ngatm, pf, ipfilter.
 match /(vendor-sys)/(ipfilter|ngatm|pf)/((?!dist)[^/]+)/
