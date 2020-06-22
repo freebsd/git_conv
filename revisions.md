@@ -1,6 +1,7 @@
 # SVN revisions of interest in the timeline
 
 So here's what cvs2svn produced (not its fault, mind you).
+```
 r8869 | cvs2svn | 1995-05-30 07:50:54 +0200 (Tue, 30 May 1995) | 2 lines
    A /stable/2.0.5 (from /head:8852)
 r8882 | cvs2svn | 1995-05-30 10:29:08 +0200 (Tue, 30 May 1995) | 1 line
@@ -59,6 +60,7 @@ r172506 | cvs2svn | 2007-10-10 18:59:15 +0200 (Wed, 10 Oct 2007) | 1 line
    A /stable/7 (from /head:172505)
 r172507 | cvs2svn | 2007-10-10 18:59:16 +0200 (Wed, 10 Oct 2007) | 1 line
    A /releng/7.0 (from /stable/7:172506)
+```
 
 Yes, 4.3 gets created after 4.7 and 4.11 obviously before 4.10 and 4.8.
 releng/5.1 and 5.2 off of head are ok, I think. stable/5 was created after
@@ -77,7 +79,7 @@ where it's obvious where the "big diff" landed, i.e. 99% of the files started
 appearing on the tag (incl. COPYRIGHT and README for example). Everything
 predating that is likely due to repo-copies and tag slips.
 
-| Branch | cvs2svn | Date | CVS actual | Date |
+| Branch | cvs2svn | Date | CVS actual ??? | Date |
 |--------|---------|------|------------|------|
 | releng/7.4    | r216643 | 2010-12-22 | n/a | n/a |
 | releng/7.3    | r203738 | 2010-02-10 | n/a | n/a |
