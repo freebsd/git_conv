@@ -210,7 +210,6 @@ match /cvs2svn/tags/LIBTHR_ALPHA/
 end match
 # file fell of the regular branch. r128605 was then manufactured to "create"
 # RELENG_4_10. Must be a repo-copy at play here, likely from r127627
-# FIXME: this results in something weird still ... check up on it after fixing the branchpoints for real
 match /cvs2svn/branches/unlabeled-1.1.2.122.2/
   min revision 128603
   max revision 128603
@@ -375,9 +374,14 @@ match /(user)/(dfr)/([^/]+)/([^/]+)/
   repository freebsd-base.git
   branch \1/\2/\3/\4
 end match
+# started out at 4 levels and was moved in r262276
+match /user/gjb/
+  min revision 262276
+  max revision 262276
+end match
 match /(user)/(gjb)/(hacking)/([^/]+)/
   repository freebsd-base.git
-  branch \1/\2/\3/\4
+  branch \1/\2/\4
 end match
 
 # strip extra head
@@ -547,6 +551,24 @@ end match
 match /vendor/NetBSD/((libc-)?(un)?vis|libexecinfo)/FreeBSD-Upgrade
 end match
 match /vendor/Juniper/libxo/(.svnignore|import.sh)
+end match
+
+# delete files that later were removed anyway, but they cause cvs2svn tag
+# contortions that fix_bogus_tags.sh cannot automatically detect. Help it out
+# this way. Hopefully this works for all 8 tag slips.
+match /(vendor)/(ncftp)/(dist)/
+  min revision 4135
+  max revision 4135
+  repository freebsd-base.git
+  branch \1/\2/\3
+  delete usr.bin/ncftp/Makefile.ORIG
+end match
+match /(vendor)/(ncftp)/(dist)/
+  min revision 7889
+  max revision 7889
+  repository freebsd-base.git
+  branch \1/\2/\3
+  delete usr.bin/ncftp/v2_Note
 end match
 
 # Ok, routed vendor is special. Till r17843 everything was imported under dist.
@@ -775,6 +797,11 @@ match /vendor/patch/
   min revision 128777
   max revision 128777
 end match
+# but also ignore the 2nd delete
+match /vendor/misc-GNU/patch/
+  min revision 358869
+  max revision 358869
+end match
 # Flattening tags? Not even once. Say "no" today, save a kitten.
 match /vendor/gcc/[^d][^/]*/
   min revision 179468
@@ -969,7 +996,7 @@ match /vendor/(zlib|libz)/[^d][^/]*/
   min revision 204237
   max revision 204238
 end match
-# tough one, the tag was moved to delete an unused file, we could blacklist the
+# tough one, the tag was moved to delete an unused file, we could block the
 # file during the initial import, but that would make a later revision on dist
 # bogus. Instead, just skip the re-tagging. A newer point-release was tagged
 # just 8 days later anyway.
@@ -1316,6 +1343,11 @@ match /vendor/
   min revision 359492
   max revision 359492
 end match
+# never move tags to /backups/
+match /vendor/NetBSD/bl.cklist/
+  min revision 362196
+  max revision 362196
+end match
 
 # never merged, later deleted.
 match /vendor/fsx/
@@ -1449,12 +1481,12 @@ match /(vendor)/(lukemftpd?|sort)/([^/]+)/
   branch \1/NetBSD/\2/\3
 end match
 # 4-levels for some of them
-match /(vendor)/(NetBSD)/(blacklist|bmake|libc-pwcache|libc-vis|libedit|libexecinfo|lukemftpd?|mknod|mtree|softfloat|sort|tests|unvis|vis|xlint)/((?!dist)[^/]+)/
+match /(vendor)/(NetBSD)/(bl.cklist|bmake|libc-pwcache|libc-vis|libedit|libexecinfo|lukemftpd?|mknod|mtree|softfloat|sort|tests|unvis|vis|xlint)/((?!dist)[^/]+)/
   repository freebsd-base.git
   branch refs/tags/\1/\2/\3/\4
   annotated true
 end match
-match /(vendor)/(NetBSD)/(blacklist|bmake|libc-pwcache|libc-vis|libedit|libexecinfo|lukemftpd?|mknod|mtree|softfloat|sort|tests|unvis|vis|xlint)/([^/]+)/
+match /(vendor)/(NetBSD)/(bl.cklist|bmake|libc-pwcache|libc-vis|libedit|libexecinfo|lukemftpd?|mknod|mtree|softfloat|sort|tests|unvis|vis|xlint)/([^/]+)/
   repository freebsd-base.git
   branch \1/\2/\3/\4
 end match
