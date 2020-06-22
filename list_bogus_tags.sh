@@ -9,7 +9,14 @@ export GIT_DIR=$git
 git for-each-ref --format='%(refname:short)' refs/tags |
     egrep "^vendor" |
     while read ref; do
-        dist=${ref%/*}/dist
+        case "$ref" in
+            vendor/llvm-project/*)
+                dist=${ref%/*}/master
+                ;;
+            *)
+                dist=${ref%/*}/dist
+                ;;
+        esac
         # log instead of show here, as it transparently does the right thing
         # w/o need of ^{commit}
         commit=`git log -n1 -s --format=%H $ref`
@@ -29,14 +36,30 @@ git for-each-ref --format='%(refname:short)' refs/tags |
                 git gnlog $commit $other_commit
             fi
             svn_rev=`git show -s --format=%N $other_commit | egrep -o "revision=[0-9]*"`
+            svn_rev=${svn_rev#revision=}
             # This only works if other_commit is actually older, which isn't always the case.
-            cat <<EOS
+cat <<EOS
+
 match /`echo $ref | sed 's,/,)/(,g; s/^/(/; s/$/)\//;'`
   repository freebsd-base.git
   branch refs/tags/\1/\2/\3
-  branchpoint $dist@${svn_rev#revision=}
+  branchpoint $dist@${svn_rev}
   annotated true
 end match
+
+-- or --
+
+match /`echo $dist | sed 's,/,)/(,g; s/^/(/; s/$/)\//;'`
+  min revision ${svn_rev}
+  max revision ${svn_rev}
+end match
+
+-- or --
+
+# $ref
+if git rev-list ${dist}..${ref} | wc -l | grep -q 1; then
+    rewrite_tag $ref \`git log --format=%h --notes --grep='revision=$svn_rev\$' ${dist}\`
+fi
 EOS
         fi
     done

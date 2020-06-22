@@ -858,6 +858,11 @@ match /vendor/openpam/[^d][^/]*/
   min revision 186063
   max revision 186063
 end match
+# just svn metadata removal
+match /vendor/resolver/dist/
+  min revision 186081
+  max revision 186081
+end match
 # no flattening of existing tags
 match /vendor/bsnmp/[^d][^/]*/
   min revision 186357
@@ -978,8 +983,9 @@ match /(vendor)/(testfloat)/
   repository freebsd-base.git
   branch \1/\2/dist
 end match
+# keywords and move into proper location skipped
 match /(vendor)/(testfloat)/
-  min revision 206920
+  min revision 206918
   max revision 206921
 end match
 match /vendor/misc-GNU/sort/[^d][^/]*/
@@ -1115,10 +1121,19 @@ match /(vendor)/(device-tree)/
   repository freebsd-base.git
   branch \1/\2/dist
 end match
+match /(vendor)/(device-tree)/
+  min revision 262573
+  max revision 262573
+end match
 # tag deletion makes no sense
 match /vendor/ncurses/
   min revision 262636
   max revision 262636
+end match
+# autoprops removal, svn:mime-type additions
+match /vendor/unbound/dist/
+  min revision 266140
+  max revision 266145
 end match
 match /vendor/tzdata/tzdata2013e
   min revision 267453
@@ -1189,6 +1204,11 @@ match /vendor/NetBSD/libedit/2016-02-27/
   min revision 312996
   max revision 312996
 end match
+# props stuff
+match /vendor-crypto/openssh/dist/
+  min revision 313153
+  max revision 313155
+end match
 # botched tag
 match /vendor/libarchive/3.3.2/
   min revision 320925
@@ -1204,9 +1224,19 @@ match /(vendor)/(byacc|lua)/
   min revision 326345
   max revision 326351
 end match
+# keywords removal, also on the tag :/
+match /vendor/tcpdump/
+  min revision 326627
+  max revision 326627
+end match
 # botched import and tag
 match /vendor/acpica/20180105/
   max revision 327601
+end match
+# autoprops removal
+match /vendor/unbound/dist/
+  min revision 333531
+  max revision 333531
 end match
 # tag, change of SVN metadata that doesn't concern git, tag deletion
 match /vendor/llvm/
@@ -1928,23 +1958,25 @@ end match
 # * abacebb0f379 f3af5b582d9a  2010-03-08 - Vendor import of OpenSSH 5.4p1
 # |       svn path=/vendor-crypto/openssh/dist/; revision=204861
 
-
 match /(vendor)-crypto/(openssh)/(5.4p1)/
-  min revision 204864
-  max revision 204864
   repository freebsd-base.git
   branch refs/tags/\1/\2/\3
   branchpoint vendor/openssh/dist@204863
   annotated true
 end match
 match /(vendor)-crypto/(openssh)/(5.8p2)/
-  min revision 221485
-  max revision 221485
   repository freebsd-base.git
   branch refs/tags/\1/\2/\3
   branchpoint vendor/openssh/dist@221484
   annotated true
 end match
+match /(vendor)/(openpam)/(MICRAMPELIS)/
+  repository freebsd-base.git
+  branch refs/tags/\1/\2/\3
+  branchpoint vendor/openpam/dist@236124
+  annotated true
+end match
+
 
 # We have some conflicting vendor names here, e.g. illumos, opensolaris, ngatm, pf, ipfilter.
 match /(vendor-sys)/(ipfilter|ngatm|pf)/((?!dist)[^/]+)/
