@@ -170,7 +170,7 @@ Releases prior to 5.3-RELEASE are omitting the secure/ and crypto/ subdirs."
     GIT_COMMITTER_DATE="$c_date" GIT_COMMITTER_NAME="$c_committer" GIT_COMMITTER_EMAIL="$c_email" git tag -a -f -m "Tag $rel as it was shipped on the ISOs." release/${tag}_cvs $commit
 
     cd ..
-    #GIT_DIR=$REPO git worktree remove --force wrk
+    GIT_DIR=$REPO git worktree remove --force wrk
     cd ..
     set +e
 }
