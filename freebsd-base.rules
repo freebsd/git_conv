@@ -55,6 +55,13 @@ min revision 306856
 max revision 306858
 end match
 
+# don't record the file death here, *if* it was the last commit to that branch
+# this helps out list_short_merges.sh to find branches that we want to splice
+# into the mainline
+match /cvs2svn/branches/(ATT|EBONES_KRB4|NOORDMARK|ORIG|SGC|UDEL|WST|ache|att|bootparamd|cron|crunch|ipfw|libftp|lwall|man|marc|nvi|ross_ridge|savio_lam|v_0_1_2_4|voxware|xten|zmbenhal)/
+  min revision 13122
+  max revision 13122
+end match
 # don't delete the tags, it only moves them from cvs2svn to backups
 match /cvs2svn/
   min revision 260580
@@ -135,6 +142,57 @@ match /(cvs2svn)/(branches)/(PST)/
   branch \1/\2/\3
   branchpoint none
 end match
+
+# TODO: inline cvs2svn/branches/COKANE r61911 till 61915
+# cvs2svn/branches/BARTON
+# cvs2svn/branches/IWASAKI
+# cvs2svn/branches/SEMENU/  (3 commits)
+# cvs2svn/branches/PICOBSD
+# cvs2svn/branches/DES
+# cvs2svn/branches/IWAI
+# cvs2svn/branches/LUIGI
+# cvs2svn/branches/ARI
+# cvs2svn/branches/CMOTT
+# cvs2svn/branches/GLOBAL
+# cvs2svn/branches/RNORDIER (many commits, need to verify)
+# cvs2svn/branches/JMACD
+# cvs2svn/branches/MSMITH (many commits, need to verify)
+# cvs2svn/branches/TEKRAM
+# cvs2svn/branches/DEERING
+# cvs2svn/branches/DOC_JP
+# cvs2svn/branches/FREEBSD (???)
+# cvs2svn/branches/GIBBS
+# cvs2svn/branches/JMZ
+# cvs2svn/branches/NRL_via_MIT
+# cvs2svn/branches/PC98
+# cvs2svn/branches/ERICH
+# cvs2svn/branches/MIT
+# cvs2svn/branches/A_GORDON (2 commits)
+# cvs2svn/branches/MC (maybe?)
+# cvs2svn/branches/FREEBSD_LOCAL
+# cvs2svn/branches/SUNRPC (but not branch creation)
+# cvs2svn/branches/roberto
+# cvs2svn/branches/mark_murray
+# cvs2svn/branches/InterNIC
+# cvs2svn/branches/alex
+# cvs2svn/branches/craig_metz
+# cvs2svn/branches/isdn
+# cvs2svn/branches/which
+# cvs2svn/branches/libscsi
+# cvs2svn/branches/scsi
+# cvs2svn/branches/sipb (2 commits)
+# cvs2svn/branches/jean_marc
+# cvs2svn/branches/FBSD_1_intl
+# cvs2svn/branches/msun
+# cvs2svn/branches/natecrypt
+# cvs2svn/branches/Burren
+# cvs2svn/branches/SLSTAT_0
+# cvs2svn/branches/UofM_at_CP
+# cvs2svn/branches/manctl_0_1
+
+# cvs2svn/branches/XEROX is mrouted and has 3 useful tags
+# cvs2svn/branches/LBL has rarpd
+
 # Only contains usr.sbin/ppp for NETGRAPH frobbing. It seems that it's made 99%
 # of MFC commits and I couldn't easily find whether it got ever merged back.
 match /(cvs2svn)/(branches)/(NETGRAPH)/
@@ -2066,6 +2124,8 @@ match /(cvs2svn)/(branches)/([^/]+)/
   branch \1/\2/\3
 end match
 
+# I checked all of them, and 99% are garbage, some will be handled specially,
+# the rest will be discarded.
 match /(cvs2svn)/(tags)/([^/]+)/
   repository freebsd-base.git
   branch refs/tags/\1/\2/\3
