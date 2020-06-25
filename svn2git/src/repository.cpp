@@ -692,7 +692,7 @@ int FastImportRepository::createBranch(const QString &branch, int revnum,
     Branch &br = branches[branch];
     br.created = revnum;
     br.commits.append(revnum);
-    //br.marks.append(mark);
+    br.marks.append(0);
 
     QByteArray cmd = "reset " + branchRef + /*"\nfrom " + resetTo + */"\n\n"
                      "progress SVN r" + QByteArray::number(revnum)

@@ -250,21 +250,6 @@ match /release/10.0.0/
   min revision 260665
   max revision 260788
 end match
-match /(release)/([0-9.]+)/
-  repository freebsd-base.git
-  branch refs/tags/\1/\2
-  annotated true
-end match
-
-match /(releng)/ALPHA_2_0/
-  repository freebsd-base.git
-  branch \1/2.0a
-end match
-
-match /(releng)/BETA_2_0/
-  repository freebsd-base.git
-  branch \1/2.0b
-end match
 
 # special nesting for these
 match /(projects)/(graid|multi-fibv6|ofed|pf|suj|zfsd)/([^/]+)/
@@ -2087,6 +2072,237 @@ match /(cvs2svn)/(tags)/([^/]+)/
   annotated true
 end match
 
+# See revisions.md for why the first cvs2svn generated branchpoint is bogus.
+match /(releng)/(4.4)/
+  min revision 57956
+  max revision 57956
+  repository freebsd-base.git
+  branch \1/\2
+  branchpoint none@212d1aae25966b1cb7769409e1ae97e626a32b95
+end match
+match /(releng)/(4.4)/
+  min revision 83457
+  max revision 83457
+  repository freebsd-base.git
+  branch \1/\2
+  branchpoint stable/4@83457
+end match
+match /(releng)/(4.5)/
+  min revision 57960
+  max revision 57960
+  repository freebsd-base.git
+  branch \1/\2
+  branchpoint none@212d1aae25966b1cb7769409e1ae97e626a32b95
+end match
+match /(releng)/(4.5)/
+  min revision 90219
+  max revision 90219
+  repository freebsd-base.git
+  branch \1/\2
+  branchpoint stable/4@90219
+end match
+match /(releng)/(4.6)/
+  min revision 63491
+  max revision 63491
+  repository freebsd-base.git
+  branch \1/\2
+  branchpoint none@46af6a7c2ce0bcd9dcf44adf8294180f757c1944
+end match
+match /(releng)/(4.6)/
+  min revision 99348
+  max revision 99348
+  repository freebsd-base.git
+  branch \1/\2
+  branchpoint stable/4@99348
+end match
+match /(releng)/(4.7)/
+  min revision 66473
+  max revision 66473
+  repository freebsd-base.git
+  branch \1/\2
+  branchpoint none@321ceddd22427da5dcc8f23e36aff460e535fa9e
+end match
+match /(releng)/(4.7)/
+  min revision 104537
+  max revision 104537
+  repository freebsd-base.git
+  branch \1/\2
+  branchpoint stable/4@104537
+end match
+match /(releng)/(4.8)/
+  min revision 111744
+  max revision 111744
+  repository freebsd-base.git
+  branch \1/\2
+  branchpoint none@abac6104eea0298a9468178d2a49f2cb7fff5cf6
+end match
+match /(releng)/(4.8)/
+  min revision 112503
+  max revision 112503
+  repository freebsd-base.git
+  branch \1/\2
+  branchpoint stable/4@112503
+end match
+match /(releng)/(4.9)/
+  min revision 101418
+  max revision 101418
+  repository freebsd-base.git
+  branch \1/\2
+  branchpoint none@a58dbd5fdfea98adcbf2e1add96fd61cbfa64661
+end match
+match /(releng)/(4.9)/
+  min revision 121369
+  max revision 121369
+  repository freebsd-base.git
+  branch \1/\2
+  branchpoint stable/4@121369
+end match
+match /(releng)/(4.10)/
+  min revision 108855
+  max revision 108855
+  repository freebsd-base.git
+  branch \1/\2
+  branchpoint none@189976367ccc628f7c92b7f10c09190fcf986b5e
+end match
+match /(releng)/(4.10)/
+  min revision 128520
+  max revision 128520
+  repository freebsd-base.git
+  branch \1/\2
+  branchpoint stable/4@128520
+end match
+match /(releng)/(4.11)/
+  min revision 101416
+  max revision 101416
+  repository freebsd-base.git
+  branch \1/\2
+  branchpoint none@a58dbd5fdfea98adcbf2e1add96fd61cbfa64661
+end match
+match /(releng)/(4.11)/
+  min revision 139026
+  max revision 139026
+  repository freebsd-base.git
+  branch \1/\2
+  branchpoint stable/4@139026
+end match
+match /(releng)/(5.3)/
+  min revision 133969
+  max revision 133969
+  repository freebsd-base.git
+  branch \1/\2
+  branchpoint none@b99ab05eb34f00ad805361803ba5ec1607b3a372
+end match
+match /(releng)/(5.3)/
+  min revision 136588
+  max revision 136588
+  repository freebsd-base.git
+  branch \1/\2
+  branchpoint stable/5@136588
+end match
+match /(releng)/(5.4)/
+  min revision 133971
+  max revision 133971
+  repository freebsd-base.git
+  branch \1/\2
+  # git show -s --format=none@%T `git log --format=%h --notes -n1 --grep='revision=133971$' releng/5.4`\~1
+  branchpoint none@b99ab05eb34f00ad805361803ba5ec1607b3a372
+end match
+match /(releng)/(5.4)/
+  min revision 145335
+  max revision 145335
+  repository freebsd-base.git
+  branch \1/\2
+  branchpoint stable/5@145335
+end match
+match /(releng)/(6.0)/
+  min revision 147907
+  max revision 147907
+  repository freebsd-base.git
+  branch \1/\2
+  # git show -s --format=none@%T `git log --format=%h --notes -n1 --grep='revision=147907$' releng/6.0`\~1
+  branchpoint none@01ec195a7173d8fedfd4ad521cb4ec0270d31c62
+end match
+match /(releng)/(6.0)/
+  min revision 151174
+  max revision 151174
+  repository freebsd-base.git
+  branch \1/\2
+  branchpoint stable/6@151174
+end match
+match /(releng)/(6.1)/
+  min revision 147908
+  max revision 147908
+  repository freebsd-base.git
+  branch \1/\2
+  # git show -s --format=none@%T `git log --format=%h --notes -n1 --grep='revision=147908$' releng/6.1`\~1
+  branchpoint none@01ec195a7173d8fedfd4ad521cb4ec0270d31c62
+end match
+match /(releng)/(6.1)/
+  min revision 158179
+  max revision 158179
+  repository freebsd-base.git
+  branch \1/\2
+  branchpoint stable/6@158179
+end match
+match /(releng)/(6.2)/
+  min revision 147921
+  max revision 147921
+  repository freebsd-base.git
+  branch \1/\2
+  # git show -s --format=none@%T `git log --format=%h --notes -n1 --grep='revision=147921$' releng/6.2`\~1
+  branchpoint none@01ec195a7173d8fedfd4ad521cb4ec0270d31c62
+end match
+match /(releng)/(6.2)/
+  min revision 164286
+  max revision 164286
+  repository freebsd-base.git
+  branch \1/\2
+  branchpoint stable/6@164286
+end match
+match /(releng)/(6.3)/
+  min revision 147922
+  max revision 147922
+  repository freebsd-base.git
+  branch \1/\2
+  # git show -s --format=none@%T `git log --format=%h --notes -n1 --grep='revision=147922$' releng/6.3`\~1
+  branchpoint none@01ec195a7173d8fedfd4ad521cb4ec0270d31c62
+end match
+match /(releng)/(6.3)/
+  min revision 173886
+  max revision 173886
+  repository freebsd-base.git
+  branch \1/\2
+  branchpoint stable/6@173886
+end match
+match /(releng)/(7.0)/
+  min revision 172507
+  max revision 172507
+  repository freebsd-base.git
+  branch \1/\2
+  # git show -s --format=none@%T `git log --format=%h --notes -n1 --grep='revision=172507$' releng/7.0`\~1
+  branchpoint none@5a0de7aea46575bd5fc596f9088d4af22f9287dc
+end match
+match /(releng)/(7.0)/
+  min revision 174854
+  max revision 174854
+  repository freebsd-base.git
+  branch \1/\2
+  branchpoint stable/7@174854
+end match
+
+match /(release)/([0-9.]+)/
+  repository freebsd-base.git
+  branch refs/tags/\1/\2
+  annotated true
+end match
+match /(releng)/ALPHA_2_0/
+  repository freebsd-base.git
+  branch \1/2.0a
+end match
+match /(releng)/BETA_2_0/
+  repository freebsd-base.git
+  branch \1/2.0b
+end match
 match /(stable|releng)/([0-9.]+)/
   repository freebsd-base.git
   branch \1/\2

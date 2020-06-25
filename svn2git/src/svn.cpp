@@ -1859,7 +1859,8 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
             // So master -> project is a cherrypick, not a merge.
             //&& !(branch.startsWith("projects") && prevbranch.startsWith("master"))
             && !prevbranch.isEmpty()
-            && !prevbranch.startsWith("stable")) {
+            // don't merge _from_ stable, unless it's into user/
+            && (!prevbranch.startsWith("stable") || branch.startsWith("user"))) {
         QStringList log = QStringList()
                           << "copy from branch" << prevbranch << "to branch"
                           << branch << "@rev" << QString::number(rev_from);
