@@ -49,7 +49,7 @@ end match
 
 -- or --
 
-match /`echo $dist | sed 's,/,)/(,g; s/^/(/; s/$/)\//;'`
+match /`echo $dist | sed 's/$/\//'`
   min revision ${svn_rev}
   max revision ${svn_rev}
 end match
