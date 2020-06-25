@@ -133,6 +133,34 @@ match /(cvs2svn)/(branches)/(unlabeled-1.1.1)/
   branch vendor/pppd/dist  # sic, this is all about pppd
   branchpoint none
 end match
+# import and tags of ee
+match /cvs2svn/branches/HUGH_F_MAHON/
+  repository freebsd-base.git
+  branch vendor/ee/dist
+end match
+match /cvs2svn/tags/ee/
+  repository freebsd-base.git
+  branch refs/tags/vendor/ee/1.2.4
+  annotated true
+end match
+match /cvs2svn/tags/ee_1_3/
+  repository freebsd-base.git
+  branch refs/tags/vendor/ee/1.3
+  annotated true
+end match
+match /cvs2svn/tags/ee_1_4_1/
+  repository freebsd-base.git
+  branch refs/tags/vendor/ee/1.4.1
+  annotated true
+end match
+# Need to remove old stuff when the new SVN version hits the tree
+match /(vendor)/(ee)/(dist)/
+  min revision 192830
+  max revision 192830
+  repository freebsd-base.git
+  branch \1/\2/\3
+  delete usr.bin/ee
+end match
 
 # This is a groff branch
 match /(cvs2svn)/(branches)/(PST)/
@@ -613,6 +641,10 @@ match /(vendor)/(ncftp)/(dist)/
   branch \1/\2/\3
   delete usr.bin/ncftp/v2_Note
 end match
+match /vendor/ncftp/dist/
+  min revision 13122
+  max revision 13122
+end match
 
 # Ok, routed vendor is special. Till r17843 everything was imported under dist.
 # After that, things were imported into both dist2 *and* dist_v_2_21. The
@@ -1058,6 +1090,10 @@ match /vendor/tzdata/tzdata2009.
   min revision 197596
   max revision 197596
 end match
+match /vendor/ntp/dist/
+  min revision 200453
+  max revision 200453
+end match
 # merges into a tag, advancing it, but it's an empty diff (empty dir got deleted)
 match /vendor/ntp/4.2.4p8/
   min revision 200454
@@ -1091,12 +1127,13 @@ match /vendor/libz/1.2.4/
 end match
 # committed w/o dist at first
 match /(vendor)/(testfloat)/
-  max revision 206919
+  max revision 206917
+  max revision 206917
   repository freebsd-base.git
   branch \1/\2/dist
 end match
 # keywords and move into proper location skipped
-match /(vendor)/(testfloat)/
+match /vendor/testfloat/
   min revision 206918
   max revision 206921
 end match
@@ -1164,6 +1201,10 @@ match /vendor/libpcap/1.2.1
   min revision 230829
   max revision 230834
 end match
+match /(vendor)/(bind9)/(dist)/
+  min revision 233901
+  max revision 233901
+end match
 # fixup copied dist/
 match /vendor/dtc/dtc-f807af19/
   min revision 238734
@@ -1185,6 +1226,11 @@ end match
 match /vendor/byacc/byacc-20120115/
   min revision 234949
   max revision 234949
+end match
+# autoprops removal
+match /vendor-crypto/openssh/dist/
+  min revision 239846
+  max revision 239846
 end match
 # bad tags
 match /vendor/NetBSD/bmake/20120831
@@ -1243,6 +1289,10 @@ match /vendor/ncurses/
   max revision 262636
 end match
 # autoprops removal, svn:mime-type additions
+match /vendor/ldns/dist/
+  min revision 266139
+  max revision 266143
+end match
 match /vendor/unbound/dist/
   min revision 266140
   max revision 266145
@@ -1265,7 +1315,7 @@ match /(vendor)/(device-tree)/(ianc-b78b6b80)/dist/
   annotated true
 end match
 # don't muck with tags, especially not deleting empty dirs
-match /vendor/atf/[^d][^/]*/
+match /vendor/atf/
   min revision 273930
   max revision 273930
 end match
@@ -1279,6 +1329,10 @@ match /vendor/ficl
   min revision 282768
   max revision 282800
 end match
+match /vendor-crypto/openssh/dist/
+  min revision 285035
+  max revision 285035
+end match
 # wrong name
 match /(vendor)/(NetBSD)/(libedit)/2016-01-16/
   min revision 295361
@@ -1287,6 +1341,11 @@ match /(vendor)/(NetBSD)/(libedit)/2016-01-16/
   branch refs/tags/\1/\2/\3/2016-01-30
   annotated true
 end match
+match /vendor/openresolv/dist/
+  min revision 296165
+  max revision 296165
+end match
+
 # skip rename of previous
 match /vendor/NetBSD/libedit/
   min revision 296551
@@ -1345,6 +1404,10 @@ end match
 match /vendor/acpica/20180105/
   max revision 327601
 end match
+match /vendor-crypto/openssl/dist/
+  min revision 329021
+  max revision 329021
+end match
 # autoprops removal
 match /vendor/unbound/dist/
   min revision 333531
@@ -1359,6 +1422,11 @@ end match
 match /vendor/file/5.34/
   max revision 336861
 end match
+match /vendor/libcxxrt/dist/
+  min revision 337298
+  max revision 337298
+end match
+
 # was later re-done
 match /vendor/tzdb/
   min revision 337683
@@ -2081,19 +2149,12 @@ match /(vendor)-crypto/(openssh)/(5.4p1)/
   branchpoint vendor/openssh/dist@204863
   annotated true
 end match
-match /(vendor)-crypto/(openssh)/(5.8p2)/
+match /(vendor)/(cortex-strings)/(linaro-eb80ac)/
   repository freebsd-base.git
   branch refs/tags/\1/\2/\3
-  branchpoint vendor/openssh/dist@221484
+  branchpoint vendor/cortex-strings/dist@305889
   annotated true
 end match
-match /(vendor)/(openpam)/(MICRAMPELIS)/
-  repository freebsd-base.git
-  branch refs/tags/\1/\2/\3
-  branchpoint vendor/openpam/dist@236124
-  annotated true
-end match
-
 
 # We have some conflicting vendor names here, e.g. illumos, opensolaris, ngatm, pf, ipfilter.
 match /(vendor-sys)/(ipfilter|ngatm|pf)/((?!dist)[^/]+)/
