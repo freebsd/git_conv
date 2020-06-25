@@ -93,8 +93,12 @@ diff_it() {
                             diff -ruN --strip-trailing-cr `echo $flags` s g/*/*/*/ >/dev/null || {
                                 echo "diffs found in SVN $from vs git $to, bailing out" >&2; exit 1;
                             }
+                        else
+                            echo "diffs found in SVN $from vs git $to, bailing out" >&2; exit 1;
                         fi
                     }
+                else
+                    echo "diffs found in SVN $from vs git $to, bailing out" >&2; exit 1;
                 fi
             }
         else
@@ -107,7 +111,7 @@ diff_it() {
 }
 
 diff_em() {
-    local from1 from2 to r flags
+    local from to r flags
     set -e
     while getopts "I:x:" OPT; do
         case "$OPT" in
@@ -119,41 +123,31 @@ diff_em() {
     done
     shift $(($OPTIND - 1))
 
-    case $1 in
-        *:*)
-            from1=${1%:*}@${1#*:}
-            r="-r ${1#*:}"
-            ;;
-        *)
-            from1=${1%%/}
-            r=
-            ;;
-    esac
-
-    case $2 in
-        *:*)
-            from2=${2%:*}@${2#*:}
-            r="-r ${2#*:}"
-            ;;
-        *)
-            from2=${2%%/}
-            r=
-            ;;
-    esac
-    to=${3%%/}
-
+    eval to=\$$#
+    to=${to%%/}
     sentinel="$GIT/compared_to_`echo -n $to | tr / _`"
-
     if [ -r "$sentinel" ]; then
         return
     fi
     set -e
+
     cd $S && rm -rf s g
-    # NOTE: vendor-sys/illumos/dist has a newer avl.c, as does git. If we
-    # would export the SVN tags in different order, we'd get the older avl.c
-    # and would end up with a diff.
-    svn export --force --ignore-keywords -q $SVN/$from1 s
-    svn export --force --ignore-keywords -q $SVN/$from2 s
+
+    while [ $# -gt 1 ]; do
+        case $1 in
+            *:*)
+                from=${1%:*}@${1#*:}
+                r="-r ${1#*:}"
+                ;;
+            *)
+                from=${1%%/}
+                r=
+                ;;
+        esac
+        svn export --force --ignore-keywords -q $SVN/$from s
+        shift
+    done
+
     git archive --format=tar --prefix=g/ $to | tar xf -
     test -d s || exit 1
     test -d g || exit 1
@@ -172,6 +166,8 @@ diff_em() {
                     diff -ruN --strip-trailing-cr `echo $flags` s g/*/*/ >/dev/null || {
                         echo "diffs found in SVN $from1 + $from2 vs git $to, bailing out" >&2; exit 1;
                     }
+                else
+                    echo "diffs found in SVN $from1 + $from2 vs git $to, bailing out" >&2; exit 1;
                 fi
             }
         else
@@ -222,6 +218,10 @@ case "$type" in
                     unknown/) diff_it $t/$b; continue ;;
                 esac
                 for s in `svn ls $SVN/$t/$b | grep '/$'`; do
+                    # we skip generating these tags, they are of dubious quality anyway and looking up the history in the dist branch is easy enough.
+                    if echo "$b$s" | egrep -q "misc-GNU/(gnu_tag|GZIP_1_1|TEXT_1_6|GREP_1_6|DIFF_2_3|DIFF3_2_3|ptx_0_3|readline_1_1|texinfo_2_0|libg\+\+_tag|V1_09|rcs_5_7|diff_2_7|gmp_1_3_2|textutils_1_14|gmp_2_0_2|v2_3|grep_2_[34][ad]?|grep_2_4_2|grep_2_5_1|v6_1_1)"; then
+                        continue
+                    fi
                     case "$b$s" in
                         # stripping redundant tags/
                         SGI/tags/) diff_it $t/$b$s/v_2_17 $t/${b}v_2_17; continue ;;
@@ -256,6 +256,11 @@ case "$type" in
                             for r in `svn ls $SVN/$t/$b$s | grep '/$'`; do
                                 diff_it $t/$b$s$r $t/$b${s#gnu-}$r
                             done
+                            continue
+                        ;;
+                        # These were all merged
+                        misc-GNU/dist*/)
+                            diff_em vendor/misc-GNU/dist vendor/misc-GNU/dist1 vendor/misc-GNU/dist3 vendor/misc-GNU/dist2 vendor/misc-GNU/dist
                             continue
                         ;;
                         # the tag flattening fucked up the svn keyword
@@ -317,6 +322,10 @@ case "$type" in
                         file/4.17a/) continue ;; #diff_it $t/$b$s@186674 $t/$b$s; continue ;;
                         gcc/2.95.3-test1/) continue ;;
                         gcc/2.95.3-test3/) continue ;;
+                        # tags were advanced with a rename
+                        top/3.4/|top/3.5beta12/) diff_it -xinstall -xinstall-sh $t/$b$s; continue ;;
+                        # we skipped the flattening of tags
+                        gcc/2.7.2.3/) diff_it $t/$b$s@179467 $t/$b$s; continue ;;
                     esac
                     diff_it $t/$b$s
                 done

@@ -616,6 +616,32 @@ match /(vendor)/(SGI)/(dist)(2|_v_2_21)/
   delete usr.sbin/routed
 end match
 
+# We have 4 "dist" branches under /vendor/misc-GNU/dist{,1,2,3}/ and they don't
+# overlap at all. In fact, some of the stuff like e.g. libg++ is split across
+# two of them and rcs in dist3 is just an old and forgotten snapshot of dist3.
+match /vendor/misc-GNU/dist3/gnu/usr.bin/rcs/
+end match
+# All the tags are garbage
+match /vendor/misc-GNU/(gnu_tag|GZIP_1_1|TEXT_1_6|GREP_1_6|DIFF_2_3|DIFF3_2_3|ptx_0_3|readline_1_1|texinfo_2_0|libg\+\+_tag|V1_09|rcs_5_7|diff_2_7|gmp_1_3_2|textutils_1_14|gmp_2_0_2|v2_3|grep_2_[34][ad]?|grep_2_4_2|grep_2_5_1|v6_1_1)/
+end match
+# now bogus and somehow manages to omit 1 file anyway?
+match /vendor/misc-GNU/dist/
+  min revision 4425
+  max revision 4425
+end match
+match /(vendor)/(misc-GNU)/(dist)[123]?/
+  repository freebsd-base.git
+  branch \1/\2/\3
+end match
+# GNU awk and tar get added here and are later merged into
+# vendor/misc-GNU/dist3 in r731.
+match /cvs2svn/branches/unlabeled-1.1.1/
+  min revision 9
+  max revision 9
+  repository freebsd-base.git
+  branch vendor/misc-GNU/dist
+end match
+
 # fixup trailing dot, skip the rename revs
 match /vendor/(clang|llvm)/(clang|llvm)-(r73070)\./
   repository freebsd-base.git
