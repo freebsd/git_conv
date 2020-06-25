@@ -117,6 +117,10 @@ tar xf svnmirror-ports-r527184.tar.xz
 
 Additional runs of `svnmir.sh` or `git_conv` will run incrementally.
 
+NOTE: This is not longer true, while it works fine for git version 2.24 and
+2.25, at least version 2.27 will cause git-fast-import upon reading the marks
+file to eat up all RAM and eventually crash with out of memory.
+
 On on moderately fast system with an SSD and/or enough RAM for the buffer cache,
 this should take about 2h to finish for `src` and will produce about 10GiB of
 intermediate data. The final `src` repo size should be around 1.7GiB.
