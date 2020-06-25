@@ -937,6 +937,22 @@ match /vendor/binutils/[^d][^/]*/
   min revision 187443
   max revision 187632  # sic, both revisions
 end match
+# supplicant and hostapd got merged into 1, record that.
+match /(vendor)/(wpa)/(dist)/README
+  min revision 189251
+  max revision 189251
+  repository freebsd-base.git
+  branch \1/\2/\3
+  branchpoint vendor/wpa_supplicant/dist@189251
+  prefix README
+end match
+match /(vendor)/(wpa)/(dist)/
+  min revision 189251
+  max revision 189251
+  repository freebsd-base.git
+  branch \1/\2/\3
+  branchpoint vendor/hostapd/dist@189251
+end match
 match /vendor/tcpdump/[^d][^/]*/
   min revision 190150
   max revision 190150
