@@ -15,6 +15,7 @@ rewrite_tag()
     tag=$1
     target=$2
 
+    set -e
     c_auth=`git cat-file tag $tag | sed -n '/^tagger/s/^tagger //; s/ [0-9 +]*$//p'`
     c_date=`git cat-file tag $tag | sed -n '/^tagger/s/^tagger //p' | egrep -o '[0-9]* [+0-9]*$'`
     c_msg=`git cat-file tag $tag | sed '1,/^$/d'`
@@ -23,12 +24,20 @@ rewrite_tag()
 
     old_commit=`git show -s --format=%h "$tag^{commit}"`
 
+    # check that both trees are the same!
+    if [ `git show -s --format=%T "$tag^{commit}"` != `git show -s --format=%T "$target^{commit}"` ]; then
+        echo "Would point tag $tag to $target with a different tree!" >&2
+        echo `git show -s --format=%h "$tag^{commit}"` vs `git show -s --format=%h "$target^{commit}"`
+        exit 1
+    fi
+
     # Move the tag up to the ancestor
     GIT_COMMITTER_DATE="$c_date" GIT_COMMITTER_NAME="$c_committer" GIT_COMMITTER_EMAIL="$c_email" git tag -a -f -m "$c_msg" ${tag} ${target}
     # NOTE: grabs only the 2nd line (with the tag) and then re-edits the note
     # to drop the extra newline in the middle.
     git notes append -m "`git notes show $old_commit|tail -1`" "$tag^{commit}"
     EDITOR="sed -i.bak -e '/^$/d'" git notes edit "$tag^{commit}"
+    set +e
 }
 
 git --git-dir=$git for-each-ref --format='%(refname:short)' refs/tags |
@@ -68,6 +77,9 @@ fi
 # vendor/openpam/HYDRANGEA had its tag slipped
 if git rev-list vendor/openpam/dist..vendor/openpam/HYDRANGEA|wc -l|grep -q 1; then
     rewrite_tag vendor/openpam/HYDRANGEA `git log --format=%h --notes --grep='revision=174835$' vendor/openpam/dist`
+fi
+if git rev-list vendor/openpam/dist..vendor/openpam/MICRAMPELIS | wc -l | grep -q 1; then
+    rewrite_tag vendor/openpam/MICRAMPELIS `git log --format=%h --notes --grep='revision=236124$' vendor/openpam/dist`
 fi
 
 # vendor/groff/1.17 tag was slipped after some files were deleted ... twice
@@ -136,4 +148,23 @@ fi
 # tag to point to something on the mainline.
 if git rev-list vendor/alpine-hal/dist..vendor/alpine-hal/2.7a | wc -l | grep -q 2; then
     rewrite_tag vendor/alpine-hal/2.7a `git log --format=%h --notes --grep='revision=306016$' vendor/alpine-hal/dist`
+fi
+# vendor/alpine-hal/2.7
+if git rev-list vendor/alpine-hal/dist..vendor/alpine-hal/2.7 | wc -l | grep -q 1; then
+    rewrite_tag vendor/alpine-hal/2.7 `git log --format=%h --notes --grep='revision=294835$' vendor/alpine-hal/dist`
+fi
+
+# vendor-sys/ipfilter/5-1-2
+if git rev-list vendor-sys/ipfilter/dist..vendor-sys/ipfilter/5-1-2 | wc -l | grep -q 3; then
+    rewrite_tag vendor-sys/ipfilter/5-1-2 `git log --format=%h --notes --grep='revision=254562$' vendor-sys/ipfilter/dist`
+fi
+
+# vendor/ck/20161128
+if git rev-list vendor/ck/dist..vendor/ck/20161128 | wc -l | grep -q 1; then
+    rewrite_tag vendor/ck/20161128 `git log --format=%h --notes --grep='revision=309264$' vendor/ck/dist`
+fi
+
+# vendor/openssh/5.8p2
+if git rev-list vendor/openssh/dist..vendor/openssh/5.8p2 | wc -l | grep -q 1; then
+    rewrite_tag vendor/openssh/5.8p2 `git log --format=%h --notes --grep='revision=221484$' vendor/openssh/dist`
 fi
