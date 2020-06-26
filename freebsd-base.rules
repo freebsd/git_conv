@@ -927,9 +927,13 @@ match /vendor/bind9/
 end match
 # don't flatten the tags, as it advances them and they no longer tag along the
 # axis of `dist`
-match /vendor-crypto/openssh/[^d][^/]*/
+match /vendor-crypto/openssh/
   min revision 180714
-  max revision 180739  # sic, both revisions
+  max revision 180718
+end match
+match /vendor-crypto/openssh/[^d][^/]*/
+  min revision 180739
+  max revision 180739
 end match
 # shouldn't be needed, because we didn't flatten?
 match /vendor-crypto/openssh/[^d][^/]*/
@@ -1289,12 +1293,8 @@ match /vendor/ncurses/
   max revision 262636
 end match
 # autoprops removal, svn:mime-type additions
-match /vendor/ldns/dist/
+match /(head/contrib|vendor)/(ldns|unbound)/
   min revision 266139
-  max revision 266143
-end match
-match /vendor/unbound/dist/
-  min revision 266140
   max revision 266145
 end match
 match /vendor/tzdata/tzdata2013e
