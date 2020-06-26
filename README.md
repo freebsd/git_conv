@@ -138,6 +138,15 @@ of contrib software.
 Further information and documentation can be found on the Wiki sites at
 https://github.com/freebsd/git_conv/wiki
 
+## For the curious
+
+`blaming` the whole project takes about a day of wall clock time using this naive approach:
+```
+git ls-tree -r --name-only -z HEAD|xargs -0n1 git blame -e --line-porcelain | sed -n 's/^author-mail //p' | sort -f | uniq -ic | sort -nr
+```
+It only blames the current state of the repo, not all of history, mind you.
+Sadly, it currently comes up with 6484 lines owned by "cvs2svn".
+
 ## License
 The included svn2git is GPLv3; see svn2git/LICENSE. The scripts and configuration files are licensed under
 [CC0](https://creativecommons.org/publicdomain/zero/1.0/legalcode).
