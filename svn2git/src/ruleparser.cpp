@@ -139,7 +139,7 @@ void Rules::load(const QString &filename)
     QRegExp matchRepoSubstLine("substitute repository\\s+(.+)$", Qt::CaseInsensitive);
     QRegExp matchBranchLine("branch\\s+(\\S+)", Qt::CaseInsensitive);
     QRegExp matchBranchSubstLine("substitute branch\\s+(.+)$", Qt::CaseInsensitive);
-    QRegExp matchRevLine("(min|max) revision (\\d+)", Qt::CaseInsensitive);
+    QRegExp matchRevLine("(min|max)\\s+revision\\s+(\\d+)", Qt::CaseInsensitive);
     QRegExp matchAnnotateLine("annotated\\s+(\\S+)", Qt::CaseInsensitive);
     QRegExp matchBranchpointLine("branchpoint\\s+(\\S+)$", Qt::CaseInsensitive);
     QRegExp matchPrefixLine("prefix\\s+(.*)$", Qt::CaseInsensitive);
