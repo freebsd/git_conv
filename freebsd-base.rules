@@ -55,10 +55,137 @@ min revision 306856
 max revision 306858
 end match
 
+# cvs2svn sprayed several revisions all over the place, only to manufacture
+# them back onto mainline. There is little value in these branches, especially
+# the "unknown" or "unlabeled" ones. So instead make the commits appear on
+# mainline in 1 go. This gives better authorship attribution and commit
+# messages.
+match /(cvs2svn/branches/tcpdump|cvs2svn/branches/unlabeled-1.1.1|vendor/unknown)/
+  min revision 2
+  max revision 2
+  repository freebsd-base.git
+  branch master
+end match
+match /head/
+  min revision 3
+  max revision 3
+end match
+match /(cvs2svn/branches/unlabeled-1.1.1|cvs2svn/branches/v_0_1_2_4|head|vendor/CSRG/dist|vendor/jthorpe/dist|vendor/unknown)/
+  min revision 4
+  max revision 4
+  repository freebsd-base.git
+  branch master
+end match
+match /head/
+  min revision 5
+  max revision 5
+end match
+match /(cvs2svn/branches/unlabeled-1.1.1|vendor/misc-GNU/dist2|vendor/misc-GNU/dist3)/
+  min revision 9
+  max revision 9
+  repository freebsd-base.git
+  branch master
+end match
+match /head/
+  min revision 10
+  max revision 10
+end match
+match /(cvs2svn/branches/unlabeled-1.1.1|vendor/unknown)/
+  min revision 16
+  max revision 16
+  repository freebsd-base.git
+  branch master
+end match
+match /head/
+  min revision 17
+  max revision 17
+end match
+match /cvs2svn/branches/unlabeled-1.1.1/
+  min revision 28
+  max revision 28
+  repository freebsd-base.git
+  branch master
+end match
+match /head/
+  min revision 29
+  max revision 29
+end match
+match /cvs2svn/branches/unlabeled-1.1.1/
+  min revision 33
+  max revision 33
+  repository freebsd-base.git
+  branch master
+end match
+match /head/
+  min revision 34
+  max revision 34
+end match
+match /(cvs2svn/branches/unlabeled-1.1.1|vendor/NetBSD/dist|vendor/unknown)/
+  min revision 37
+  max revision 37
+  repository freebsd-base.git
+  branch master
+end match
+match /head/
+  min revision 38
+  max revision 38
+end match
+match /(cvs2svn/branches/unlabeled-1.1.1|vendor/unknown)/
+  min revision 220
+  max revision 220
+  repository freebsd-base.git
+  branch master
+end match
+match /head/
+  min revision 221
+  max revision 221
+end match
+match /(cvs2svn/branches/unlabeled-1.1.1)/
+  min revision 327
+  max revision 327
+  repository freebsd-base.git
+  branch master
+end match
+match /head/
+  min revision 328
+  max revision 328
+end match
+match /(cvs2svn/branches/unlabeled-1.1.1)/
+  min revision 867
+  max revision 867
+  repository freebsd-base.git
+  branch master
+end match
+match /head/
+  min revision 868
+  max revision 868
+end match
+match /(cvs2svn/branches/unlabeled-1.1.1)/
+  min revision 1022
+  max revision 1022
+  repository freebsd-base.git
+  branch master
+end match
+match /head/
+  min revision 1023
+  max revision 1023
+end match
+match /(cvs2svn/branches/unlabeled-1.1.1|vendor/unknown)/
+  min revision 1112
+  max revision 1112
+  repository freebsd-base.git
+  branch master
+end match
+#match /head/
+#  min revision 1113
+#  max revision 1113
+#end match
+
+
 # don't record the file death here, *if* it was the last commit to that branch
 # this helps out list_short_merges.sh to find branches that we want to splice
 # into the mainline
-match /cvs2svn/branches/(ATT|EBONES_KRB4|NOORDMARK|ORIG|SGC|UDEL|WST|ache|att|bootparamd|cron|crunch|ipfw|libftp|lwall|man|marc|nvi|ross_ridge|savio_lam|v_0_1_2_4|voxware|xten|zmbenhal)/
+match /cvs2svn/branches/(ATT|EBONES_KRB4|NOORDMARK|ORIG|SGC|WST|ache|att|bootparamd|cron|crunch|ipfw|libftp|lwall|man|marc|nvi|ross_ridge|savio_lam|v_0_1_2_4|voxware|xten|zmbenhal)/
   min revision 13122
   max revision 13122
 end match
@@ -109,8 +236,65 @@ end match
 # Some cvs2svn tags/branches are basically vendor branches with only a small
 # subset of the files. This can confuse `git subtree`, so snip off their
 # parent, making them stand along vendor branches.
+
+# Just 1 commit, inline it.
+match /cvs2svn/branches/man/
+  min revision 103
+  max revision 103
+  repository freebsd-base.git
+  branch master
+end match
+match /head/
+  min revision 104
+  max revision 104
+end match
+match /cvs2svn/branches/att/
+  min revision 943
+  max revision 943
+  repository freebsd-base.git
+  branch master
+end match
+match /head/
+  min revision 944
+  max revision 944
+end match
+match /cvs2svn/branches/manctl_0_1/
+  min revision 1366
+  max revision 1366
+  repository freebsd-base.git
+  branch master
+end match
+match /head/
+  min revision 1367
+  max revision 1367
+end match
+
+match /cvs2svn/branches/UofM_at_CP/
+  min revision 1578
+  max revision 1578
+  repository freebsd-base.git
+  branch master
+end match
+
+
+# 3 commits on UDEL, which is xntpd stuff
+match /(vendor/ntpd/dist|cvs2svn/branches/UDEL)/
+  min revision   893
+  max revision 13122  #  893, 1081, and 13122 affected
+  repository freebsd-base.git
+  branch vendor/ntpd/dist
+end match
+
+# move *all* the games on the branch
+match /(vendor/games/dist|cvs2svn/branches/unlabeled-1.1.1)/
+  min revision  2490
+  max revision 13122  #  2490, 4992, and 13122 affected
+  repository freebsd-base.git
+  branch vendor/games/dist
+end match
+
 # This is basically a pppd branch
-match /(cvs2svn)/(branches)/(MACKERAS)/
+match /cvs2svn/branches/MACKERAS/
   min revision 3010
   max revision 3010
   # files will come back with r3012 and a better commit message.
@@ -119,6 +303,20 @@ end match
 match /(cvs2svn/branches/MACKERAS|vendor/pppd/dist)/
   min revision 3066
   max revision 3067
+end match
+match /(cvs2svn/branches/MACKERAS|vendor/pppd/pppstats)/
+  min revision 4383
+  max revision 4384
+end match
+match /(vendor/pppd/dist|cvs2svn/branches/MACKERAS)/
+  min revision 11981
+  max revision 11981
+  repository freebsd-base.git
+  branch vendor/pppd/dist
+  delete usr.sbin/pppd/lock.c
+  delete usr.sbin/pppd/sys-linux.c
+  delete usr.sbin/pppd/sys-str.c
+  delete usr.sbin/pppd/sys-ultrix.c
 end match
 match /(vendor/pppd/dist|cvs2svn/branches/MACKERAS|cvs2svn/branches/chat)/
   min revision 3011

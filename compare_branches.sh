@@ -6,7 +6,7 @@
 # whether the latest-revision content of SVN vs git actually matches.
 # So far, it has never found a discrepancy.
 
-type=$1; shift
+type=${1:-base}; shift
 
 test -z "$type" && exit 1
 
@@ -250,7 +250,8 @@ case "$type" in
         for t in vendor; do
             for b in `svn ls $SVN/$t`; do
                 case "$b" in
-                    unknown/) diff_it $t/$b; continue ;;
+                    # We move some stuff from this directly into the mainline, so diffing no longer makes sense.
+                    unknown/) continue ;;
                 esac
                 for s in `svn ls $SVN/$t/$b | grep '/$'`; do
                     # we skip generating these tags, they are of dubious quality anyway and looking up the history in the dist branch is easy enough.
@@ -291,11 +292,6 @@ case "$type" in
                             for r in `svn ls $SVN/$t/$b$s | grep '/$'`; do
                                 diff_it $t/$b$s$r $t/$b${s#gnu-}$r
                             done
-                            continue
-                        ;;
-                        # These were all merged
-                        misc-GNU/dist*/)
-                            diff_em vendor/misc-GNU/dist vendor/misc-GNU/dist1 vendor/misc-GNU/dist3 vendor/misc-GNU/dist2 vendor/misc-GNU/dist
                             continue
                         ;;
                         # the tag flattening fucked up the svn keyword
@@ -351,16 +347,42 @@ case "$type" in
                         # splicing MACKERAS and pppd leads to 2 extra files
                         pppd/2.1.2/) diff_it -xslcompress.c -xslcompress.h $t/$b$s; continue ;;
                         # have a bunch of extra files, we could diff_em together with the old cvs2svn branch @260580, though.
-                        pppd/2.2/|pppd/2.3.0/|pppd/2.3.1/|pppd/2.3.11/|pppd/2.3.3/|pppd/2.3.5/|pppd/dist/) continue ;;
+                        #pppd/2.2/|pppd/2.3.0/|pppd/2.3.1/|pppd/2.3.11/|pppd/2.3.3/|pppd/2.3.5/|pppd/dist/) continue ;;
+                        # tags were advanced with a rename
+                        top/3.4/|top/3.5beta12/) diff_it -xinstall -xinstall-sh $t/$b$s; continue ;;
                         # FIXME FIXME FIXME fallout from merging from the highest rev always to fix most tags (you win some, you lose some)
                         binutils/2.10.0/) continue ;;
                         file/4.17a/) continue ;; #diff_it $t/$b$s@186674 $t/$b$s; continue ;;
                         gcc/2.95.3-test1/) continue ;;
                         gcc/2.95.3-test3/) continue ;;
-                        # tags were advanced with a rename
-                        top/3.4/|top/3.5beta12/) diff_it -xinstall -xinstall-sh $t/$b$s; continue ;;
                         # we skipped the flattening of tags
-                        gcc/2.7.2.3/) diff_it $t/$b$s@179467 $t/$b$s; continue ;;
+                        gcc/2.7.2.3/|gcc/2.95.1/) continue ;; #diff_it $t/$b$s@179467 $t/$b$s; continue ;;
+                        gcc/*) continue ;;
+                        # useless tag, victim of inlining commits into mainline
+                        misc-GNU/V_GNU_0_2/) continue ;;
+                        # These were all merged, but actually we inline some of them, so can't compare them anymore.
+                        misc-GNU/dist*/)
+                            #diff_em vendor/misc-GNU/dist vendor/misc-GNU/dist1 vendor/misc-GNU/dist3 vendor/misc-GNU/dist2 vendor/misc-GNU/dist
+                            continue
+                        ;;
+                        # we moved some stuff from cvs2svn/branches/MACKERAS here
+                        pppd/2.2/) diff_it -r'g/usr.sbin/pppd/{RELNOTES,args.h,callout.h,ppp.h}' $t/$b$s; continue ;;
+                        pppd/2.3.0/) diff_it -r'g/{usr.sbin/pppd/{RELNOTES,args.h,callout.h,ppp.h},usr.bin/chat/{Example,Makefile,README,chat.?,connect-ppp,ppp-o*,unlock}}' $t/$b$s; continue ;;
+                        pppd/2.3.1/|pppd/2.3.3/|pppd/2.3.5/) diff_it -r'g/usr.bin/chat/{Example,README,connect-ppp,ppp-o*,unlock}' $t/$b$s; continue ;;
+                        pppd/2.3.3/) diff_it -r'g/usr.bin/chat/{Example,README}' $t/$b$s; continue ;;
+                        # Everything is missing, what's the point
+                        pppd/2.3.11/) continue ;;
+                        # filesets diverged too much
+                        pppd/dist/) continue ;;
+                        # bogus tag
+                        pppd/pppstats/) continue ;;
+                        # we've lined a bunch of files, cannot compare any longer
+                        games/dist/) continue ;;
+                        # we splice in cvs2svn/branches/UDEL into ntpd, so we have some extra files.
+                        ntpd/dist/) diff_it -r'g/usr.sbin/xntpd/parse/util/Makefile' $t/$b$s; continue ;;
+                        ntpd/udel_33Z/) diff_it -r'g/usr.sbin/xntpd/{parse/util/Makefile,Config,Config.sed}' $t/$b$s; continue ;;
+                        ntpd/udel_3_3p/) diff_it -r'g/usr.sbin/xntpd/{Config,Config.sed,compilers/hpux10+.cc,machines/hpux10+,parse/util/Makefile}' $t/$b$s; continue ;;
+                        ntpd/xntp*/) diff_it -r'g/usr.sbin/xntpd/{Config,Config.sed,compilers/hpux10+.cc,machines/hpux10+,parse/util/Makefile}' $t/$b$s; continue ;;
                     esac
                     diff_it $t/$b$s
                 done
