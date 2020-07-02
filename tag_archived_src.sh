@@ -89,6 +89,11 @@ extract() {
             test -d $d && make -C $d -k MACHINE_ARCH=i386 cleandir >/dev/null 2>&1 || true
         done
         make -C usr.bin/vi -k MACHINE_ARCH=i386 RELEASE_BUILD_FIXIT=1 cleandir >/dev/null 2>&1 || true
+        # 2.0.5
+        make -C sys/i386/boot/kzipboot -k cleandir >/dev/null 2>&1 || true
+        make -C sys/i386/boot/netboot -k cleandir >/dev/null 2>&1 || true
+        # 2.2.1
+        make -C sys/dev/aic7xxx -k cleandir >/dev/null 2>&1 || true
     )
     set +e
 }
