@@ -237,6 +237,14 @@ end match
 # subset of the files. This can confuse `git subtree`, so snip off their
 # parent, making them stand along vendor branches.
 
+# utter nonsense
+match /cvs2svn/branches/BRANCH_1_0/
+end match
+match /cvs2svn/tags/FINAL_1_0_2/
+end match
+match /cvs2svn/branches/Makefile/
+end match
+
 # Just 1 commit, inline it.
 match /cvs2svn/branches/man/
   min revision 103
@@ -363,6 +371,78 @@ match /(cvs2svn)/(branches)/(unlabeled-1.1.1)/
   branchpoint none
 end match
 
+# retain XEROX as vendor/mrouted
+# NOTE: we cannot splice it in, as the cvs2svn merge to head only picked a few
+# files off the original commit, and then there was a "fix conflict" commit
+# afterwards. We could still do it, but the import would clobber all our
+# changes and the "fix conflicts" commit would bring them all back.
+match /cvs2svn/branches/XEROX/
+  repository freebsd-base.git
+  branch vendor/mrouted/dist
+end match
+match /cvs2svn/tags/MULTICAST_3_3/
+  repository freebsd-base.git
+  branch refs/tags/vendor/mrouted/3.3
+  annotated true
+end match
+match /cvs2svn/tags/release_3_6/
+  repository freebsd-base.git
+  branch refs/tags/vendor/mrouted/3.6
+  annotated true
+end match
+match /cvs2svn/tags/release_3_8/
+  repository freebsd-base.git
+  branch refs/tags/vendor/mrouted/3.8
+  annotated true
+end match
+match /cvs2svn/tags/mtrace_5_1/
+  repository freebsd-base.git
+  branch refs/tags/vendor/mrouted/mtrace-5.1
+  annotated true
+end match
+match /cvs2svn/tags/mtrace_5_2/
+  repository freebsd-base.git
+  branch refs/tags/vendor/mrouted/mtrace-5.2
+  annotated true
+end match
+match /cvs2svn/tags/mrouted_3_9_beta3_ios12/
+  repository freebsd-base.git
+  branch refs/tags/vendor/mrouted/3.9-beta3
+  annotated true
+end match
+# ditto for rarpd from LBL
+match /cvs2svn/branches/LBL/
+  repository freebsd-base.git
+  branch vendor/rarpd/dist
+end match
+match /cvs2svn/tags/rarpd-orig/
+  repository freebsd-base.git
+  branch refs/tags/vendor/rarpd/1.0
+  annotated true
+end match
+match /cvs2svn/tags/rarpd_1_1/
+  repository freebsd-base.git
+  branch refs/tags/vendor/rarpd/1.1
+  annotated true
+end match
+# ditto for rpcgen from SUN, but we also skip the fork from head
+match /cvs2svn/branches/SUNRPC/
+  min revision 1898
+  max revision 1898
+end match
+match /cvs2svn/branches/SUNRPC/
+  min revision 12795
+  max revision 12795
+  repository freebsd-base.git
+  branch vendor/rpcgen/dist
+end match
+match /cvs2svn/tags/rpcgen_2_3/
+  min revision 12797
+  max revision 12797
+  branch refs/tags/vendor/rpcgen/2.3
+  annotated true
+end match
+
 # import and tags of ee
 match /cvs2svn/branches/HUGH_F_MAHON/
   repository freebsd-base.git
@@ -426,15 +506,27 @@ match /vendor/nvi/dist/
   delete usr.bin/vi
 end match
 
-# TODO:
-# cvs2svn/branches/MC (maybe?)
-# cvs2svn/branches/MSMITH (many commits, need to verify)
-# cvs2svn/branches/SUNRPC (but not branch creation), r1898 is rpcgen
-# cvs2svn/branches/alex
-# cvs2svn/branches/sipb (2 commits)
-
-# cvs2svn/branches/XEROX is mrouted and has 3 useful tags
-# cvs2svn/branches/LBL has rarpd
+match /cvs2svn/branches/JPO/
+  repository freebsd-base.git
+  branch vendor/NetBSD/xlint/dist
+end match
+match /cvs2svn/tags/v1_3/
+  repository freebsd-base.git
+  branch refs/tags/vendor/NetBSD/xlint/1.3
+  annotated true
+end match
+match /cvs2svn/tags/v_2002_3_3/
+  repository freebsd-base.git
+  branch refs/tags/vendor/NetBSD/xlint/2002-03-03
+  annotated true
+end match
+match /cvs2svn/tags/v_2002_7_19/
+  repository freebsd-base.git
+  branch refs/tags/vendor/NetBSD/xlint/2002-07-19
+  annotated true
+end match
+# NOTE: r280454 "copies" this in SVN and results in the flattening that we'd
+# like.
 
 match /cvs2svn/branches/crunch/
   min revision 1722
@@ -455,6 +547,34 @@ end match
 match /(head|cvs2svn)/
   min revision 1753
   max revision 1754
+end match
+match /cvs2svn/branches/ORIG/
+  min revision 1802
+  max revision 1814
+  repository freebsd-base.git
+  branch master
+end match
+match /head/
+  min revision 1803
+  max revision 1803
+end match
+match /(head|cvs2svn)/
+  min revision 1815
+  max revision 1816
+end match
+match /cvs2svn/branches/SUN/
+  min revision 1905
+  max revision 3248
+  repository freebsd-base.git
+  branch master
+end match
+match /head/
+  min revision 1906
+  max revision 1906
+end match
+match /head/
+  min revision 3249
+  max revision 3249
 end match
 match /cvs2svn/branches/Burren/
   min revision 1956
@@ -496,6 +616,46 @@ match /(head|cvs2svn)/
   min revision 2312
   max revision 2313
 end match
+match /cvs2svn/branches/FBSD_1/
+  min revision 2334
+  max revision 2347
+  repository freebsd-base.git
+  branch master
+end match
+match /(head|cvs2svn)/
+  min revision 2335
+  max revision 2339
+end match
+match /(head|cvs2svn)/
+  min revision 2342
+  max revision 2348
+end match
+match /(head|cvs2svn)/
+  min revision 2472
+  max revision 2472
+end match
+
+match /cvs2svn/branches/WST_SE/
+  min revision 2432
+  max revision 2432
+  repository freebsd-base.git
+  branch master
+end match
+match /(head|cvs2svn)/
+  min revision 2433
+  max revision 2434
+end match
+match /cvs2svn/branches/WST_SE/
+  min revision 2528
+  max revision 2528
+  repository freebsd-base.git
+  branch master
+end match
+match /(head|cvs2svn)/
+  min revision 2529
+  max revision 2530
+end match
+
 match /cvs2svn/branches/Rehmet/
   min revision 2470
   max revision 2470
@@ -525,6 +685,16 @@ end match
 match /(head|cvs2svn)/
   min revision 2636
   max revision 2637
+end match
+match /(cvs2svn/branches/MC|vendor/NetBSD/dist)/
+  min revision 3229
+  max revision 3229
+  repository freebsd-base.git
+  branch master
+end match
+match /(head|cvs2svn)/
+  min revision 3230
+  max revision 3230
 end match
 match /cvs2svn/branches/zmbenhal/
   min revision 3410
@@ -596,6 +766,20 @@ match /(head|cvs2svn)/
   min revision 5263
   max revision 5264
 end match
+match /cvs2svn/branches/sipb/
+  min revision 5622
+  max revision 5719
+  repository freebsd-base.git
+  branch master
+end match
+match /(head|cvs2svn)/
+  min revision 5623
+  max revision 5623
+end match
+match /(head|cvs2svn)/
+  min revision 5718
+  max revision 5721
+end match
 match /cvs2svn/branches/scsi/
   min revision 5843
   max revision 5843
@@ -655,6 +839,16 @@ end match
 match /(head|cvs2svn)/
   min revision 6463
   max revision 6464
+end match
+match /cvs2svn/branches/(alex|unlabeled-1.1.1)/
+  min revision 6527
+  max revision 6527
+  repository freebsd-base.git
+  branch master
+end match
+match /(head|cvs2svn)/
+  min revision 6528
+  max revision 6529
 end match
 match /cvs2svn/branches/bootparamd/
   min revision 6751
@@ -735,6 +929,25 @@ end match
 match /(head|cvs2svn)/
   min revision 13023
   max revision 13024
+end match
+# skip that 1 file modification here, it was not put onto head.
+match /cvs2svn/branches/MC/libexec/bootpd/bootpd.8
+  min revision 13572
+  max revision 13572
+end match
+match /cvs2svn/branches/MC/
+  min revision 13569
+  max revision 13572
+  repository freebsd-base.git
+  branch master
+end match
+match /(head|cvs2svn)/
+  min revision 13570
+  max revision 13570
+end match
+match /(head|cvs2svn)/
+  min revision 13573
+  max revision 13574
 end match
 # Two commits
 match /cvs2svn/branches/A_GORDON/
@@ -867,6 +1080,44 @@ match /(head|cvs2svn)/
   min revision 21504
   max revision 21505
 end match
+match /cvs2svn/branches/MSMITH/
+  min revision 21183
+  max revision 59138
+  repository freebsd-base.git
+  branch master
+end match
+match /(head|cvs2svn)/
+  min revision 21184
+  max revision 21185
+end match
+match /(head|cvs2svn)/
+  min revision 21913
+  max revision 21913
+end match
+match /(head|cvs2svn)/
+  min revision 26006
+  max revision 26006
+end match
+match /(head|cvs2svn)/
+  min revision 31696
+  max revision 31696
+end match
+match /(head|cvs2svn)/
+  min revision 38452
+  max revision 38452
+end match
+match /(head|cvs2svn)/
+  min revision 38466
+  max revision 38466
+end match
+match /(head|cvs2svn)/
+  min revision 45411
+  max revision 45411
+end match
+match /(head|cvs2svn)/
+  min revision 59139
+  max revision 59140
+end match
 # Several useful commits, put their commit message directly onto head
 match /cvs2svn/branches/RNORDIER/
   min revision 21918
@@ -874,18 +1125,61 @@ match /cvs2svn/branches/RNORDIER/
   repository freebsd-base.git
   branch master
 end match
-match /head/
+match /(head|cvs2svn)/
   min revision 21919
-  max revision 21919
+  max revision 21920
+end match
+match /head/
+  min revision 37447
+  max revision 37447
+end match
+match /(head|cvs2svn)/
+  min revision 39089
+  max revision 39090
+end match
+match /head/
+  min revision 39093
+  max revision 39093
+end match
+match /head/
+  min revision 39974
+  max revision 39974
+end match
+match /head/
+  min revision 40270
+  max revision 40270
+end match
+match /head/
+  min revision 44197
+  max revision 44197
+end match
+match /head/
+  min revision 47472
+  max revision 47472
 end match
 match /head/
   min revision 48906
   max revision 48906
 end match
-match /head/
+match /(head|cvs2svn)/
   min revision 48908
-  max revision 48908
+  max revision 48909
 end match
+match /cvs2svn/branches/HELBIG/
+  min revision 31529
+  max revision 31744
+  repository freebsd-base.git
+  branch master
+end match
+match /head/
+  min revision 31530
+  max revision 31530
+end match
+match /head/
+  min revision 31745
+  max revision 31745
+end match
+
 
 # This one is tricky, there are some extra files under sys imported here, and
 # patched up with r23452 about 6 minutes later. Which means, we can ignore them
@@ -1008,6 +1302,17 @@ end match
 match /(head|cvs2svn)/
   min revision 38590
   max revision 38591
+end match
+# 2 commits for this one
+match /cvs2svn/branches/NSOUCH/
+  min revision 38774
+  max revision 38776
+  repository freebsd-base.git
+  branch master
+end match
+match /head/
+  min revision 38775
+  max revision 38777
 end match
 match /cvs2svn/branches/CBW/
   min revision 40767
@@ -1211,8 +1516,13 @@ end match
 # wrong vendor imports, were later patched up, but the original imports have the
 # better commit messages.
 match /cvs2svn/branches/unlabeled-1.1.1/
-  # there are no further commits between r43007 and r136632 on this branch
-  min revision  43007
+  min revision 43007
+  max revision 43007
+  repository freebsd-base.git
+  branch vendor/tzdata/dist
+end match
+match /cvs2svn/branches/unlabeled-1.1.1/
+  min revision 136632
   max revision 136632
   repository freebsd-base.git
   branch vendor/tzdata/dist

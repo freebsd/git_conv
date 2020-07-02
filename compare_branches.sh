@@ -434,7 +434,7 @@ case "$type" in
                         # they should be in the tag.
                         ipfilter/3*|ipfilter/v3*|ipfilter/V3*|ipfilter/4*) diff_it -xmlf_ipl.c -xmln_ipl.c $t/$b$s@253466 $t/$b$s; continue ;;
                         ipfilter/*) diff_it $t/$b$s $t/$b$s; continue ;;
-                        # compare againts pre-flattening
+                        # compare against pre-flattening
                         pf/3.7.001|pf/4.1) diff_it $t/$b$s@181287 $t/$b$s; continue ;;
                         pf/*) diff_it $t/$b$s $t/$b$s; continue ;;
                         # we skip some binary backup files
@@ -451,6 +451,12 @@ case "$type" in
                 done
             done
         done
+        # Things with newer stuff, or resurrected from cvs2svn/branches
+        diff_it cvs2svn/branches/NAILabs@260579 vendor/lomac/dist
+        diff_it cvs2svn/branches/XEROX@260579 vendor/mrouted/dist
+        diff_it cvs2svn/branches/LBL@260579 vendor/rarpd/dist
+        diff_it cvs2svn/branches/SUNRPC@260579 vendor/rpcgen/dist
+
         for t in projects; do
             for b in `svn ls $SVN/$t | grep '/$'`; do
                 case $b in
