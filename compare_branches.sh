@@ -278,7 +278,7 @@ case "$type" in
                         # NOTE: these are missing the .gitignore, .gitattributes et al, because `git archive` will honor the ignore attribute :/
                         libarchive/3.2.*/|libarchive/3.3.*/|libarchive/3.4.*/|libarchive/dist/) diff_it -x.github -x.gitignore -x.gitattributes $t/$b${s} $t/$b$s; continue ;;
                         # These have an extra level of depth
-                        google/*/|Juniper/libxo/|NetBSD/blacklist/|NetBSD/bmake/|NetBSD/libc-pwcache/|NetBSD/libc-vis/|NetBSD/libedit/|NetBSD/libexecinfo/|NetBSD/lukemftp/|NetBSD/lukemftpd/|NetBSD/mknod/|NetBSD/mtree/|NetBSD/softfloat/|NetBSD/sort/|NetBSD/tests/|NetBSD/unvis/|NetBSD/vis/|NetBSD/xlint/|misc-GNU/awk/|misc-GNU/bc/|misc-GNU/bison/|misc-GNU/cpio/|misc-GNU/cvs/|misc-GNU/tar/|misc-GNU/texinfo/)
+                        google/*/|Juniper/libxo/|NetBSD/blacklist/|NetBSD/bmake/|NetBSD/libc-pwcache/|NetBSD/libc-vis/|NetBSD/libedit/|NetBSD/libexecinfo/|NetBSD/lukemftp/|NetBSD/lukemftpd/|NetBSD/mknod/|NetBSD/mtree/|NetBSD/softfloat/|NetBSD/sort/|NetBSD/tests/|NetBSD/unvis/|NetBSD/vis/|NetBSD/xlint/|misc-GNU/awk/|misc-GNU/bc/|misc-GNU/bison/|misc-GNU/cpio/|misc-GNU/cvs/|misc-GNU/texinfo/)
                             for r in `svn ls $SVN/$t/$b$s | grep '/$'`; do
                                 case "$r" in
                                     bmake-20121111/) diff_it $t/$b$s$r $t/$b$s${r#bmake-}; continue ;;
@@ -302,11 +302,6 @@ case "$type" in
                         openpam/*) diff_it '-I[$](FreeBSD|Id).*[$]' $t/$b$s; continue ;;
                         # We converted this into 1 dist instead.
                         sendmail/dist-old/) continue ;;
-                        # vendor and vendor-crypto were smushed together, not the SVN tag though.
-                        telnet/95-10-23/) continue ;;
-                        # this matches, but the heuristic looks in the wrong
-                        # dir for the tag flattening
-                        telnet/dist/) diff_it $t/$b$s/contrib/telnet/ $t/$b$s; continue ;;
                         # Ugh, these flattened away 2 dirs, compare to earlier rev.
                         tzcode/tzcode9*|tzcode/tzcode1999*|tzcode/tzcode2004a/) diff_it $t/$b$s@183401 $t/$b$s; continue ;;
                         # has another dist/ subdir as the 2nd tagging was messed up
@@ -352,19 +347,16 @@ case "$type" in
                         top/3.4/|top/3.5beta12/) diff_it -xinstall -xinstall-sh $t/$b$s; continue ;;
                         # FIXME FIXME FIXME fallout from merging from the highest rev always to fix most tags (you win some, you lose some)
                         binutils/2.10.0/) continue ;;
+                        # TODO analyze this
                         file/4.17a/) continue ;; #diff_it $t/$b$s@186674 $t/$b$s; continue ;;
+                        # TODO analyze this
                         gcc/2.95.3-test1/) continue ;;
+                        # TODO analyze this
                         gcc/2.95.3-test3/) continue ;;
                         # we skipped the flattening of tags
                         gcc/2.7.2.3/|gcc/2.95.1/) continue ;; #diff_it $t/$b$s@179467 $t/$b$s; continue ;;
+                        # TODO analyze this
                         gcc/*) continue ;;
-                        # useless tag, victim of inlining commits into mainline
-                        misc-GNU/V_GNU_0_2/) continue ;;
-                        # These were all merged, but actually we inline some of them, so can't compare them anymore.
-                        misc-GNU/dist*/)
-                            #diff_em vendor/misc-GNU/dist vendor/misc-GNU/dist1 vendor/misc-GNU/dist3 vendor/misc-GNU/dist2 vendor/misc-GNU/dist
-                            continue
-                        ;;
                         # we moved some stuff from cvs2svn/branches/MACKERAS here
                         pppd/2.2/) diff_it -r'g/usr.sbin/pppd/{RELNOTES,args.h,callout.h,ppp.h}' $t/$b$s; continue ;;
                         pppd/2.3.0/) diff_it -r'g/{usr.sbin/pppd/{RELNOTES,args.h,callout.h,ppp.h},usr.bin/chat/{Example,Makefile,README,chat.?,connect-ppp,ppp-o*,unlock}}' $t/$b$s; continue ;;
@@ -376,13 +368,28 @@ case "$type" in
                         pppd/dist/) continue ;;
                         # bogus tag
                         pppd/pppstats/) continue ;;
-                        # we've lined a bunch of files, cannot compare any longer
-                        games/dist/) continue ;;
                         # we splice in cvs2svn/branches/UDEL into ntpd, so we have some extra files.
                         ntpd/dist/) diff_it -r'g/usr.sbin/xntpd/parse/util/Makefile' $t/$b$s; continue ;;
                         ntpd/udel_33Z/) diff_it -r'g/usr.sbin/xntpd/{parse/util/Makefile,Config,Config.sed}' $t/$b$s; continue ;;
                         ntpd/udel_3_3p/) diff_it -r'g/usr.sbin/xntpd/{Config,Config.sed,compilers/hpux10+.cc,machines/hpux10+,parse/util/Makefile}' $t/$b$s; continue ;;
                         ntpd/xntp*/) diff_it -r'g/usr.sbin/xntpd/{Config,Config.sed,compilers/hpux10+.cc,machines/hpux10+,parse/util/Makefile}' $t/$b$s; continue ;;
+                        #### inlined stuff below here ####
+                        # useless tag, victim of inlining commits into mainline
+                        misc-GNU/V_GNU_0_2/) continue ;;
+                        # These were all merged, but actually we inline some of them, so can't compare them anymore.
+                        misc-GNU/dist*/)
+                            #diff_em vendor/misc-GNU/dist vendor/misc-GNU/dist1 vendor/misc-GNU/dist3 vendor/misc-GNU/dist2 vendor/misc-GNU/dist
+                            continue
+                        ;;
+                        # the 1 commit on telnet was inlined into main
+                        telnet/*/) continue ;;
+                        # we've inlined a bunch of files, cannot compare any longer
+                        games/dist/) continue ;;
+                        # inlined into mainline
+                        pnpinfo/*/) continue ;;
+                        jthorpe/dist/) continue ;;
+                        misc-GNU/tar/) continue ;;
+
                     esac
                     diff_it $t/$b$s
                 done
@@ -399,8 +406,6 @@ case "$type" in
                         openssh/3.*|openssh/4.*) diff_it '-I[$]FreeBSD.*[$]' $t/$b$s vendor/$b$s; continue ;;
                         # tag was moved by deleting more files
                         openssh/5.9p1) diff_it $t/$b$s@225833 vendor/$b$s; continue ;;
-                        # prefixes were collapsed from 2 down to 1 in the conversion
-                        telnet/95-10-23|telnet/dist) diff_it $t/$b$s/crypto/telnet vendor/$b$s; continue ;;
                         # unflattened tags, 2007 and following are identical again
                         acpica/2000*|acpica/2001*|acpica/2002*|acpica/2003*|acpica/2004*|acpica/2005*|acpica/20070320) diff_it $t/$b$s@192383 vendor/$b$s; continue ;;
                         # compare against pre-flattening
@@ -432,6 +437,15 @@ case "$type" in
                         # compare againts pre-flattening
                         pf/3.7.001|pf/4.1) diff_it $t/$b$s@181287 $t/$b$s; continue ;;
                         pf/*) diff_it $t/$b$s $t/$b$s; continue ;;
+                        # we skip some binary backup files
+                        heimdal/*) diff_it -x._ltoptions.m4 -x._ltsugar.m4 -x._lt\~obsolete.m4 $t/$b$s vendor/$b$s; continue ;;
+                        # We put a newer import into dist, somehow this was missed in cvs2svn, compare to the old git hash
+                        lomac/dist) diff_it $t/$b$s vendor/$b$s\~1; continue ;;
+                        #### inlined stuff below here ####
+                        # the 1 commit on telnet was inlined into main
+                        telnet/*) continue ;;
+                        # has just 1 file that was inlined
+                        OpenSSH/*) continue ;;
                     esac
                     diff_it $t/$b$s vendor/$b$s
                 done
