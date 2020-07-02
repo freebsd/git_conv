@@ -36,11 +36,20 @@ match $svn_path
   repository freebsd-base.git
   branch master
 end match
+match /head/
+  min revision $(( svn_rev + 1 ))
+  max revision $(( svn_rev + 1 ))
+end match
+-- or --
+match /(head|cvs2svn)/
+  min revision $(( svn_rev + 1 ))
+  max revision $(( svn_rev + 2 ))
+end match
 EOS
     fi
 }
 
-git log --format='%H %P' --all --reverse "$@" | awk '{if (NF == 3) { print NF " " $0}}' |
+git log --format='%H %P' --all --reverse --max-parents=2 --min-parents=2 "$@" | awk '{if (NF == 3) { print NF " " $0}}' |
     while read n c p1 p2; do
 	# TODO skip commits on /projects et al
 	git rev-parse -q --verify $p1\~1 > /dev/null || print_commit $c $p1
