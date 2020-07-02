@@ -168,3 +168,6 @@ fi
 if git rev-list vendor/openssh/dist..vendor/openssh/5.8p2 | wc -l | grep -q 1; then
     rewrite_tag vendor/openssh/5.8p2 `git log --format=%h --notes --grep='revision=221484$' vendor/openssh/dist`
 fi
+
+# artifact of the conversion, not needed.
+git update-ref -d refs/backups/r17806/heads/vendor/nvi/dist
