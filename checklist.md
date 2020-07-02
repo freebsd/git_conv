@@ -1,5 +1,17 @@
-# Day of Switchover Checklist
+# Switchover Checklist
 
+## One week before
+*  email reminder
+*  perform trial run of conversion process
+
+## One day before
+*  email reminder
+
+## Flag day
+*  send email that migration process is starting
+*  make SVN repo to read-only
+
+## Conversion process
 *  run svnmir.sh
 *  update svn_log.txt output, gzip, commit to repo
 *  run author.sh
