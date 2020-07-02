@@ -66,7 +66,6 @@ diff_it() {
     if [ -r "$sentinel" ]; then
         return
     fi
-    set -e
     cd $S && rm -rf s g
     svn export --ignore-keywords -q $SVN/$from s &
     git archive --format=tar --prefix=g/ $to | tar xf -
@@ -91,23 +90,26 @@ diff_it() {
                     diff -ruN --strip-trailing-cr `echo $flags` s g/*/*/ >/dev/null || {
                         if [ 1 -eq `ls -1 g/*/*/|wc -l` ] ; then
                             diff -ruN --strip-trailing-cr `echo $flags` s g/*/*/*/ >/dev/null || {
-                                echo "diffs found in SVN $from vs git $to, bailing out" >&2; exit 1;
+                                bail_out $from $to
+                                return
                             }
                         else
-                            echo "diffs found in SVN $from vs git $to, bailing out" >&2; exit 1;
+                            bail_out $from $to
+                            return
                         fi
                     }
                 else
-                    echo "diffs found in SVN $from vs git $to, bailing out" >&2; exit 1;
+                    bail_out $from $to
+                    return
                 fi
             }
         else
-            echo "diffs found in SVN $from vs git $to, bailing out" >&2; exit 1;
+            bail_out $from $to
+            return
         fi
     }
+
     touch "$sentinel"
-    cd ..
-    set +e
 }
 
 diff_em() {
@@ -129,7 +131,6 @@ diff_em() {
     if [ -r "$sentinel" ]; then
         return
     fi
-    set -e
 
     cd $S && rm -rf s g
 
@@ -164,20 +165,39 @@ diff_em() {
             diff -ruN --strip-trailing-cr `echo $flags` s g/*/ >/dev/null || {
                 if [ 1 -eq `ls -1 g/*/|wc -l` ] ; then
                     diff -ruN --strip-trailing-cr `echo $flags` s g/*/*/ >/dev/null || {
-                        echo "diffs found in SVN $from1 + $from2 vs git $to, bailing out" >&2; exit 1;
+                        bail_out $from $to
+                        return
                     }
                 else
-                    echo "diffs found in SVN $from1 + $from2 vs git $to, bailing out" >&2; exit 1;
+                    bail_out $from $to
+                    return
                 fi
             }
         else
-            echo "diffs found in SVN $from1 + $from2 vs git $to, bailing out" >&2; exit 1;
+            bail_out $from $to
+            return
         fi
     }
+
     touch "$sentinel"
-    cd ..
-    set +e
 }
+
+bail_out()
+{
+    echo "diffs found in SVN $1 vs git $2, bailing out" >&2
+    if [ -z "$keep_going" ]; then
+        exit 1
+    fi
+}
+
+keep_going=
+while getopts "k" OPT; do
+    case "$OPT" in
+        k) keep_going=1
+            ;;
+    esac
+done
+shift $(($OPTIND - 1))
 
 if [ $# -ge 2 ] ; then
     while [ $# -ge 2 ] ; do
@@ -187,8 +207,6 @@ if [ $# -ge 2 ] ; then
     done
     exit 0
 else
-
-diff_it head master
 
 case "$type" in
     base)
@@ -204,6 +222,7 @@ case "$type" in
                 fi
             done
 
+        diff_it head master
         diff_it releng/ALPHA_2_0 releng/2.0a
         diff_it releng/BETA_2_0 releng/2.0b
 
@@ -419,6 +438,7 @@ case "$type" in
         done
         ;;
     doc)
+        diff_it head master
         for u in `svn ls $SVN/user`; do
             for b in `svn ls $SVN/user/$u`; do
                 diff_it user/$u$b
@@ -434,6 +454,7 @@ case "$type" in
         done
         ;;
     ports)
+        diff_it head master
         # 2.x and 3.0.0 are broken in SVN, skip EOL tags as well.
         for t in `svn ls $SVN/tags | egrep '^RELEASE_([4-9]|1[0-9]|3_[1-9])_[0-9_]+/'`; do
             diff_it tags/$t `echo $t|sed 's,RELEASE_,release/,; s,_,.,g; s,/$,,'`
