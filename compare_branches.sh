@@ -210,6 +210,22 @@ else
 
 case "$type" in
     base)
+        git log --format="%h %N" --reverse --notes --grep="path=/head/" master | egrep '^[^s].*=/head/;' | sed -e 's/ .*=/ /' | awk 'NR % 30 == 0' | head -300 | \
+            while read ref rev; do
+                diff_it -r's/sys/contrib/ipfilter/netinet' head@$rev $ref
+            done
+        git log --format="%h %N" --reverse --notes --grep="path=/head/" master | egrep '^[^s].*=/head/;' | sed -e 's/ .*=/ /' | awk 'NR % 1000 == 0' | head -100 | \
+            while read ref rev; do
+                if [ $rev -lt 77859 ]; then
+                    diff_it -r's/sys/contrib/ipfilter/netinet' head@$rev $ref
+                elif [ $rev -le 151841 ]; then
+                    # ppp-user -> ppp repo-copy was corrected
+                    diff_it -xppp head@$rev $ref
+                else
+                    diff_it head@$rev $ref
+                fi
+            done
+
         git log --format="%h %N" master|egrep '^[^s].*=/head/;' | sed -e 's/ .*=/ /' | awk 'NR % 1000 == 0' | \
             while read ref rev; do
                 if [ $rev -lt 77859 ]; then
