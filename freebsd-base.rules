@@ -328,36 +328,69 @@ match /(vendor/ntpd/dist|cvs2svn/branches/UDEL)/
   branch vendor/ntpd/dist
 end match
 
-# move *all* the games on the vendor branch
+# merge *all* games into mainline
 match /(vendor/games/dist|cvs2svn/branches/unlabeled-1.1.1)/
   min revision  2490
   max revision  2490
   repository freebsd-base.git
-  branch vendor/games/dist
+  branch master
+end match
+match /head/
+  min revision 2491
+  max revision 2491
 end match
 match /(vendor/games/dist|cvs2svn/branches/unlabeled-1.1.1)/
   min revision  4922
   max revision  4922
   repository freebsd-base.git
-  branch vendor/games/dist
+  branch master
+end match
+match /(head|cvs2svn)/
+  min revision 4923
+  max revision 4924
 end match
 match /(vendor/games/dist|cvs2svn/branches/unlabeled-1.1.1)/
   min revision  4974
   max revision  4974
   repository freebsd-base.git
-  branch vendor/games/dist
+  branch master
+end match
+match /(head|cvs2svn)/
+  min revision 4975
+  max revision 4976
 end match
 match /(vendor/games/dist|cvs2svn/branches/unlabeled-1.1.1)/
   min revision  8136
   max revision  8136
   repository freebsd-base.git
-  branch vendor/games/dist
+  branch master
+end match
+match /(head|cvs2svn)/
+  min revision 8137
+  max revision 8138
 end match
 match /(vendor/games/dist|cvs2svn/branches/unlabeled-1.1.1)/
   min revision 13122
   max revision 13122
   repository freebsd-base.git
-  branch vendor/games/dist
+  branch master
+end match
+# avoid some files that were later committed after merge conflicts were resolved.
+match /vendor/games/dist/games/(factor/factor.c|number/number.c|primes/primes.c|quiz/Makefile|quiz/quiz.c)
+  min revision 23704
+  max revision 23704
+end match
+match /head/
+  min revision 23705
+  max revision 23705
+end match
+match /vendor/games/dist/
+  min revision 23758
+  max revision 23758
+end match
+match /vendor/games/dist/
+  repository freebsd-base.git
+  branch master
 end match
 
 # This is basically a pppd branch
@@ -575,6 +608,52 @@ end match
 match /cvs2svn/branches/(AMANCIO|voxware)/
   repository freebsd-base.git
   branch vendor/voxware/dist
+end match
+
+# ebones kerberos stuff, all munged into mainline
+match /(cvs2svn/branches/EBONES_KRB4|vendor-crypto/eBones/dist)/
+  repository freebsd-base.git
+  branch master
+end match
+match /(vendor/CSRG/dist|vendor-crypto/eBones/dist)/
+  min revision 2047
+  max revision 2050
+  repository freebsd-base.git
+  branch master
+end match
+match /(head|cvs2svn)/
+  min revision 1576
+  max revision 1576
+end match
+match /(head|cvs2svn)/
+  min revision 2048
+  max revision 2048
+end match
+match /(head|cvs2svn|vendor-crypto)/
+  min revision 2051
+  max revision 2053
+end match
+match /(vendor/CSRG/dist|vendor-crypto/eBones/dist)/
+  min revision 2316
+  max revision 2316
+  repository freebsd-base.git
+  branch master
+end match
+match /(head|cvs2svn|vendor-crypto)/
+  min revision 2317
+  max revision 2319
+end match
+match /(head|cvs2svn|vendor-crypto)/
+  min revision 3238
+  max revision 3240
+end match
+match /(head|cvs2svn|vendor-crypto)/
+  min revision 9865
+  max revision 9868
+end match
+match /(head|cvs2svn|vendor-crypto)/
+  min revision 10765
+  max revision 10770
 end match
 
 match /cvs2svn/branches/crunch/
