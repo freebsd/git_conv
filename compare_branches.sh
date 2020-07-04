@@ -210,6 +210,22 @@ else
 
 case "$type" in
     base)
+        git log --format="%h %N" --reverse --notes --grep="path=/stable" stable/2.1 | egrep '^[^s].*=/stable' | sed -e 's/ .*=/ /' | awk 'NR % 10 == 0' | head -100 | \
+            while read ref rev; do
+                diff_it stable/2.1@$rev $ref
+            done
+        git log --format="%h %N" --reverse --notes --grep="path=/stable" stable/2.2 | egrep '^[^s].*=/stable' | sed -e 's/ .*=/ /' | awk 'NR % 10 == 0' | head -100 | \
+            while read ref rev; do
+                diff_it stable/2.2@$rev $ref
+            done
+        git log --format="%h %N" --reverse --notes --grep="path=/stable" stable/3 | egrep '^[^s].*=/stable' | sed -e 's/ .*=/ /' | awk 'NR % 20 == 0' | head -100 | \
+            while read ref rev; do
+                diff_it stable/3@$rev $ref
+            done
+        git log --format="%h %N" --reverse --notes --grep="path=/stable" stable/4 | egrep '^[^s].*=/stable' | sed -e 's/ .*=/ /' | awk 'NR % 30 == 0' | head -100 | \
+            while read ref rev; do
+                diff_it stable/4@$rev $ref
+            done
         git log --format="%h %N" --reverse --notes --grep="path=/head/" master | egrep '^[^s].*=/head/;' | sed -e 's/ .*=/ /' | awk 'NR % 30 == 0' | head -300 | \
             while read ref rev; do
                 diff_it -r's/sys/contrib/ipfilter/netinet' head@$rev $ref
@@ -385,11 +401,12 @@ case "$type" in
                         telnet/*/) continue ;;
                         # we've inlined a bunch of files, cannot compare any longer
                         games/dist/) continue ;;
-                        # inlined into mainline
+                        # inlined into mainline or we stole some select commits off of them
                         pnpinfo/*/) continue ;;
                         jthorpe/dist/) continue ;;
                         misc-GNU/tar/) continue ;;
-
+                        CSRG/dist/) continue ;;
+                        NetBSD/dist/) continue ;;
                     esac
                     diff_it $t/$b$s
                 done
@@ -446,6 +463,8 @@ case "$type" in
                         telnet/*) continue ;;
                         # has just 1 file that was inlined
                         OpenSSH/*) continue ;;
+                        # inlined
+                        eBones/*) continue ;;
                     esac
                     diff_it $t/$b$s vendor/$b$s
                 done
