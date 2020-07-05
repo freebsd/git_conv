@@ -1589,20 +1589,26 @@ match /(vendor)/(patch)/(dist)/
   branch \1/misc-GNU/\2/\3
 end match
 match /(vendor)/(awk|bc|bison|cpio|cvs|patch|tar|texinfo)/((?!dist)[^/]+)/
+  # we'll get a BSD licensed bc under /vendor/bc with r362697, so make sure we
+  # don't match that then.
+  max revision 282585
   repository freebsd-base.git
   branch refs/tags/\1/misc-GNU/\2/\3
   annotated true
 end match
 match /(vendor)/(awk|bc|bison|cpio|cvs|patch|tar|texinfo)/([^/]+)/
+  max revision 282585
   repository freebsd-base.git
   branch \1/misc-GNU/\2/\3
 end match
 match /(vendor)/gnu-(sort)/((?!dist)[^/]+)/
+  max revision 282585
   repository freebsd-base.git
   branch refs/tags/\1/misc-GNU/\2/\3
   annotated true
 end match
 match /(vendor)/gnu-(sort)/([^/]+)/
+  max revision 282585
   repository freebsd-base.git
   branch \1/misc-GNU/\2/\3
 end match
