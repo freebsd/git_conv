@@ -252,7 +252,7 @@ svn2git()
     fi
 
     echo "Converting $source to $target using svn2git"
-    CPUPROFILE=$BASE/prof.out $SVN2GIT $debug_rules $max_rev $resume_from --fast-import-timeout 3600 --add-metadata-notes --identity-map authors.txt --msg-filter msg-filter.sh --rules $rules $source
+    CPUPROFILE=$BASE/prof.out $SVN2GIT $debug_rules $max_rev $resume_from --fast-import-timeout 3600 --add-metadata-notes --identity-map authors.txt --rules $rules $source
     if [ $? != 0 ]; then
 	echo "Error in svn2git conversion of $source" >&2
 	exit 1

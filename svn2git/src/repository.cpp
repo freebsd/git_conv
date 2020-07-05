@@ -24,6 +24,7 @@
 #include <QDir>
 #include <QFile>
 #include <QLinkedList>
+#include <QRegularExpression>
 
 static const int maxSimultaneousProcesses = 100;
 
@@ -140,7 +141,7 @@ private:
 
   /* Optional filter to fix up log messages */
     QProcess filterMsg;
-    QByteArray msgFilter(QByteArray);
+    QByteArray msgFilter(const QByteArray& msg);
 
     /* starts at 0, and counts up.  */
     mark_t last_commit_mark;
@@ -913,23 +914,26 @@ void FastImportRepository::saveBranchNotes()
 }
 
 QByteArray
-FastImportRepository::msgFilter(QByteArray msg)
+FastImportRepository::msgFilter(const QByteArray& msg)
 {
-    QByteArray output = msg;
-
-    if (CommandLineParser::instance()->contains("msg-filter")) {
-        if (filterMsg.state() == QProcess::Running)
-            qFatal("filter process already running?");
-
-        filterMsg.start(CommandLineParser::instance()->optionArgument("msg-filter"));
-
-        if(!(filterMsg.waitForStarted(-1)))
-            qFatal("Failed to Start Filter %d %s", __LINE__, qPrintable(filterMsg.errorString()));
-
-        filterMsg.write(msg);
-        filterMsg.closeWriteChannel();
-        filterMsg.waitForFinished();
-        output = filterMsg.readAllStandardOutput();
+    // Instead of forking for every revision, we apply our msg filter directly here.
+    QByteArray output;
+    output.reserve(msg.size());
+    QList<QByteArray> lines = msg.split('\n');
+    while (lines.last().isEmpty() && lines.length() > 1) {
+        lines.removeLast();
+    }
+    for (const auto& line : lines) {
+        if (line.endsWith("those below, will be ignored--") ||
+                line.startsWith("> Description of fields to fill in above") ||
+                line.startsWith("> PR:            If a GNATS PR is affected by the change") ||
+                line.startsWith("> Submitted by:  If someone else sent in the change") ||
+                line.startsWith("_M   ")) {
+            return output;
+        } else {
+            output.append(line);
+            output.append('\n');
+        }
     }
     return output;
 }
