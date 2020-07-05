@@ -3,6 +3,7 @@
 ## One week before
 *  email reminder
 *  perform trial run of conversion process
+*  maybe lock the vendor area
 
 ## One day before
 *  email reminder
@@ -17,6 +18,7 @@
 *  [2h, parallel] run svneverever, capture output, commit to repo
 *  [10m] run author.sh
 *  [6h, parallel] convert with debug rules, 3x
+  * **CHECK FOR NEW UNHANDLED MERGEINFO**
 *  [1h] run fix_bogus_tags.sh
 *  [8h, but can start shortly after the conversion kicked off] run compare_branches.sh -k
   *  This requires sudo and likely doesn't work in the jail anyway, need to undo the mdconfig hack
