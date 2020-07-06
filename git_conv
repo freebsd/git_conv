@@ -265,7 +265,7 @@ svn2git()
 	    # Takes much longer, but compresses better:
 	    #du -sh .; git gc --aggressive --prune=now --force; du -sh .
 	    du -sh .; git repack -adf; du -sh .
-	    git log --date=short --pretty="format:%ai %an %d %t %N%B" > ../$TYPE-gitlog
+	    git log --reverse --date=short --pretty="format:%ai %an %d %T %N%B" > ../$TYPE-gitlog
 	)
     fi
 
