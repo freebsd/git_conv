@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env zsh
 # vi:set sw=4 et:
 
 # Checks out both the SVN tree and git tree of matching tags and branches and
@@ -279,7 +279,7 @@ case "$type" in
                 esac
                 for s in `svn ls $SVN/$t/$b | grep '/$'`; do
                     # we skip generating these tags, they are of dubious quality anyway and looking up the history in the dist branch is easy enough.
-                    if echo "$b$s" | egrep -q "misc-GNU/(gnu_tag|GZIP_1_1|TEXT_1_6|GREP_1_6|DIFF_2_3|DIFF3_2_3|ptx_0_3|readline_1_1|texinfo_2_0|libg\+\+_tag|V1_09|rcs_5_7|diff_2_7|gmp_1_3_2|textutils_1_14|gmp_2_0_2|v2_3|grep_2_[34][ad]?|grep_2_4_2|grep_2_5_1|v6_1_1)"; then
+                    if echo "$b$s" | egrep -q "misc-GNU/(gnu_tag|GZIP_1_1|TEXT_1_6|GREP_1_6|DIFF_2_3|DIFF3_2_3|V_GNU_0_2|ptx_0_3|readline_1_1|texinfo_2_0|libg\+\+_tag|V1_09|rcs_5_7|diff_2_7|gmp_1_3_2|textutils_1_14|gmp_2_0_2|v2_3|grep_2_[34][ad]?|grep_2_4_2|grep_2_5_1|v6_1_1)"; then
                         continue
                     fi
                     case "$b$s" in
@@ -398,8 +398,6 @@ case "$type" in
                         ntpd/udel_3_3p/) diff_it -r'g/usr.sbin/xntpd/{Config,Config.sed,compilers/hpux10+.cc,machines/hpux10+,parse/util/Makefile}' $t/$b$s; continue ;;
                         ntpd/xntp*/) diff_it -r'g/usr.sbin/xntpd/{Config,Config.sed,compilers/hpux10+.cc,machines/hpux10+,parse/util/Makefile}' $t/$b$s; continue ;;
                         #### inlined stuff below here ####
-                        # useless tag, victim of inlining commits into mainline
-                        misc-GNU/V_GNU_0_2/) continue ;;
                         # These were all merged, but actually we inline some of them, so can't compare them anymore.
                         misc-GNU/dist*/)
                             #diff_em vendor/misc-GNU/dist vendor/misc-GNU/dist1 vendor/misc-GNU/dist3 vendor/misc-GNU/dist2 vendor/misc-GNU/dist
