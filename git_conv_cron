@@ -1,0 +1,48 @@
+#!/bin/sh
+
+set -e
+
+TYPE=$1
+REPO=$TYPE
+case $TYPE in base) REPO=src;; esac
+
+LOG="`date +%Y-%m-%d`_${TYPE}.log"
+
+cd /home/uqs/git_conv
+(git pull && cd svn2git && make) >> $LOG 2>&1
+
+./svnmir.sh -1
+
+case "$1" in
+    base)
+	# test for certain time of day, or maybe test for the age of the previous run? (logfile or HEAD or whatever)
+	eval `/usr/bin/stat -s log-freebsd-base.git`
+	if [ -n "$st_mtime" -a "$st_mtime" -ge `date -v -6H +%s` ]; then
+	    echo "Skipping run for $1 as last result is not yet 6h old" >&2
+	    exit 0
+	fi
+	rm -rf freebsd-$1.git/ gitlog-freebsd-$1.git log-freebsd-$1.git log-freebsd-$1.git.old log-$1
+	rm -rf mi
+	rm -rf archive/*/wrk 2>/dev/null
+	./git_conv "$@" >> $LOG 2>&1
+	./tag_archived_src.sh >> $LOG 2>&1
+	./fix_bogus_tags.sh >> $LOG 2>&1
+        ;;
+    ports|doc)
+	rm -rf freebsd-$1.git/ gitlog-freebsd-$1.git log-freebsd-$1.git log-freebsd-$1.git.old log-$1
+	./git_conv "$@" >> $LOG 2>&1
+        ;;
+    *)
+        echo "Need to specify which repo to convert" >&2
+        exit 1
+        ;;
+esac
+
+if [ $? != 0 ]; then
+    echo "Error during git_conv" >&2
+    tail -30 $LOG
+    exit 1
+else
+    # push and leave a marker to indicate a GC run.
+    cd freebsd-$1.git && git push freebsd && echo $REPO >> /home/git/git_gc_semaphore
+fi
