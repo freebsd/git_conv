@@ -2844,27 +2844,189 @@ end match
 # We have 4 "dist" branches under /vendor/misc-GNU/dist{,1,2,3}/ and they don't
 # overlap at all. In fact, some of the stuff like e.g. libg++ is split across
 # two of them and rcs in dist3 is just an old and forgotten snapshot of dist3.
+# Except for some of the later imports, these were not really handled properly
+# as vendor branches, so we inline most of them.
 match /vendor/misc-GNU/dist3/gnu/usr.bin/rcs/
 end match
-# All the tags are garbage
-match /vendor/misc-GNU/(gnu_tag|GZIP_1_1|TEXT_1_6|GREP_1_6|DIFF_2_3|DIFF3_2_3|ptx_0_3|readline_1_1|texinfo_2_0|libg\+\+_tag|V1_09|rcs_5_7|diff_2_7|gmp_1_3_2|textutils_1_14|gmp_2_0_2|v2_3|grep_2_[34][ad]?|grep_2_4_2|grep_2_5_1|v6_1_1)/
+# Create a new "grep" vendor area, as that's basically the only thing left in
+# misc-GNU/dist* after we're done here.
+match /vendor/misc-GNU/dist[12]/
+  min revision 61
+  max revision 61
+  repository freebsd-base.git
+  branch vendor/misc-GNU/grep/dist
+end match
+match /vendor/misc-GNU/dist1/
+  min revision 96
+  max revision 96
+  repository freebsd-base.git
+  branch vendor/misc-GNU/grep/dist
+end match
+match /vendor/misc-GNU/dist1/
+  min revision 53469
+  max revision 53469
+  repository freebsd-base.git
+  branch vendor/misc-GNU/grep/dist
+  delete gnu/usr.bin/grep/tests/regress.sh
+end match
+match /vendor/misc-GNU/dist1/
+  min revision  53469
+  max revision 131554
+  repository freebsd-base.git
+  branch vendor/misc-GNU/grep/dist
+end match
+match /vendor/misc-GNU/(GREP|grep)_([12])_([3456][ad]?)/
+  repository freebsd-base.git
+  branch refs/tags/vendor/misc-GNU/grep/\2.\3
+  annotated true
+end match
+match /vendor/misc-GNU/(GREP|grep)_([12])_([3456])_([12])/
+  repository freebsd-base.git
+  branch refs/tags/vendor/misc-GNU/grep/\2.\3.\4
+  annotated true
+end match
+
+# All these tags are garbage
+match /vendor/misc-GNU/(gnu_tag|GZIP_1_1|TEXT_1_6|DIFF_2_3|DIFF3_2_3|ptx_0_3|readline_1_1|texinfo_2_0|libg\+\+_tag|V1_09|rcs_5_7|diff_2_7|gmp_1_3_2|textutils_1_14|gmp_2_0_2|v2_3|v6_1_1)/
+end match
+match /vendor/misc-GNU/dist[123]?/
+  min revision 9
+  max revision 57
+  repository freebsd-base.git
+  branch master
+end match
+match /(head)/
+  min revision 19
+  max revision 19
+end match
+match /(head)/
+  min revision 54
+  max revision 54
+end match
+match /(head)/
+  min revision 58
+  max revision 58
+end match
+match /vendor/misc-GNU/dist[123]?/
+  min revision 67
+  max revision 70
+  repository freebsd-base.git
+  branch master
+end match
+match /(head)/
+  min revision 68
+  max revision 71
+end match
+# these go head -> branch
+match /vendor/misc-GNU/dist[123]?/
+  min revision 731
+  max revision 755
+end match
+match /vendor/misc-GNU/dist[123]?/
+  min revision 1457
+  max revision 2726
+  repository freebsd-base.git
+  branch master
+end match
+match /(head)/
+  min revision 1458
+  max revision 1458
+end match
+match /(head)/
+  min revision 1467
+  max revision 1467
+end match
+match /(head)/
+  min revision 1824
+  max revision 1824
+end match
+match /(head)/
+  min revision 1934
+  max revision 1936
+end match
+match /(head)/
+  min revision 2727
+  max revision 2727
+end match
+match /vendor/misc-GNU/dist[123]?/gnu/lib/libg../(Makefile|include/_G_config.h)
+  min revision 4422
+  max revision 4422
+end match
+match /vendor/misc-GNU/dist[123]?/
+  min revision 4420
+  max revision 4422
+  repository freebsd-base.git
+  branch master
+end match
+match /(head)/
+  min revision 4421
+  max revision 4423
 end match
 # now bogus and somehow manages to omit 1 file anyway?
 match /vendor/misc-GNU/dist/
   min revision 4425
   max revision 4425
 end match
+match /(vendor/misc-GNU/dist[123]?|cvs2svn/branches/PST)/
+  min revision 5637
+  max revision 5637
+  repository freebsd-base.git
+  branch master
+end match
+match /(head)/
+  min revision 5638
+  max revision 5638
+end match
+match /vendor/misc-GNU/dist[123]?/
+  min revision 12234
+  max revision 12234
+  repository freebsd-base.git
+  branch master
+end match
+match /head/
+  min revision 12235
+  max revision 12235
+end match
+match /vendor/misc-GNU/dist[123]?/
+  min revision 19045
+  max revision 19045
+  repository freebsd-base.git
+  branch master
+end match
+match /head/
+  min revision 19046
+  max revision 19046
+end match
+# fresh import of cpio v2.3, which was already in head. Shortly after, 2.4.2 is
+# imported to vendor/cpio/dist with r24398, so graft that in front of that.
+match /vendor/misc-GNU/dist2/
+  min revision 24304
+  max revision 24304
+  repository freebsd-base.git
+  branch vendor/misc-GNU/cpio/dist
+end match
+match /vendor/cpio/dist/
+  min revision 24398
+  max revision 24398
+  repository freebsd-base.git
+  branch vendor/misc-GNU/cpio/dist
+  delete gnu  # now under contrib/ prefix
+end match
+match /vendor/misc-GNU/dist1/
+  min revision 157571
+  max revision 157571
+  repository freebsd-base.git
+  branch master
+end match
+#match /head/
+#  min revision 157572
+#  max revision 157572
+#end match
+
+# fallthrough for r11844, r11891, r11905, r13122, r14049
 match /(vendor)/(misc-GNU)/(dist)[123]?/
   repository freebsd-base.git
   branch \1/\2/\3
-end match
-# GNU awk and tar get added here and are later merged into
-# vendor/misc-GNU/dist3 in r731.
-match /cvs2svn/branches/unlabeled-1.1.1/
-  min revision 9
-  max revision 9
-  repository freebsd-base.git
-  branch vendor/misc-GNU/dist
 end match
 
 # fixup trailing dot, skip the rename revs
