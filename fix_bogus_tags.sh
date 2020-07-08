@@ -32,11 +32,9 @@ rewrite_tag()
     fi
 
     # Move the tag up to the ancestor
-    GIT_COMMITTER_DATE="$c_date" GIT_COMMITTER_NAME="$c_committer" GIT_COMMITTER_EMAIL="$c_email" git tag -a -f -m "$c_msg" ${tag} ${target}
-    # NOTE: grabs only the 2nd line (with the tag) and then re-edits the note
-    # to drop the extra newline in the middle.
-    git notes append -m "`git notes show $old_commit|tail -1`" "$tag^{commit}"
-    EDITOR="sed -i.bak -e '/^$/d'" git notes edit "$tag^{commit}"
+    GIT_COMMITTER_DATE="$c_date" GIT_COMMITTER_NAME="$c_committer" GIT_COMMITTER_EMAIL="$c_email" GIT_AUTHOR_DATE="$c_date" GIT_AUTHOR_NAME="$c_committer" GIT_AUTHOR_EMAIL="$c_email" git tag -a -f -m "$c_msg" ${tag} ${target}
+    # NOTE: convoluted to put only 1 edit into refs/commits/notes that doesn't have the extra newline.
+    GIT_COMMITTER_DATE="$c_date" GIT_COMMITTER_NAME="$c_committer" GIT_COMMITTER_EMAIL="$c_email" GIT_AUTHOR_DATE="$c_date" GIT_AUTHOR_NAME="$c_committer" GIT_AUTHOR_EMAIL="$c_email" EDITOR="{ printf 'g/^\$/d\n\$a\n'; git notes show $old_commit|tail -1; printf '.\nwq\n'; } | ed -" git notes edit "$tag^{commit}"
     set +e
 }
 
