@@ -397,6 +397,7 @@ case "$type" in
                         ntpd/udel_33Z/) diff_it -r'g/usr.sbin/xntpd/{parse/util/Makefile,Config,Config.sed}' $t/$b$s; continue ;;
                         ntpd/udel_3_3p/) diff_it -r'g/usr.sbin/xntpd/{Config,Config.sed,compilers/hpux10+.cc,machines/hpux10+,parse/util/Makefile}' $t/$b$s; continue ;;
                         ntpd/xntp*/) diff_it -r'g/usr.sbin/xntpd/{Config,Config.sed,compilers/hpux10+.cc,machines/hpux10+,parse/util/Makefile}' $t/$b$s; continue ;;
+                        diff/*/) diff_it -xconfig.h $t/$b$s; continue ;;
                         #### inlined stuff below here ####
                         # These were all merged, but actually we inline some of them, so can't compare them anymore.
                         misc-GNU/dist*/)
@@ -411,8 +412,10 @@ case "$type" in
                         pnpinfo/*/) continue ;;
                         jthorpe/dist/) continue ;;
                         misc-GNU/tar/) continue ;;
-                        CSRG/dist/) continue ;;
+                        CSRG/*/) continue ;;
+                        sendmail/8.6.10/|sendmail/8.7*/|sendmail/8.8*/) continue ;;
                         NetBSD/dist/) continue ;;
+                        OpenBSD/*/) continue ;;
                     esac
                     diff_it $t/$b$s
                 done
@@ -529,6 +532,10 @@ case "$type" in
         done
         for t in projects release; do
             for b in `svn ls $SVN/$t`; do
+                case $b in
+                    ISBN_1-57176-407-0/) diff_it $t/$b; continue ;;
+                    D*|E*|H*|I*|L*|P*) diff_it $t/$b tags/$b; continue ;;
+                esac
                 diff_it $t/$b
             done
         done
@@ -544,12 +551,9 @@ case "$type" in
         done
         diff_it branches/RELEASE_8_4_0/ releng/8.4.0
         diff_it branches/RELENG_9_2_0 releng/9.2.0
-        #for b in `svn ls $SVN/branches | grep Q`; do
-        #    diff_it branches/$b $b
-        #done
-        #for b in translations; do
-        #    diff_it $b
-        #done
+        for b in `svn ls $SVN/branches | grep Q`; do
+            diff_it branches/$b $b
+        done
         ;;
 esac
 fi

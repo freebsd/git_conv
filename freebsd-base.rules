@@ -80,15 +80,15 @@ match /head/
   min revision 5
   max revision 5
 end match
-match /(cvs2svn/branches/unlabeled-1.1.1|vendor/misc-GNU/dist2|vendor/misc-GNU/dist3)/
+match /(cvs2svn/branches/unlabeled-1.1.1|vendor/misc-GNU/dist[23])/
   min revision 9
   max revision 9
   repository freebsd-base.git
   branch master
 end match
-match /head/
+match /(head|cvs2vn)/
   min revision 10
-  max revision 10
+  max revision 11
 end match
 match /(cvs2svn/branches/unlabeled-1.1.1|vendor/unknown)/
   min revision 16
@@ -130,6 +130,16 @@ match /head/
   min revision 38
   max revision 38
 end match
+match /cvs2svn/branches/man/
+  min revision 103
+  max revision 103
+  repository freebsd-base.git
+  branch master
+end match
+match /head/
+  min revision 104
+  max revision 104
+end match
 match /(cvs2svn/branches/unlabeled-1.1.1|vendor/unknown)/
   min revision 220
   max revision 220
@@ -160,6 +170,16 @@ match /head/
   min revision 868
   max revision 868
 end match
+match /cvs2svn/branches/att/
+  min revision 943
+  max revision 943
+  repository freebsd-base.git
+  branch master
+end match
+match /head/
+  min revision 944
+  max revision 944
+end match
 match /(cvs2svn/branches/unlabeled-1.1.1)/
   min revision 1022
   max revision 1022
@@ -179,6 +199,118 @@ end match
 match /head/
   min revision 1113
   max revision 1113
+end match
+match /cvs2svn/branches/manctl_0_1/
+  min revision 1366
+  max revision 1366
+  repository freebsd-base.git
+  branch master
+end match
+match /head/
+  min revision 1367
+  max revision 1367
+end match
+# Inline the BSD 4.4 code drops, even though that steals some content from
+# vendor branches like sendmail (the dist-old variant) or resolver or NetBSD.
+match /head/
+  min revision 1540
+  max revision 1540
+end match
+match /head/
+  min revision 1542
+  max revision 1542
+end match
+match /head/
+  min revision 1544
+  max revision 1544
+end match
+match /(head|vendor/CSRG/dist|vendor/resolver/dist)/
+  min revision 1539
+  max revision 1543
+  repository freebsd-base.git
+  branch master
+end match
+match /head/
+  min revision 1554
+  max revision 1554
+end match
+match /head/
+  min revision 1557
+  max revision 1557
+end match
+match /head/
+  min revision 1559
+  max revision 1559
+end match
+match /head/
+  min revision 1561
+  max revision 1561
+end match
+match /(cvs2svn/branches/WIN_TUE_NL|head|vendor/CSRG/dist|vendor/NetBSD/dist|vendor/sendmail/dist-old)/
+  min revision 1553
+  max revision 1560
+  repository freebsd-base.git
+  branch master
+end match
+match /head/
+  min revision 1574
+  max revision 1574
+end match
+match /(cvs2svn/branches/unlabeled-1.1.1|head|vendor/CSRG/dist|vendor/OpenBSD/dist|vendor/bind4/dist)/
+  min revision 1573
+  max revision 1573
+  repository freebsd-base.git
+  branch master
+end match
+match /cvs2svn/branches/UofM_at_CP/
+  min revision 1578
+  max revision 1578
+  repository freebsd-base.git
+  branch master
+end match
+match /head/
+  min revision 1579
+  max revision 1579
+end match
+match /vendor/NetBSD/dist/
+  min revision 1581
+  max revision 1581
+  repository freebsd-base.git
+  branch master
+end match
+match /head/
+  min revision 1582
+  max revision 1582
+end match
+match /head/
+  min revision 1591
+  max revision 1591
+end match
+match /head/
+  min revision 1593
+  max revision 1593
+end match
+match /head/
+  min revision 1595
+  max revision 1595
+end match
+match /(cvs2svn/branches/CHRISTOS|cvs2svn/branches/bsd|head|vendor/CSRG/dist|vendor/NetBSD/dist|vendor/OpenBSD/dist|vendor/file/dist)/
+  min revision 1590
+  max revision 1594
+  repository freebsd-base.git
+  branch master
+end match
+match /head/
+  min revision 1639
+  max revision 1639
+end match
+match /(head|vendor/CSRG/dist|vendor/tzdata/dist)/
+  min revision 1638
+  max revision 1638
+  repository freebsd-base.git
+  branch master
+end match
+match /vendor/CSRG/bsd_44_lite/
 end match
 
 
@@ -255,9 +387,22 @@ match /cvs2svn/branches/MATT_THOMAS/
   min revision 7056
   max revision 7056
 end match
+match /cvs2svn/branches/unlabeled-1.1.1/
+  min revision 7022
+  max revision 7022
+end match
+# some easy-import.pl <-> easy-import.perl repo move fallout
+match /cvs2svn/branches/unlabeled-1.1.1/
+  min revision 7514
+  max revision 7514
+end match
 match /cvs2svn/branches/(AMANCIO|voxware)/
   min revision 1257
   max revision 1401
+end match
+match /cvs2svn/branches/unlabeled-1.1.1/
+  min revision 28418
+  max revision 28418
 end match
 match /cvs2svn/branches/(JB|jb)/
   min revision 32410
@@ -314,48 +459,19 @@ match /cvs2svn/branches/unlabeled-1.15.2/
 end match
 match /cvs2svn/branches/unlabeled-[0-9.]*/sbin/ldconfig/
 end match
-
-# Just 1 commit, inline it.
-match /cvs2svn/branches/man/
-  min revision 103
-  max revision 103
-  repository freebsd-base.git
-  branch master
+# csup stuff
+match /cvs2svn/branches/unlabeled-1\.1\.4/
 end match
-match /head/
-  min revision 104
-  max revision 104
+match /cvs2svn/
+  min revision 9722
+  max revision 9723
 end match
-match /cvs2svn/branches/att/
-  min revision 943
-  max revision 943
-  repository freebsd-base.git
-  branch master
+match /cvs2svn/
+  min revision 10849
+  max revision 10849
 end match
-match /head/
-  min revision 944
-  max revision 944
-end match
-match /cvs2svn/branches/manctl_0_1/
-  min revision 1366
-  max revision 1366
-  repository freebsd-base.git
-  branch master
-end match
-match /head/
-  min revision 1367
-  max revision 1367
-end match
-
-match /cvs2svn/branches/UofM_at_CP/
-  min revision 1578
-  max revision 1578
-  repository freebsd-base.git
-  branch master
-end match
-match /head/
-  min revision 1579
-  max revision 1579
+# sysinstall and FAQ?
+match /cvs2svn/branches/unlabeled-1\.13\.4/
 end match
 
 # TODO: inline the bsd 4.4 code drops, spraying them all over the place isn't super helpful.
@@ -580,13 +696,10 @@ match /(vendor)/(ee)/(dist)/
   delete usr.bin/ee
 end match
 
-# This is a groff branch
-match /(cvs2svn)/(branches)/(PST)/
+# garbage groff vestiges in branches/PST
+match /cvs2svn/
   min revision 18139
-  max revision 18139
-  repository freebsd-base.git
-  branch \1/\2/\3
-  branchpoint none
+  max revision 18141
 end match
 
 # put nvi into /vendor
@@ -1016,10 +1129,14 @@ match /head/
   max revision 3674
 end match
 match /cvs2svn/branches/(xten|unlabeled-1.1.1)/
-  min revision 3782
+  min revision 3779
   max revision 3782
   repository freebsd-base.git
   branch master
+end match
+match /head/
+  min revision 3780
+  max revision 3780
 end match
 match /(head|cvs2svn)/
   min revision 3783
@@ -1105,6 +1222,16 @@ match /(head|cvs2svn)/
   min revision 5263
   max revision 5264
 end match
+match /cvs2svn/branches/unlabeled-1.1.1/
+  min revision 5425
+  max revision 5425
+  repository freebsd-base.git
+  branch master
+end match
+match /(head|cvs2svn)/
+  min revision 5426
+  max revision 5427
+end match
 match /cvs2svn/branches/sipb/
   min revision 5622
   max revision 5719
@@ -1173,6 +1300,16 @@ match /(head|cvs2svn)/
   min revision 6060
   max revision 6061
 end match
+match /cvs2svn/branches/unlabeled-1.1.1/
+  min revision 6199
+  max revision 6199
+  repository freebsd-base.git
+  branch master
+end match
+match /(head|cvs2svn)/
+  min revision 6200
+  max revision 6201
+end match
 match /cvs2svn/branches/mkisofs/
   min revision 6318
   max revision 6318
@@ -1225,6 +1362,26 @@ match /(head|cvs2svn)/
   min revision 6528
   max revision 6529
 end match
+match /(vendor/CSRG/dist|vendor/sendmail/dist-old)/
+  min revision 6647
+  max revision 6647
+  repository freebsd-base.git
+  branch master
+end match
+#match /(head|cvs2svn)/
+#  min revision 6648
+#  max revision 6649
+#end match
+match /vendor/sendmail/dist-old/
+  min revision 6653
+  max revision 6653
+  repository freebsd-base.git
+  branch master
+end match
+#match /(head|cvs2svn)/
+#  min revision 6654
+#  max revision 6654
+#end match
 match /cvs2svn/branches/bootparamd/
   min revision 6751
   max revision 6751
@@ -1235,6 +1392,35 @@ match /(head|cvs2svn)/
   min revision 6752
   max revision 6753
 end match
+# look, this vendor branch is a stub only, so we inline this liberally.
+match /vendor/sendmail/dist-old/usr.sbin/sendmail/src/(conf|daemon|deliver|domain).c
+  min revision 6973
+  max revision 6973
+end match
+match /vendor/sendmail/dist-old/
+  min revision 6973
+  max revision 6973
+  repository freebsd-base.git
+  branch master
+end match
+#match /(head|cvs2svn)/
+#  min revision 6974
+#  max revision 6974
+#end match
+match /vendor/sendmail/dist-old/usr.sbin/sendmail/src/(conf|daemon|deliver|readcf).c
+  min revision 10088
+  max revision 10088
+end match
+match /vendor/sendmail/dist-old/
+  min revision 10088
+  max revision 10088
+  repository freebsd-base.git
+  branch master
+end match
+#match /(head|cvs2svn)/
+#  min revision 10089
+#  max revision 10089
+#end match
 match /cvs2svn/branches/InterNIC/
   min revision 7270
   max revision 7270
@@ -1255,6 +1441,16 @@ match /(head|cvs2svn)/
   min revision 7284
   max revision 7285
 end match
+match /cvs2svn/branches/unlabeled-1.1.1/
+  min revision 7302
+  max revision 7302
+  repository freebsd-base.git
+  branch master
+end match
+match /(head|cvs2svn)/
+  min revision 7303
+  max revision 7303
+end match
 match /cvs2svn/branches/libftp/
   min revision 8064
   max revision 8064
@@ -1264,6 +1460,16 @@ end match
 match /(head|cvs2svn)/
   min revision 8065
   max revision 8066
+end match
+match /cvs2svn/branches/unlabeled-1.1.1/
+  min revision 8097
+  max revision 8097
+  repository freebsd-base.git
+  branch master
+end match
+match /(head|cvs2svn)/
+  min revision 8098
+  max revision 8099
 end match
 match /cvs2svn/branches/jfieber/
   min revision 8100
@@ -1307,6 +1513,10 @@ end match
 match /head/
   min revision 9317
   max revision 9317
+end match
+match /vendor/CSRG/
+  min revision 9337
+  max revision 9337
 end match
 match /cvs2svn/branches/ACHE/
   min revision 11696
@@ -1839,6 +2049,16 @@ match /(head|cvs2svn)/
   max revision 24145
 end match
 
+match /cvs2svn/branches/unlabeled-1.1.1/
+  min revision 27159
+  max revision 27159
+  repository freebsd-base.git
+  branch master
+end match
+match /(head|cvs2svn)/
+  min revision 27160
+  max revision 27160
+end match
 match /cvs2svn/branches/MARKM/
   min revision 29815
   max revision 29815
@@ -2016,6 +2236,16 @@ match /(head|cvs2svn)/
   min revision 26782
   max revision 26783
 end match
+match /(cvs2svn/branches/unlabeled-1.1.1|vendor/CSRG/dist)/
+  min revision 27237
+  max revision 27237
+  repository freebsd-base.git
+  branch master
+end match
+#match /(head|cvs2svn)/
+#  min revision 27238
+#  max revision 27238
+#end match
 match /cvs2svn/branches/POWERDOG/
   min revision 28019
   max revision 28019
@@ -2061,6 +2291,21 @@ match /(head|cvs2svn)/
   min revision 29616
   max revision 29617
 end match
+# a diff file, put it in the vendor area and delete it with a later revision
+match /cvs2svn/branches/unlabeled-1.1.1/
+  min revision 30839
+  max revision 30839
+  repository freebsd-base.git
+  branch vendor/diff/dist
+end match
+match /vendor/diff/dist/
+  min revision 170759
+  max revision 170759
+  repository freebsd-base.git
+  branch vendor/diff/dist
+  delete contrib/diff/config.h
+end match
+
 match /cvs2svn/branches/IWAI/
   min revision 32345
   max revision 32345
@@ -2070,6 +2315,12 @@ end match
 match /(head|cvs2svn)/
   min revision 32346
   max revision 32347
+end match
+
+# obsolete by r34759
+match /cvs2svn/branches/unlabeled-1.1.1/
+  min revision 34758
+  max revision 34758
 end match
 
 # Need to snip off history. Also, this wasn't ever properly recorded as a
@@ -3018,10 +3269,10 @@ match /vendor/misc-GNU/dist1/
   repository freebsd-base.git
   branch master
 end match
-#match /head/
-#  min revision 157572
-#  max revision 157572
-#end match
+match /head/
+  min revision 157572
+  max revision 157572
+end match
 
 # fallthrough for r11844, r11891, r11905, r13122, r14049
 match /(vendor)/(misc-GNU)/(dist)[123]?/
