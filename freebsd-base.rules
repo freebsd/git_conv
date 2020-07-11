@@ -310,7 +310,108 @@ match /(head|vendor/CSRG/dist|vendor/tzdata/dist)/
   repository freebsd-base.git
   branch master
 end match
-match /vendor/CSRG/bsd_44_lite/
+match /vendor/CSRG/bsd_44_lite(_2)?/
+end match
+match /cvs2svn/tags/bsd_44_lite2/
+end match
+match /(vendor/CSRG/dist|vendor/sendmail/dist-old)/
+  min revision 6647
+  max revision 6647
+  repository freebsd-base.git
+  branch master
+end match
+match /(head|cvs2svn)/
+  min revision 6648
+  max revision 6649
+end match
+match /vendor/sendmail/dist-old/
+  min revision 6653
+  max revision 6653
+  repository freebsd-base.git
+  branch master
+end match
+match /(head|cvs2svn)/
+  min revision 6654
+  max revision 6654
+end match
+match /cvs2svn/branches/bsd/
+  min revision 7528
+  max revision 7528
+end match
+match /vendor/CSRG/
+  min revision 9337
+  max revision 9337
+end match
+#match /vendor/CSRG/
+#  min revision 9337
+#  max revision 11152
+#end match
+#match /vendor/CSRG/
+#  min revision 13429
+#  max revision 13429
+#end match
+match /vendor/CSRG/dist/lib/libc/db/(btree/(bt_close|bt_open)|hash/(hash|hash_page|ndbm)|mpool/mpool|recno/(rec_put|rec_search|rec_seq)|test/dbtest).[ch]
+  min revision 14272
+  max revision 14272
+end match
+match /vendor/CSRG/dist/
+  min revision 14272
+  max revision 14272
+  repository freebsd-base.git
+  branch master
+end match
+match /(head|cvs2svn|vendor)/
+  min revision 14273
+  max revision 14275
+end match
+match /vendor/(CSRG|NetBSD)/dist/libexec/getty/gettytab.5
+  min revision 15100
+  max revision 15100
+end match
+match /vendor/(CSRG|NetBSD)/dist/
+  min revision 15100
+  max revision 15100
+  repository freebsd-base.git
+  branch master
+end match
+match /(head|cvs2svn)/
+  min revision 15101
+  max revision 15101
+end match
+match /vendor/CSRG/dist/
+  min revision 23715
+  max revision 23715
+end match
+
+# the import into bind4 would actually revert the import done in r13304 and
+# revert files to an older state, so what's the point?
+match /vendor/(bind4|CSRG)/dist/
+  min revision 27180
+  max revision 27180
+  repository freebsd-base.git
+  branch vendor/CSRG/dist
+end match
+
+match /vendor/CSRG/dist/usr.bin/tn3270/Makefile
+  min revision 27237
+  max revision 27237
+end match
+match /(cvs2svn/branches/unlabeled-1.1.1|vendor/CSRG/dist)/
+  min revision 27237
+  max revision 27237
+  repository freebsd-base.git
+  branch master
+end match
+match /(head|cvs2svn)/
+  min revision 27238
+  max revision 27238
+end match
+
+match /(cvs2svn/branches/WIN_TUE_NL|vendor/CSRG/dist|vendor/NetBSD/dist)/
+  min revision 27850
+  max revision 27850
+  repository freebsd-base.git
+  branch vendor/CSRG/dist
 end match
 
 
@@ -383,6 +484,10 @@ match /cvs2svn/tags/FINAL_1_0_2/
 end match
 match /cvs2svn/branches/Makefile/
 end match
+match /vendor/NetBSD/dist/
+  min revision 3585
+  max revision 3585
+end match
 match /cvs2svn/branches/MATT_THOMAS/
   min revision 7056
   max revision 7056
@@ -407,6 +512,14 @@ end match
 match /cvs2svn/branches/(JB|jb)/
   min revision 32410
   max revision 32418
+end match
+match /vendor/resolver/dist/
+  min revision 36889
+  max revision 36889
+end match
+match /vendor/resolver/dist/
+  min revision 157309
+  max revision 157309
 end match
 match /cvs2svn/branches/WIP_GCC31/
   min revision 85743
@@ -433,6 +546,34 @@ match /cvs2svn/branches/jt_spdup/
 end match
 match /cvs2svn/tags/(b4_spdup|cronxy_2_4)/
 end match
+match /cvs2svn/branches/unlabeled-(1\.1\.1\.1\.6|1\.2\.4)/
+end match
+match /cvs2svn/branches/unlabeled-1\.2\.6/
+  min revision 7397
+  max revision 7397
+end match
+match /cvs2svn/branches/unlabeled-1\.2\.[46]/
+end match
+match /cvs2svn/branches/unlabeled-1\.3\.4/
+end match
+
+match /cvs2svn/branches/unlabeled-1\.(12|19)\.2/
+end match
+match /cvs2svn/branches/unlabeled-1\.[13]4\.4/
+end match
+# this drops r4731 which propably can't be saved anyway
+match /cvs2svn/branches/unlabeled-1\.1[0346789]\.2/
+end match
+
+match /cvs2svn/branches/unlabeled-1\.[123456789]\.2/
+end match
+match /cvs2svn/branches/unlabeled-1\.(20|23|27|30)\.2/
+end match
+match /cvs2svn/branches/unlabeled-1\.[4569]\.4/
+end match
+match /cvs2svn/branches/unlabeled-1\.12\.4/
+end match
+
 
 # unlabeled mess, I guess a result from repo-copies and moves
 #
@@ -473,11 +614,6 @@ end match
 # sysinstall and FAQ?
 match /cvs2svn/branches/unlabeled-1\.13\.4/
 end match
-
-# TODO: inline the bsd 4.4 code drops, spraying them all over the place isn't super helpful.
-# TODO: do that for cvs2svn/branches/CHRISTOS' early revisions, but drop the later stuff straight
-# into vendor/NetBSD/bmake/dist (and prepare for the initial drop there)
-# TODO: look at cvs2svn/branches/PST again!
 
 # 3 commits on UDEL, which is xntpd stuff
 match /(vendor/ntpd/dist|cvs2svn/branches/UDEL)/
@@ -1320,7 +1456,7 @@ match /(head|cvs2svn)/
   min revision 6319
   max revision 6320
 end match
-# FIXME: not sure what to do about the 2nd import in r11646 using a vendor branch
+# 2nd and last import in r11646 is using a vendor branch properly :/
 
 match /cvs2svn/branches/isdn/
   min revision 6407
@@ -1362,26 +1498,6 @@ match /(head|cvs2svn)/
   min revision 6528
   max revision 6529
 end match
-match /(vendor/CSRG/dist|vendor/sendmail/dist-old)/
-  min revision 6647
-  max revision 6647
-  repository freebsd-base.git
-  branch master
-end match
-#match /(head|cvs2svn)/
-#  min revision 6648
-#  max revision 6649
-#end match
-match /vendor/sendmail/dist-old/
-  min revision 6653
-  max revision 6653
-  repository freebsd-base.git
-  branch master
-end match
-#match /(head|cvs2svn)/
-#  min revision 6654
-#  max revision 6654
-#end match
 match /cvs2svn/branches/bootparamd/
   min revision 6751
   max revision 6751
@@ -1403,10 +1519,10 @@ match /vendor/sendmail/dist-old/
   repository freebsd-base.git
   branch master
 end match
-#match /(head|cvs2svn)/
-#  min revision 6974
-#  max revision 6974
-#end match
+match /(head|cvs2svn)/
+  min revision 6974
+  max revision 6974
+end match
 match /vendor/sendmail/dist-old/usr.sbin/sendmail/src/(conf|daemon|deliver|readcf).c
   min revision 10088
   max revision 10088
@@ -1417,10 +1533,10 @@ match /vendor/sendmail/dist-old/
   repository freebsd-base.git
   branch master
 end match
-#match /(head|cvs2svn)/
-#  min revision 10089
-#  max revision 10089
-#end match
+match /(head|cvs2svn)/
+  min revision 10089
+  max revision 10089
+end match
 match /cvs2svn/branches/InterNIC/
   min revision 7270
   max revision 7270
@@ -1513,10 +1629,6 @@ end match
 match /head/
   min revision 9317
   max revision 9317
-end match
-match /vendor/CSRG/
-  min revision 9337
-  max revision 9337
 end match
 match /cvs2svn/branches/ACHE/
   min revision 11696
@@ -1833,6 +1945,26 @@ match /head/
   max revision 18149
 end match
 
+match /(cvs2svn/branches/CHRISTOS|vendor/CSRG/dist)/
+  min revision 18756
+  max revision 18756
+  repository freebsd-base.git
+  branch vendor/NetBSD/bmake/dist
+end match
+match /cvs2svn/branches/CHRISTOS/
+  min revision 18731
+  max revision 27241
+  repository freebsd-base.git
+  branch vendor/NetBSD/bmake/dist
+end match
+match /vendor/NetBSD/bmake/dist/
+  min revision 236769
+  max revision 236769
+  repository freebsd-base.git
+  branch vendor/NetBSD/bmake/dist
+  delete usr.bin/make
+end match
+
 match /cvs2svn/branches/GIBBS/
   min revision 18781
   max revision 18781
@@ -1975,7 +2107,7 @@ match /head/
   max revision 21440
 end match
 
-# Need to blacklist 2 files that didn't hit head as-is
+# Need to block 2 files that didn't hit head as-is
 match /cvs2svn/branches/MATT_THOMAS/(sys/netinet/if_fddi.h|sys/net/if_fddisubr.c)
   min revision 21826
   max revision 21826
@@ -2038,6 +2170,32 @@ match /(head|cvs2svn)/
   min revision 48908
   max revision 48909
 end match
+
+match /cvs2svn/branches/PST/
+  min revision 22375
+  max revision 22381
+  repository freebsd-base.git
+  branch master
+end match
+match /(head|cvs2svn)/
+  min revision 22376
+  max revision 22383
+end match
+match /(head|cvs2svn)/
+  min revision 22383
+  max revision 22383
+end match
+match /cvs2svn/branches/PST/
+  min revision 28112
+  max revision 28114
+  repository freebsd-base.git
+  branch master
+end match
+match /(head|cvs2svn)/
+  min revision 28113
+  max revision 28115
+end match
+
 match /cvs2svn/branches/FREEBSD/
   min revision 24143
   max revision 24143
@@ -2236,16 +2394,6 @@ match /(head|cvs2svn)/
   min revision 26782
   max revision 26783
 end match
-match /(cvs2svn/branches/unlabeled-1.1.1|vendor/CSRG/dist)/
-  min revision 27237
-  max revision 27237
-  repository freebsd-base.git
-  branch master
-end match
-#match /(head|cvs2svn)/
-#  min revision 27238
-#  max revision 27238
-#end match
 match /cvs2svn/branches/POWERDOG/
   min revision 28019
   max revision 28019
@@ -2295,15 +2443,6 @@ end match
 match /cvs2svn/branches/unlabeled-1.1.1/
   min revision 30839
   max revision 30839
-  repository freebsd-base.git
-  branch vendor/diff/dist
-end match
-match /vendor/diff/dist/
-  min revision 170759
-  max revision 170759
-  repository freebsd-base.git
-  branch vendor/diff/dist
-  delete contrib/diff/config.h
 end match
 
 match /cvs2svn/branches/IWAI/
@@ -2605,6 +2744,14 @@ match /cvs2svn/tags/LOMAC_2_2_0/
   repository freebsd-base.git
   branch refs/tags/vendor/lomac/2.2.0
   annotated yes
+end match
+
+# tip(1) from OpenBSD
+match /cvs2svn/branches/bsd/
+  min revision 88273
+  max revision 161751
+  repository freebsd-base.git
+  branch vendor/OpenBSD/dist
 end match
 
 # This was used just once, inline it. tar otherwise lived under vendor/misc-GNU/dist3
@@ -4151,7 +4298,7 @@ match /(vendor)/(patch)/(dist)/
   repository freebsd-base.git
   branch \1/misc-GNU/\2/\3
 end match
-match /(vendor)/(awk|bc|bison|cpio|cvs|patch|tar|texinfo)/((?!dist)[^/]+)/
+match /(vendor)/(awk|bc|bison|cpio|cvs|diff|patch|tar|texinfo)/((?!dist)[^/]+)/
   # we'll get a BSD licensed bc under /vendor/bc with r362697, so make sure we
   # don't match that then.
   max revision 282585
@@ -4159,7 +4306,7 @@ match /(vendor)/(awk|bc|bison|cpio|cvs|patch|tar|texinfo)/((?!dist)[^/]+)/
   branch refs/tags/\1/misc-GNU/\2/\3
   annotated true
 end match
-match /(vendor)/(awk|bc|bison|cpio|cvs|patch|tar|texinfo)/([^/]+)/
+match /(vendor)/(awk|bc|bison|cpio|cvs|diff|patch|tar|texinfo)/([^/]+)/
   max revision 282585
   repository freebsd-base.git
   branch \1/misc-GNU/\2/\3
@@ -5006,7 +5153,7 @@ match /head/
   max revision 88276
   repository freebsd-base.git
   branch master
-  branchpoint cvs2svn/branches/bsd@88273
+  branchpoint vendor/OpenBSD/dist@88273
 end match
 # /head/contrib/patch was fully deleted in r128779, skip the partial delete,
 # manufactured by cvs2svn

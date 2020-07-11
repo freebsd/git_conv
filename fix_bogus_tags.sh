@@ -120,8 +120,8 @@ if git rev-list vendor/bzip2/dist..vendor/bzip2/1.0.4 | wc -l | grep -q 1; then
     rewrite_tag vendor/bzip2/1.0.4 `git log --format=%h --notes --grep='revision=167984$' vendor/bzip2/dist`
 fi
 # vendor/diff/2.8.7
-if git rev-list vendor/diff/dist..vendor/diff/2.8.7 | wc -l | grep -q 1; then
-    rewrite_tag vendor/diff/2.8.7 `git log --format=%h --notes --grep='revision=170759$' vendor/diff/dist`
+if git rev-list vendor/misc-GNU/diff/dist..vendor/misc-GNU/diff/2.8.7 | wc -l | grep -q 1; then
+    rewrite_tag vendor/misc-GNU/diff/2.8.7 `git log --format=%h --notes --grep='revision=170759$' vendor/misc-GNU/diff/dist`
 fi
 # vendor/file/5.00
 if git rev-list vendor/file/dist..vendor/file/5.00 | wc -l | grep -q 1; then

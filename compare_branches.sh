@@ -397,7 +397,7 @@ case "$type" in
                         ntpd/udel_33Z/) diff_it -r'g/usr.sbin/xntpd/{parse/util/Makefile,Config,Config.sed}' $t/$b$s; continue ;;
                         ntpd/udel_3_3p/) diff_it -r'g/usr.sbin/xntpd/{Config,Config.sed,compilers/hpux10+.cc,machines/hpux10+,parse/util/Makefile}' $t/$b$s; continue ;;
                         ntpd/xntp*/) diff_it -r'g/usr.sbin/xntpd/{Config,Config.sed,compilers/hpux10+.cc,machines/hpux10+,parse/util/Makefile}' $t/$b$s; continue ;;
-                        diff/*/) diff_it -xconfig.h $t/$b$s; continue ;;
+                        diff/*/) diff_it -xconfig.h $t/$b$s $t/misc-GNU/$b$s; continue ;;
                         #### inlined stuff below here ####
                         # These were all merged, but actually we inline some of them, so can't compare them anymore.
                         misc-GNU/dist*/)
