@@ -378,6 +378,13 @@ match /(head|cvs2svn)/
   min revision 15101
   max revision 15101
 end match
+# stray file went off to OpenBSD land ...
+match /vendor/(CSRG|OpenBSD)/dist/
+  min revision 23658
+  max revision 23658
+  repository freebsd-base.git
+  branch vendor/CSRG/dist
+end match
 match /vendor/CSRG/dist/
   min revision 23715
   max revision 23715
@@ -407,13 +414,21 @@ match /(head|cvs2svn)/
   max revision 27238
 end match
 
+# Let these files live in CSRG, they otherwise clobber some files that are
+# already newer in the NetBSD and OpenBSD trees!
+match /vendor/(CSRG|NetBSD|OpenBSD)/dist/
+  min revision 27241
+  max revision 27241
+  repository freebsd-base.git
+  branch vendor/CSRG/dist
+end match
+
 match /(cvs2svn/branches/WIN_TUE_NL|vendor/CSRG/dist|vendor/NetBSD/dist)/
   min revision 27850
   max revision 27850
   repository freebsd-base.git
   branch vendor/CSRG/dist
 end match
-
 
 # don't record the file death here, *if* it was the last commit to that branch
 # this helps out list_short_merges.sh to find branches that we want to splice
@@ -2746,6 +2761,37 @@ match /cvs2svn/tags/LOMAC_2_2_0/
   branch refs/tags/vendor/lomac/2.2.0
   annotated yes
 end match
+
+# cvs2svn manufactured commits that are useless, as a later commits will update
+# the files anyway (and will have a meaningful commit message)
+#
+# OpenBSD didn't even exist in 1994 yet ...
+match /vendor/OpenBSD/dist/
+  min revision 2022
+  max revision 13122  # rev doesn't apply
+end match
+# block the RCS import, it never happened ...
+match /vendor/OpenBSD/dist/
+  min revision 282572
+  max revision 358868
+end match
+
+match /vendor/NetBSD/dist/
+  min revision 45097
+  max revision 45097
+  # r78344 and r78616
+end match
+match /vendor/NetBSD/dist/
+  min revision 98185
+  max revision 98185
+  # r98576 brings them in
+end match
+match /vendor/NetBSD/dist/
+  min revision 127413
+  max revision 127413
+  # r127419 imports these files
+end match
+
 
 # tip(1) from OpenBSD
 match /cvs2svn/branches/bsd/
