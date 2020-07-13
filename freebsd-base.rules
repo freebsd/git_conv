@@ -4959,9 +4959,6 @@ end match
 # I checked all of them, and 99% are garbage, some will be handled specially,
 # the rest will be discarded.
 match /(cvs2svn)/(tags)/([^/]+)/
-  repository freebsd-base.git
-  branch refs/tags/\1/\2/\3
-  annotated true
 end match
 
 # See revisions.md for why the first cvs2svn generated branchpoint is bogus.
