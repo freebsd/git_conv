@@ -548,32 +548,21 @@ match /cvs2svn/tags/(b4_spdup|cronxy_2_4)/
 end match
 match /cvs2svn/branches/unlabeled-(1\.1\.1\.1\.6|1\.2\.4)/
 end match
-match /cvs2svn/branches/unlabeled-1\.2\.6/
-  min revision 7397
-  max revision 7397
-end match
 match /cvs2svn/branches/unlabeled-1\.2\.[46]/
-end match
-match /cvs2svn/branches/unlabeled-1\.3\.4/
-end match
-
-match /cvs2svn/branches/unlabeled-1\.(12|19)\.2/
 end match
 match /cvs2svn/branches/unlabeled-1\.[13]4\.4/
 end match
 # this drops r4731 which propably can't be saved anyway
 match /cvs2svn/branches/unlabeled-1\.1[0346789]\.2/
 end match
-
 match /cvs2svn/branches/unlabeled-1\.[123456789]\.2/
 end match
-match /cvs2svn/branches/unlabeled-1\.(20|23|27|30)\.2/
+match /cvs2svn/branches/unlabeled-1\.(12|19|20|23|27|30|45)\.2/
 end match
-match /cvs2svn/branches/unlabeled-1\.[4569]\.4/
+match /cvs2svn/branches/unlabeled-1\.[34569]\.4/
 end match
 match /cvs2svn/branches/unlabeled-1\.12\.4/
 end match
-
 
 # unlabeled mess, I guess a result from repo-copies and moves
 #
@@ -894,6 +883,14 @@ match /head/
   repository freebsd-base.git
   branch master
   branchpoint cvs2svn/branches/ANDREW_LOCKD@86641
+end match
+# record WIP_GCC31 as being merged here
+match /head/
+  min revision 96340
+  max revision 96340
+  repository freebsd-base.git
+  branch master
+  branchpoint cvs2svn/branches/WIP_GCC31@96339
 end match
 
 # These are basically the same thing
@@ -2724,9 +2721,13 @@ match /(cvs2svn)/(branches)/(NETGRAPH)/
   min revision 66901
   max revision 66901
   repository freebsd-base.git
-  branch \1/\2/\3
+  branch projects/netgraph_ppp
   # git log --format=none@%T --notes --grep='revision=66900$'
   branchpoint none@70ae643eb6340c78f40c375830898f626e07e456
+end match
+match /cvs2svn/branches/NETGRAPH/
+  repository freebsd-base.git
+  branch projects/netgraph_ppp
 end match
 # created in r92208, never used for anything
 match /cvs2svn/branches/IMP_CB_MERGE/
