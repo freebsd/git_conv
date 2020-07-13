@@ -107,7 +107,7 @@ public:
         virtual void setDateTime(uint dt) = 0;
         virtual void setLog(const QByteArray &log) = 0;
 
-        virtual void noteCopyFromBranch (const QString &prevbranch, int revFrom) = 0;
+        virtual void noteCopyFromBranch (const QString &prevbranch, int revFrom, bool allow_heuristic=true) = 0;
 
         virtual void deleteFile(const QString &path) = 0;
         virtual void renameFile(const QString &from, const QString &to) = 0;

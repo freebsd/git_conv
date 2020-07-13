@@ -38,6 +38,28 @@ rewrite_tag()
     set +e
 }
 
+graft_and_filter() {
+    local tag target
+    test $# -eq 2 || { echo "wrong number of arguments given: $1 and $2" >&2; exit 1; }
+    tag=$1
+    target=$2
+
+    set -e
+    c_auth=`git cat-file tag $tag | sed -n '/^tagger/s/^tagger //; s/ [0-9 +]*$//p'`
+    c_date=`git cat-file tag $tag | sed -n '/^tagger/s/^tagger //p' | egrep -o '[0-9]* [+0-9]*$'`
+    c_msg=`git cat-file tag $tag | sed '1,/^$/d'`
+    c_committer=${c_auth%<*}
+    c_email=${c_auth#*<}
+
+    old_commit=`git show -s --format=%h "$tag^{commit}"`
+
+    git replace --graft $tag $target # revision=159825
+    FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch -f --tag-name-filter cat $tag
+    # copy notes over to the new commit
+    GIT_COMMITTER_DATE="$c_date" GIT_COMMITTER_NAME="$c_committer" GIT_COMMITTER_EMAIL="$c_email" GIT_AUTHOR_DATE="$c_date" GIT_AUTHOR_NAME="$c_committer" GIT_AUTHOR_EMAIL="$c_email" git notes append -m "`git notes show $old_commit`" "$tag^{commit}"
+    git update-ref -d refs/original/refs/tags/$tag
+}
+
 git --git-dir=$git for-each-ref --format='%(refname:short)' refs/tags |
     egrep -v "^(backups|release)/" |
     while read rev; do
@@ -54,8 +76,11 @@ git --git-dir=$git for-each-ref --format='%(refname:short)' refs/tags |
 # r221422 tagged a single file, as the vendor tree just has a single *new*
 # file. This is however a file copy, not a dir copy and we end up with an extra
 # commit object. Patch it up.
-if git rev-parse -q --verify vendor/v4l/2.6.17~1 >/dev/null; then
+if git show --format=%P -s vendor/v4l/2.6.17\^{} | xargs -n1 | wc -l | grep -q 2; then
     rewrite_tag vendor/v4l/2.6.17 `git log --format=%h --notes --grep='revision=221421$' vendor/v4l/dist`
+fi
+if git rev-list vendor/v4l/dist..vendor/v4l/2.6.34.14|wc -l|grep -q 1; then
+    rewrite_tag vendor/v4l/2.6.34.14 `git log --format=%h --notes --grep='revision=252590$' vendor/v4l/dist`
 fi
 
 # Something else was merged into the commit, point to the commit on dist instead
@@ -169,3 +194,13 @@ fi
 
 # artifact of the conversion, not needed.
 git update-ref -d refs/backups/r17806/heads/vendor/nvi/dist
+
+# These need their parent change w/o touching the tree object.
+if ! git show --format=%T -s vendor/file/4.17a~1 | grep -q 5955fc5b4bbbf94b243c08adea8d5ed70b4e7577; then
+    graft_and_filter vendor/file/4.17a `git log --format=%h --notes --grep='revision=159825$' vendor/file/dist`
+fi
+if ! git show --format=%T -s vendor/gcc/2.95.1~1 | grep -q a1f2c4c47e8e2c43a83ae4b26946eb4a8d4f14b9; then
+    graft_and_filter vendor/gcc/2.95.1 `git log --format=%h --notes --grep='revision=58650$' vendor/gcc/dist`
+fi
+# ... and delete the unneeded grafts again.
+git show-ref | grep refs/replace/ | cut -d" " -f2 | xargs -n1 git update-ref -d

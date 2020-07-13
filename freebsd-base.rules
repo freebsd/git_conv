@@ -3577,6 +3577,60 @@ match /(vendor)/(SGI)/tags/(v_2_17)/
   branch refs/tags/\1/\2/\3
   annotated true
 end match
+# This one imported under contrib/ and should've deleted old stuff under usr.bin/
+match /(vendor|vendor-sys|vendor-crypto)/([^/]+)/([^/]+)/
+  min revision 68349
+  max revision 68349
+  repository freebsd-base.git
+  # unify the prefix for other branches
+  branch vendor/\2/\3
+  delete usr.bin
+end match
+
+# the bump-branchpoint-heuristic produces a bogus result for these, override them manually
+match /(vendor|vendor-sys|vendor-crypto)/([^/]+)/((?!dist)[^/]+)/
+  min revision 53656
+  max revision 53656
+  repository freebsd-base.git
+  branch refs/tags/vendor/\2/\3
+  annotated true
+  branchpoint vendor/gcc/dist@48743
+end match
+match /(vendor|vendor-sys|vendor-crypto)/([^/]+)/((?!dist)[^/]+)/
+  min revision 53659
+  max revision 53659
+  repository freebsd-base.git
+  branch refs/tags/vendor/\2/\3
+  annotated true
+  branchpoint vendor/gcc/dist@52143
+end match
+match /(vendor|vendor-sys|vendor-crypto)/([^/]+)/((?!dist)[^/]+)/
+  min revision 58652
+  max revision 58652
+  repository freebsd-base.git
+  branch refs/tags/vendor/\2/\3
+  annotated true
+  branchpoint vendor/gcc/dist@52287
+end match
+match /(vendor|vendor-sys|vendor-crypto)/([^/]+)/((?!dist)[^/]+)/
+  min revision 69182
+  max revision 69182
+  repository freebsd-base.git
+  branch refs/tags/vendor/\2/\3
+  annotated true
+  branchpoint vendor/binutils/dist@68673
+end match
+match /vendor/gcc/2.95.3-test[13]/
+end match
+match /(vendor|vendor-sys|vendor-crypto)/([^/]+)/((?!dist)[^/]+)/
+  min revision 159827
+  max revision 159827
+  repository freebsd-base.git
+  branch refs/tags/vendor/\2/\3
+  annotated true
+  branchpoint vendor/file/dist@68349
+end match
+
 # look what I've found between the couch cushions
 match /(vendor)-crypto/(OpenSSH)/(dist)/
   min revision 74713

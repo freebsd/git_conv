@@ -1875,7 +1875,8 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
         } else {
             merge_from_rev_ = rev_from;
             merge_from_branch_ = prevbranch;
-            txn->noteCopyFromBranch (prevbranch, rev_from);
+            bool allow_heuristic = (rule.branchpoint == "");
+            txn->noteCopyFromBranch(prevbranch, rev_from, allow_heuristic);
         }
     }
 

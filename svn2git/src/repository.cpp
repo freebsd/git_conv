@@ -78,7 +78,7 @@ public:
         void setDateTime(uint dt);
         void setLog(const QByteArray &log);
 
-        void noteCopyFromBranch (const QString &prevbranch, int revFrom);
+        void noteCopyFromBranch(const QString &prevbranch, int revFrom, bool allow_heuristic=true);
 
         void deleteFile(const QString &path);
         void renameFile(const QString &from, const QString &to);
@@ -185,8 +185,8 @@ public:
         void setDateTime(uint dt) { txn->setDateTime(dt); }
         void setLog(const QByteArray &log) { txn->setLog(log); }
 
-        void noteCopyFromBranch (const QString &prevbranch, int revFrom)
-        { txn->noteCopyFromBranch(prevbranch, revFrom); }
+        void noteCopyFromBranch (const QString &prevbranch, int revFrom, bool allow_heuristic=true)
+        { txn->noteCopyFromBranch(prevbranch, revFrom, allow_heuristic); }
 
         void deleteFile(const QString &path) { txn->deleteFile(prefix + path); }
         void renameFile(const QString &from, const QString &to) { txn->renameFile(from, to); };
@@ -1028,7 +1028,7 @@ void FastImportRepository::Transaction::setLog(const QByteArray &l)
     log = l;
 }
 
-void FastImportRepository::Transaction::noteCopyFromBranch(const QString &branchFrom, int branchRevNum)
+void FastImportRepository::Transaction::noteCopyFromBranch(const QString &branchFrom, int branchRevNum, bool allow_heuristic)
 {
     if(branch == branchFrom) {
         qWarning() << "WARN: Cannot merge inside a branch";
@@ -1101,6 +1101,10 @@ void FastImportRepository::Transaction::noteCopyFromBranch(const QString &branch
             const QString rb = repository->resetBranches;
             const Branch &br = repository->branches[branch];
             if (br.marks.last() < mark && rb.contains("from branch "+branchFrom)) {
+                if (!allow_heuristic) {
+                    qDebug() << "WARN: found branchpoint from lower mark, ignoring due to manual rule override";
+                    return;
+                }
                 qDebug() << "WARN: found branchpoint from lower mark, about to recreate branch from different revision";
                 //qDebug() << "\n" << repository->resetBranches << "\n";
                 repository->resetBranches.clear();

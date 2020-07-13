@@ -369,18 +369,13 @@ case "$type" in
                         #pppd/2.2/|pppd/2.3.0/|pppd/2.3.1/|pppd/2.3.11/|pppd/2.3.3/|pppd/2.3.5/|pppd/dist/) continue ;;
                         # tags were advanced with a rename
                         top/3.4/|top/3.5beta12/) diff_it -xinstall -xinstall-sh $t/$b$s; continue ;;
-                        # FIXME FIXME FIXME fallout from merging from the highest rev always to fix most tags (you win some, you lose some)
-                        binutils/2.10.0/) continue ;;
-                        # TODO analyze this
-                        file/4.17a/) continue ;; #diff_it $t/$b$s@186674 $t/$b$s; continue ;;
-                        # TODO analyze this
+                        ## lol, the tag flattening in r186675 actually fucked this up
+                        file/4.17a/) diff_it $t/$b$s@186674 $t/$b$s; continue ;;
+                        # we skipped the test1/test3 interim tags
                         gcc/2.95.3-test1/) continue ;;
-                        # TODO analyze this
                         gcc/2.95.3-test3/) continue ;;
-                        # we skipped the flattening of tags
-                        gcc/2.7.2.3/|gcc/2.95.1/) continue ;; #diff_it $t/$b$s@179467 $t/$b$s; continue ;;
-                        # TODO analyze this
-                        gcc/*) continue ;;
+                        # we skipped the flattening of tags, compare to earlier rev
+                        gcc/4.2.0*|gcc/4.2.1*|gcc/egcs*) diff_it $t/$b$s@179467 $t/$b$s; continue ;;
                         # we moved some stuff from cvs2svn/branches/MACKERAS here
                         pppd/2.2/) diff_it -r'g/usr.sbin/pppd/{RELNOTES,args.h,callout.h,ppp.h}' $t/$b$s; continue ;;
                         pppd/2.3.0/) diff_it -r'g/{usr.sbin/pppd/{RELNOTES,args.h,callout.h,ppp.h},usr.bin/chat/{Example,Makefile,README,chat.?,connect-ppp,ppp-o*,unlock}}' $t/$b$s; continue ;;
@@ -398,6 +393,8 @@ case "$type" in
                         ntpd/udel_3_3p/) diff_it -r'g/usr.sbin/xntpd/{Config,Config.sed,compilers/hpux10+.cc,machines/hpux10+,parse/util/Makefile}' $t/$b$s; continue ;;
                         ntpd/xntp*/) diff_it -r'g/usr.sbin/xntpd/{Config,Config.sed,compilers/hpux10+.cc,machines/hpux10+,parse/util/Makefile}' $t/$b$s; continue ;;
                         diff/*/) diff_it -xconfig.h $t/$b$s $t/misc-GNU/$b$s; continue ;;
+                        # we stop a later import reverting things done earlier, libc has no business here anyway.
+                        bind4/dist/) diff_it -r'{s,g}/lib/libc' $t/$b$s; continue ;;
                         #### inlined stuff below here ####
                         # These were all merged, but actually we inline some of them, so can't compare them anymore.
                         misc-GNU/dist*/)
@@ -408,7 +405,10 @@ case "$type" in
                         telnet/*/) continue ;;
                         # we've inlined a bunch of files, cannot compare any longer
                         games/dist/) continue ;;
-                        # inlined into mainline or we stole some select commits off of them
+                        # inlined into mainline or we stole some select commits
+                        # off of them. We could compare git vs SVN and ignore
+                        # "new" files, but I have no desire to hack this in
+                        # further.
                         pnpinfo/*/) continue ;;
                         jthorpe/dist/) continue ;;
                         misc-GNU/tar/) continue ;;
@@ -484,6 +484,9 @@ case "$type" in
         diff_it cvs2svn/branches/XEROX@260579 vendor/mrouted/dist
         diff_it cvs2svn/branches/LBL@260579 vendor/rarpd/dist
         diff_it cvs2svn/branches/SUNRPC@260579 vendor/rpcgen/dist
+        diff_it cvs2svn/branches/NETGRAPH@260579 projects/netgraph_ppp
+        diff_it -r's/gnu/lib/{libg2c,libstdc++/doc/,libstdc++/_G_config.h}' cvs2svn/branches/WIP_GCC31@260579 cvs2svn/branches/WIP_GCC31
+        diff_it cvs2svn/branches/MP@36312 cvs2svn/branches/MP
 
         for t in projects; do
             for b in `svn ls $SVN/$t | grep '/$'`; do
@@ -550,6 +553,7 @@ case "$type" in
             diff_it tags/$t `echo $t|sed 's,RELEASE_,release/,; s,_,.,g; s,/$,,'`
         done
         diff_it branches/RELEASE_8_4_0/ releng/8.4.0
+        diff_it branches/RELENG_9_1_0 releng/9.1.0
         diff_it branches/RELENG_9_2_0 releng/9.2.0
         for b in `svn ls $SVN/branches | grep Q`; do
             diff_it branches/$b $b
