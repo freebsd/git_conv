@@ -235,9 +235,9 @@ end match
 match /branches/pkg_install/
 end match
 
-match /branches/([0-9Q]+)/
+match /(branches)/([0-9Q]+)/
   repository freebsd-ports.git
-  branch \1
+  branch \1/\2
 end match
 
 match /(projects)/([^/]+)/
