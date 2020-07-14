@@ -210,7 +210,7 @@ svn2git()
 	    case "$TYPE" in
 		base)
 		    git remote add freebsd ssh://git@githome.nyi.freebsd.org/src
-		    git config --add remote.freebsd.push '+refs/heads/master:refs/heads/master'
+		    git config --add remote.freebsd.push '+refs/heads/master:refs/heads/main'
 		    git config --add remote.freebsd.push '+refs/heads/stable/*:refs/heads/stable/*'
 		    git config --add remote.freebsd.push '+refs/heads/releng/*:refs/heads/releng/*'
 		    git config --add remote.freebsd.push '+refs/tags/release/*:refs/tags/release/*'
@@ -231,7 +231,7 @@ svn2git()
 		    ;;
 		doc)
 		    git remote add freebsd ssh://git@githome.nyi.freebsd.org/doc
-		    git config --add remote.freebsd.push '+refs/heads/master:refs/heads/master'
+		    git config --add remote.freebsd.push '+refs/heads/master:refs/heads/main'
 		    git config --add remote.freebsd.push '+refs/tags/*:refs/tags/*'
 		    git config --add remote.freebsd.push '+refs/notes/*:refs/notes/*'
 
@@ -240,7 +240,7 @@ svn2git()
 		    ;;
 		ports)
 		    git remote add freebsd ssh://git@githome.nyi.freebsd.org/ports
-		    git config --add remote.freebsd.push '+refs/heads/master:refs/heads/master'
+		    git config --add remote.freebsd.push '+refs/heads/master:refs/heads/main'
 		    git config --add remote.freebsd.push '+refs/heads/branches/*:refs/heads/branches/*'
 		    git config --add remote.freebsd.push '+refs/tags/*:refs/tags/*'
 		    git config --add remote.freebsd.push '+refs/notes/*:refs/notes/*'
