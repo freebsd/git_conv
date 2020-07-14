@@ -33,18 +33,26 @@ git fetch
 ```
 
 Note that `projects` and `user` branches also exist for the `doc` repo and
-`ports` has `projects` as well. vendor(-sys), cvs2svn and backups are exclusive
-to the `src` repo though.
+`ports` has `projects` and `releng` as well. vendor(-sys), cvs2svn and backups
+are exclusive to the `src` repo though.
 
 - `user/` branches are never merged back into `master`
+- MFHs into `user/` or `projects/` branches are just cherry-picks to keep `git
+  log --graph` somewhat readable and as merges wouldn't convey any useful
+  information, really.
 - `vendor` **tags** were never flattened post-creation, as that would advance
   them off of the mainline branch and make them invisible to a simple `git log`
 - `release/1.0_cvs` et al. are snapshots of the checked out CVS source
   code, including expanded $Id$ tags.
-- no other tags are expanded
+- no other keywords are expanded
 - various vendor-foo suffixes have been collapsed into 1 vendor namespace,
   except for a few vendors where merging the userland and kernel bits is not
   straightforward due to how they interleave with the merge and branch history.
+- some branches have their history "extended", that is, commits under the
+  `cvs2svn` area were properly attached.
+- ... and most of these commits have actually been inlined directly into the
+  mainline tree to keep the history more "linear" and associate the commit with
+  the original author and commit message.
 
 ## How to analyze the results
 
