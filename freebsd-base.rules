@@ -444,6 +444,10 @@ match /cvs2svn/branches/(ATT|NOORDMARK|ORIG|SGC|WST|att|bootparamd|cron|crunch|l
   min revision 13122
   max revision 13122
 end match
+match /vendor/unknown/
+  min revision 13122
+  max revision 13122
+end match
 # don't delete the tags, it only moves them from cvs2svn to backups
 match /cvs2svn/
   min revision 260580
@@ -3285,6 +3289,17 @@ match /(vendor)/(SGI)/(dist)(2|_v_2_21)/
   branch \1/\2/\3
   delete usr.sbin/routed
 end match
+# these are pretty garbage or redundant
+match /vendor/SGI/(sgi_routed|v_2_17|v_2_22)/
+end match
+# properly record the merge to head
+match /head/
+  min revision 126250
+  max revision 126250
+  repository freebsd-base.git
+  branch master
+  branchpoint vendor/SGI/dist@126247
+end match
 
 # We have 4 "dist" branches under /vendor/misc-GNU/dist{,1,2,3}/ and they don't
 # overlap at all. In fact, some of the stuff like e.g. libg++ is split across
@@ -3332,7 +3347,7 @@ match /vendor/misc-GNU/(GREP|grep)_([12])_([3456])_([12])/
 end match
 
 # All these tags are garbage
-match /vendor/misc-GNU/(gnu_tag|GZIP_1_1|TEXT_1_6|DIFF_2_3|DIFF3_2_3|ptx_0_3|readline_1_1|texinfo_2_0|libg\+\+_tag|V1_09|rcs_5_7|diff_2_7|gmp_1_3_2|textutils_1_14|gmp_2_0_2|v2_3|v6_1_1)/
+match /vendor/misc-GNU/(gnu_tag|GZIP_1_1|TEXT_1_6|DIFF_2_3|DIFF3_2_3|ptx_0_3|readline_1_1|texinfo_2_0|libg\+\+_tag|V1_09|rcs_5_7|diff_2_7|gmp_1_3_2|textutils_1_14|gmp_2_0_2|v2_3|v6_1_1|V_GNU_0_2)/
 end match
 match /vendor/misc-GNU/dist[123]?/
   min revision 9
