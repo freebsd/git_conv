@@ -16,7 +16,7 @@ rewrite_tag()
     target=$2
 
     set -e
-    c_auth=`git cat-file tag $tag | sed -n '/^tagger/s/^tagger //; s/ [0-9 +]*$//p'`
+    c_auth=`git cat-file tag $tag | sed -n '/^tagger/{ s/^tagger //; s/ [0-9 +]*$//p; }'`
     c_date=`git cat-file tag $tag | sed -n '/^tagger/s/^tagger //p' | egrep -o '[0-9]* [+0-9]*$'`
     c_msg=`git cat-file tag $tag | sed '1,/^$/d'`
     c_committer=${c_auth%<*}
