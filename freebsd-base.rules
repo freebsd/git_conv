@@ -310,7 +310,7 @@ match /(head|vendor/CSRG/dist|vendor/tzdata/dist)/
   repository freebsd-base.git
   branch master
 end match
-match /vendor/CSRG/bsd_44_lite(_2)?/
+match /vendor/CSRG/(bsd_44_lite(_2)?|MCKUSICK2?)/
 end match
 match /cvs2svn/tags/bsd_44_lite2/
 end match
@@ -3292,7 +3292,28 @@ end match
 # these are pretty garbage or redundant
 match /vendor/SGI/(sgi_routed|v_2_17|v_2_22)/
 end match
-# properly record the merge to head
+# properly record the merges to head
+match /head/
+  min revision 46303
+  max revision 46303
+  repository freebsd-base.git
+  branch master
+  branchpoint vendor/SGI/dist@46286
+end match
+match /head/
+  min revision 64131
+  max revision 64131
+  repository freebsd-base.git
+  branch master
+  branchpoint vendor/SGI/dist@64127
+end match
+match /head/
+  min revision 64483
+  max revision 64483
+  repository freebsd-base.git
+  branch master
+  branchpoint vendor/SGI/dist@64480
+end match
 match /head/
   min revision 126250
   max revision 126250
@@ -3778,9 +3799,17 @@ match /vendor/ntp/[^d][^/]*/
   min revision 181800
   max revision 181800
 end match
-match /vendor-sys/ath/[^d][^/]*/
+match /vendor-sys/ath/(?!dist)[^/]+/
   min revision 182297
+  max revision 182298
+end match
+match /vendor-sys/ath/
+  min revision 182299
   max revision 182299
+end match
+match /vendor-sys/ath/(?!dist)[^/]+/
+  min revision 182305
+  max revision 182305
 end match
 # pointless svn mimetype wrangling, even on tags
 match /vendor/sendmail/
@@ -4323,9 +4352,19 @@ match /vendor/
   max revision 359492
 end match
 # never move tags to /backups/
+# we also need to not add new tags for the old tags, it messes up the notes in
+# fix_bogus_tags later on.
+match /vendor/bl.cklist/(20160409|20170503|20191106)/
+  min revision 362196
+  max revision 362196
+end match
 match /vendor/NetBSD/bl.cklist/
   min revision 362196
   max revision 362196
+end match
+match /vendor/bc/
+  min revision 362986
+  max revision 362986
 end match
 
 # never merged, later deleted.

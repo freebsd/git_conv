@@ -250,9 +250,12 @@ case "$type" in
                 fi
             done
 
-        git log --format="%h %N" master|egrep '^[^s].*=/head/;' | sed -e 's/ .*=/ /' | awk 'NR % 1000 == 0' | \
+        git log --format="%h %N" --reverse master|egrep '^[^s].*=/head/;' | sed -e 's/ .*=/ /' | awk 'NR % 1000 == 0' | \
             while read ref rev; do
-                if [ $rev -lt 77859 ]; then
+                if [ $rev -eq 1638 ]; then
+                    # in git this appears 1 rev earlier
+                    diff_it -r's/sys/contrib/ipfilter/netinet' head@$((rev+1)) $ref
+                elif [ $rev -lt 77859 ]; then
                     diff_it -r's/sys/contrib/ipfilter/netinet' head@$rev $ref
                 elif [ $rev -le 151841 ]; then
                     # ppp-user -> ppp repo-copy was corrected
@@ -357,7 +360,7 @@ case "$type" in
                         # ditto
                         bind9/9.4.2/) diff_it -xFREEBSD-Upgrade -xFREEBSD-Xlist $t/$b$s; continue ;;
                         # we spliced the 3 routed vendor branches into 1, just compare the latest SVN one
-                        SGI/dist/|SGI/dist2/) continue ;;
+                        SGI/dist/|SGI/dist2/|SGI/sgi_routed/|SGI/v_2_22/) continue ;;
                         # the splicing means we actually have Makefiles!, sadly need to skip them all, also in the tags
                         SGI/dist_v_2_21/) diff_it -xMakefile $t/$b$s $t/${b}dist; continue ;;
                         # we resurrected a missing header here
@@ -395,6 +398,7 @@ case "$type" in
                         diff/*/) diff_it -xconfig.h $t/$b$s $t/misc-GNU/$b$s; continue ;;
                         # we stop a later import reverting things done earlier, libc has no business here anyway.
                         bind4/dist/) diff_it -r'{s,g}/lib/libc' $t/$b$s; continue ;;
+                        blocklist/20160409/|blocklist/20170503/|blocklist/20191106/) continue ;;
                         #### inlined stuff below here ####
                         # These were all merged, but actually we inline some of them, so can't compare them anymore.
                         misc-GNU/dist*/)
