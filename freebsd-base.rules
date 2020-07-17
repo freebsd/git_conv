@@ -440,7 +440,7 @@ match /cvs2svn/branches/(ATT|EBONES_KRB4|NOORDMARK|ORIG|SGC|WST|ache|att|bootpar
   repository freebsd-base.git
   branch master
 end match
-match /cvs2svn/branches/(ATT|NOORDMARK|ORIG|SGC|WST|att|bootparamd|cron|crunch|libftp|lwall|man|marc|nvi|v_0_1_2_4|voxware)/
+match /cvs2svn/branches/(HUGH_F_MAHON|ATT|NOORDMARK|ORIG|SGC|WST|att|bootparamd|cron|crunch|libftp|lwall|man|marc|nvi|v_0_1_2_4|voxware)/
   min revision 13122
   max revision 13122
 end match
@@ -812,6 +812,10 @@ match /cvs2svn/tags/rpcgen_2_3/
 end match
 
 # import and tags of ee
+match /cvs2svn/branches/HUGH_F_MAHON/
+  min revision 10475
+  max revision 10475
+end match
 match /cvs2svn/branches/HUGH_F_MAHON/
   repository freebsd-base.git
   branch vendor/ee/dist
