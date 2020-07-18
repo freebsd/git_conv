@@ -3371,6 +3371,10 @@ match /vendor/misc-GNU/(GREP|grep)_([12])_([3456])_([12])/
   annotated true
 end match
 
+# forks a tag from head?
+match /vendor/cvs/1.6.3-END/
+end match
+
 # All these tags are garbage
 match /vendor/misc-GNU/(gnu_tag|GZIP_1_1|TEXT_1_6|DIFF_2_3|DIFF3_2_3|ptx_0_3|readline_1_1|texinfo_2_0|libg\+\+_tag|V1_09|rcs_5_7|diff_2_7|gmp_1_3_2|textutils_1_14|gmp_2_0_2|v2_3|v6_1_1|V_GNU_0_2)/
 end match
@@ -3630,6 +3634,12 @@ end match
 match /vendor/llvm-project/llvmorg-10.0.0-0-gd32170dbd5b/
   min revision 359337
   max revision 359576
+end match
+
+# This branch doesn't need a cvs2svn manufacture ...
+match /vendor/texinfo/dist/
+  min revision 21499
+  max revision 21499
 end match
 
 # Note: sendmail uses vendor/sendmail/dist-old for a while, then
@@ -3995,7 +4005,7 @@ match /vendor/testfloat/
   min revision 206918
   max revision 206921
 end match
-match /vendor/misc-GNU/sort/[^d][^/]*/
+match /vendor/gnu-sort/[^d][^/]*/
   min revision 207002
   max revision 207002
 end match

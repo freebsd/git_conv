@@ -309,6 +309,7 @@ case "$type" in
                             for r in `svn ls $SVN/$t/$b$s | grep '/$'`; do
                                 case "$r" in
                                     bmake-20121111/) diff_it $t/$b$s$r $t/$b$s${r#bmake-}; continue ;;
+                                    1.6.3-END/) continue ;;
                                 esac
                                 diff_it $t/$b$s$r
                             done
