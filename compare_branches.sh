@@ -399,6 +399,8 @@ case "$type" in
                         diff/*/) diff_it -xconfig.h $t/$b$s $t/misc-GNU/$b$s; continue ;;
                         # we stop a later import reverting things done earlier, libc has no business here anyway.
                         bind4/dist/) diff_it -r'{s,g}/lib/libc' $t/$b$s; continue ;;
+                        # we undo some repo copy stuff
+                        flex/2.4.7/) diff_it -r'{s/usr.bin/lex/flex.1,g/usr.bin/lex/lex.1}' $t/$b$s; continue ;;
                         blocklist/20160409/|blocklist/20170503/|blocklist/20191106/) continue ;;
                         #### inlined stuff below here ####
                         # These were all merged, but actually we inline some of them, so can't compare them anymore.

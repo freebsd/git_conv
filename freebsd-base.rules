@@ -416,7 +416,7 @@ end match
 
 # Let these files live in CSRG, they otherwise clobber some files that are
 # already newer in the NetBSD and OpenBSD trees!
-match /vendor/(CSRG|NetBSD|OpenBSD)/dist/
+match /vendor/(CSRG|NetBSD|OpenBSD|file)/dist/
   min revision 27241
   max revision 27241
   repository freebsd-base.git
@@ -2449,6 +2449,8 @@ match /(head|cvs2svn)/
   min revision 29416
   max revision 29417
 end match
+match /vendor/pnpinfo/960505luigi/
+end match
 match /vendor/pnpinfo/dist/
   min revision 29615
   max revision 29615
@@ -2810,6 +2812,8 @@ match /cvs2svn/branches/bsd/
 end match
 
 # This was used just once, inline it. tar otherwise lived under vendor/misc-GNU/dist3
+match /vendor/(misc-GNU/)?tar/1.13.25/
+end match
 match /vendor/tar/dist/
   min revision 97805
   max revision 97805
@@ -2915,6 +2919,8 @@ match /cvs2svn/branches/unlabeled-1.1.1/
 end match
 
 # one file fix
+match /vendor/libiberty/2_15_cvsrev_1_51/
+end match
 match /vendor/libiberty/dist/
   min revision 175189
   max revision 175189
@@ -3637,9 +3643,51 @@ match /vendor/llvm-project/llvmorg-10.0.0-0-gd32170dbd5b/
 end match
 
 # This branch doesn't need a cvs2svn manufacture ...
+match /vendor/libregex/
+  min revision 219
+  max revision 219
+end match
+# This is the wrong Makefile ...
+match /vendor/zlib/dist/
+  min revision 17654
+  max revision 17654
+end match
 match /vendor/texinfo/dist/
   min revision 21499
   max revision 21499
+end match
+# neither does this one
+match /vendor-sys/ext2fs/dist/
+  min revision 12116
+  max revision 12116
+end match
+match /vendor/file/dist/
+  min revision 19157
+  max revision 19157
+end match
+match /vendor/file/dist/
+  min revision 69221
+  max revision 69221
+end match
+
+# patch up a repo-copy and obsolete the cvs 1.6 file death revision
+match /vendor/flex/dist/
+  min revision 2258
+  max revision 2258
+  repository freebsd-base.git
+  branch vendor/flex/dist
+  rename usr.bin/lex/flex.1 usr.bin/lex/lex.1
+end match
+match /vendor/flex/dist/
+  min revision 2308
+  max revision 13122
+end match
+match /vendor/flex/dist/
+  min revision 16514
+  max revision 16514
+  repository freebsd-base.git
+  branch vendor/flex/dist
+  delete usr.bin/lex/flexdoc.1
 end match
 
 # Note: sendmail uses vendor/sendmail/dist-old for a while, then
@@ -3660,9 +3708,16 @@ match /(vendor)/(sendmail)/(dist)/
   branch \1/\2/\3
   delete usr.sbin/sendmail
 end match
+# was inlined, can't tag it.
+match /vendor/sendmail/8.6.10/
+end match
 match /vendor/sendmail/[^d][^/]*/
   min revision 182324
   max revision 182327
+end match
+match /vendor/sendmail/
+  min revision 182344
+  max revision 182349
 end match
 
 # this tag has an extra /tags
@@ -3826,10 +3881,6 @@ match /vendor-sys/ath/(?!dist)[^/]+/
   max revision 182305
 end match
 # pointless svn mimetype wrangling, even on tags
-match /vendor/sendmail/
-  min revision 182344
-  max revision 182349
-end match
 match /vendor/gdtoa/[^d][^/]*/
   min revision 182700
   max revision 182702
@@ -3981,6 +4032,10 @@ match /vendor/groff/[^d][^/]*/
   min revision 202347
   max revision 202347
 end match
+match /vendor/groff/
+  min revision 202351
+  max revision 202351
+end match
 match /vendor/(zlib|libz)/[^d][^/]*/
   min revision 204237
   max revision 204238
@@ -4064,6 +4119,10 @@ match /vendor/tnftp/
   min revision 210486
   max revision 223299
 end match
+match /vendor/gperf/
+  min revision 228213
+  max revision 228213
+end match
 # libpcap snafu
 match /vendor/libpcap/1.2.1
   min revision 230829
@@ -4110,6 +4169,14 @@ match /(vendor)/(NetBSD)/(bmake)/bmake-(20121111)/
   repository freebsd-base.git
   branch refs/tags/\1/\2/\3/\4
   annotated true
+end match
+match /vendor/flex/dist/
+  min revision 250156
+  max revision 250156
+end match
+match /vendor/flex/dist/
+  min revision 250869
+  max revision 250869
 end match
 # no flattening of tags
 match /vendor/patch/[^d][^/]*/
