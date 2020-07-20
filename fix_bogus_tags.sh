@@ -204,3 +204,5 @@ if ! git show --format=%T -s vendor/gcc/2.95.1~1 | grep -q a1f2c4c47e8e2c43a83ae
 fi
 # ... and delete the unneeded grafts again.
 git show-ref | grep refs/replace/ | cut -d" " -f2 | xargs -n1 git update-ref -d
+
+exit 0

@@ -69,7 +69,7 @@ while :; do
     oldrev=$(($oldrev - 10))
     for rev in $(seq $oldrev $newrev); do
       a=$(svn propget --revprop -r $rev svn:author file://${repodirs}/$r 2>>${logdir}/svnsync-$r.log)
-      if [ "x$a" == "x$me" ]; then
+      if : || [ "x$a" == "x$me" ]; then
 	# Got garbage metadata, copy revprops again. This only checks for
 	# obvious snafus about the commit author, but not other problems like
 	# different timestamps in the metadata :/
