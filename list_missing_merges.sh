@@ -3,16 +3,14 @@
 svn=${1:-base}
 git=${2:-freebsd-base.git}
 branch=${3:-master}
+export GIT_DIR=$git
 
-# Print the potential MFV merge commits that have only a single parent (by
-# checking whether the 2nd parent field looks more like a date.
-git --git-dir=$git log --pretty=format:'%h %p %ad %N' --grep="^MF[VPp]" $branch | sed '/^$/d' |
-    awk '$3 ~ /....-..-../ {print $0}'
-
+# Print the potential MFV merge commits that have only a single parent
+git log --pretty=format:'%h %p %ad %N' --grep="^MF[VPp]" --max-parents=1 master $branch | sed '/^$/d'
 
 # Alternative approach, list all vendor/foo/dist refs that are *not* reachable
 # from master. These are changed vendor imports that a) haven't been recorded
-# as merges or b) where never merged. If we also do it for all tags we get c)
+# as merges or b) were never merged. If we also do it for all tags we get c)
 # tags that have been advanced after the merge, usually because they were
 # "flattened". We want to avoid that, so that the refs stick to the actual
 # vendor branch.
@@ -28,7 +26,6 @@ git --git-dir=$git log --pretty=format:'%h %p %ad %N' --grep="^MF[VPp]" $branch 
 # We don't want the 2.4 tag to stick out, it wouldn't show up when just logging /dist.
 
 # TODO: is this maybe just `git tag --no-merged`?
-export GIT_DIR=$git
 git show-ref dist | sed 's,.* refs/heads/,,; s,/dist,,' | while read v; do
   git show-ref --heads --tags | fgrep $v | while read sha ref; do
       if ! git --git-dir=$git merge-base --is-ancestor $sha $branch; then
@@ -36,3 +33,9 @@ git show-ref dist | sed 's,.* refs/heads/,,; s,/dist,,' | while read v; do
       fi
   done
 done
+
+
+# Show un-merged vendor tags, these need manual inspection for why they were
+# not properly recorded, often this is because the tag was cvs2svn manufactured
+# :/
+git tag --sort=-taggerdate --no-merged master vendor/\*
