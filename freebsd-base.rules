@@ -434,7 +434,7 @@ end match
 # this helps out list_short_merges.sh to find branches that we want to splice
 # into the mainline
 # TODO: redo this for all files that we've inlined into main :/
-match /cvs2svn/branches/(ATT|EBONES_KRB4|NOORDMARK|ORIG|SGC|WST|ache|att|bootparamd|cron|crunch|ipfw|libftp|lwall|man|marc|nvi|ross_ridge|savio_lam|v_0_1_2_4|voxware|xten|zmbenhal)/
+match /(cvs2svn/branches/(ATT|EBONES_KRB4|NOORDMARK|ORIG|SGC|WST|ache|att|bootparamd|cron|crunch|ipfw|libftp|lwall|man|marc|nvi|ross_ridge|savio_lam|v_0_1_2_4|voxware|xten|zmbenhal)|vendor/tzdata/dist)/
   min revision 13122
   max revision 13122
   repository freebsd-base.git
@@ -895,8 +895,11 @@ match /cvs2svn/tags/v_2002_7_19/
   branch refs/tags/vendor/NetBSD/xlint/2002-07-19
   annotated true
 end match
-# NOTE: r280454 "copies" this in SVN and results in the flattening that we'd
-# like.
+# NOTE: r280454 "copies" this in SVN but from an age old rev, skip it.
+match /vendor/NetBSD/xlint/
+  min revision 280454
+  max revision 280454
+end match
 
 # ANDREW_LOCKD has just 3 files with changes, they were apparently merged into
 # head with r87096, but not recorded as an actual merge. Fix that.
@@ -5119,7 +5122,11 @@ match /(vendor-sys)/(ipfilter|ngatm|pf)/([^/]+)/
   branch \1/\2/\3
 end match
 
-# Turn non-dist directories into annotated tags.
+# Turn non-dist directories into annotated tags. Except release-x under llvm-project isn't a tag.
+match /(vendor)/(llvm-project)/(master|release-[0-9.x]+)/
+  repository freebsd-base.git
+  branch \1/\2/\3
+end match
 match /(vendor|vendor-sys|vendor-crypto)/([^/]+)/((?!dist)[^/]+)/
   repository freebsd-base.git
   branch refs/tags/vendor/\2/\3

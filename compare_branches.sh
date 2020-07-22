@@ -311,6 +311,10 @@ case "$type" in
                                     bmake-20121111/) diff_it $t/$b$s$r $t/$b$s${r#bmake-}; continue ;;
                                     1.6.3-END/) continue ;;
                                 esac
+                                case "$s$r" in
+                                    # The "vendor" tag was resurrecting age old data and should likely never have happened
+                                    xlint/dist/) diff_it cvs2svn/branches/JPO@260579 $t/$b$s$r; continue ;;
+                                esac
                                 diff_it $t/$b$s$r
                             done
                             continue
