@@ -918,7 +918,7 @@ int SvnRevision::prepareTransactions()
     // Some of them were later added via svn:mergeinfo. Even more had changes
     // imported into head, then later the vendor import was done (?!) and
     // finally the mergeinfo recorded. We're not going to patch that up ...
-    static const QMap<int, mergeinfo> force_merges = {
+    static const QMultiMap<int, mergeinfo> force_merges = {
         // Recorded in r265214
         { 264691, { .from = "vendor/openssh/dist", .rev = 264690, .to = "master" } },
         // Recorded in r299540
@@ -927,21 +927,32 @@ int SvnRevision::prepareTransactions()
         { 317396, { .from = "vendor/less/dist", .rev = 317395, .to = "master" } },
         // Recorded in r333678
         { 333677, { .from = "vendor/openssh/dist", .rev = 333676, .to = "master" } },
+        // This rev merged ipfilter from sys and non-sys, but the 1 file that
+        // was last-touched wasn't recorded as merged, thus the merge-from
+        // points are off-by-one :/. Sigh
+        { 255332, { .from = "vendor/ipfilter/dist", .rev = 255260, .to = "master" } },
+        { 255332, { .from = "vendor-sys/ipfilter/dist", .rev = 255260, .to = "master" } },
+        // not recorded in SVN :/
+        { 223637, { .from = "vendor-sys/pf/dist", .rev = 196362, .to = "master" } },
+        { 223637, { .from = "vendor/pf/dist", .rev = 196360, .to = "master" } },
+        { 305477, { .from = "vendor/alpine-hal/dist", .rev = 305475, .to = "master" } },
     };
     if (force_merges.contains(revnum)) {
-        const auto& mi = force_merges.value(revnum);
-        static const QString svnprefix = "";
-        const QString& branch = mi.to;
-        Repository::Transaction *txn = transactions.value(repository + branch, 0);
-        if (!txn) {
-            Repository *repo = repositories.value(repository, 0);
-            txn = repo->newTransaction(branch, svnprefix, revnum);
-            if (!txn)
-                return EXIT_FAILURE;
-            transactions.insert(repository + branch, txn);
+        const auto& mi = force_merges.values(revnum);
+        for (const auto& mi : mi) {
+            static const QString svnprefix = "";
+            const QString& branch = mi.to;
+            Repository::Transaction *txn = transactions.value(repository + branch, 0);
+            if (!txn) {
+                Repository *repo = repositories.value(repository, 0);
+                txn = repo->newTransaction(branch, svnprefix, revnum);
+                if (!txn)
+                    return EXIT_FAILURE;
+                transactions.insert(repository + branch, txn);
+            }
+            txn->noteCopyFromBranch(mi.from, mi.rev);
+            needCommit = true;
         }
-        txn->noteCopyFromBranch(mi.from, mi.rev);
-        needCommit = true;
         return EXIT_SUCCESS;
     }
 
@@ -1050,6 +1061,8 @@ int SvnRevision::prepareTransactions()
         210708, 217338, 221956, 223144, 227632, 227670, 234080, 234647, 238053,
         244587, 256282, 259687, 266652, 276329, 277620, 278877, 280454, 287632,
         296049, 296962, 300828, 328072,
+        // eh? records an ipfilter merge on a project branch ...
+        288036,
     };
     if (skip_mergeinfo.contains(revnum)) {
         return EXIT_SUCCESS;
