@@ -24,7 +24,6 @@ left over from the CVS days and the cvs2svn conversion.
 
 ```
 git config --add remote.origin.fetch '+refs/vendor/*:refs/vendor/*'
-git config --add remote.origin.fetch '+refs/vendor-sys/*:refs/vendor-sys/*'
 git config --add remote.origin.fetch '+refs/projects/*:refs/projects/*'
 git config --add remote.origin.fetch '+refs/user/*:refs/user/*'
 git config --add remote.origin.fetch '+refs/backups/*:refs/backups/*'
@@ -33,7 +32,7 @@ git fetch
 ```
 
 Note that `projects` and `user` branches also exist for the `doc` repo and
-`ports` has `projects` and `releng` as well. vendor(-sys), cvs2svn and backups
+`ports` has `projects` and `releng` as well. vendor, cvs2svn and backups
 are exclusive to the `src` repo though.
 
 - `user/` branches are never merged back into `master`

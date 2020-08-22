@@ -436,32 +436,33 @@ case "$type" in
             for b in `svn ls $SVN/$t`; do
                 for s in `svn ls $SVN/$t/$b`; do
                     s=${s%/}
-                    case "$b$s" in
+                    b=${b%/}
+                    case "$b/$s" in
                         # bunch of extra files in here, as we didn't propagate the deletes, we could compare to an older rev though.
-                        openssh/4.6p1|openssh/4.7p1|openssh/4.9p1|openssh/5.0p1|openssh/5.1p1) diff_it $t/$b$s@182608 vendor/$b$s; continue ;;
+                        openssh/4.6p1|openssh/4.7p1|openssh/4.9p1|openssh/5.0p1|openssh/5.1p1) diff_it $t/$b/$s@182608 vendor/$b/$s; continue ;;
                         # some hardcoded $FreeBSD$ were committed :/
-                        openssh/3.*|openssh/4.*) diff_it '-I[$]FreeBSD.*[$]' $t/$b$s vendor/$b$s; continue ;;
+                        openssh/3.*|openssh/4.*) diff_it '-I[$]FreeBSD.*[$]' $t/$b/$s vendor/$b/$s; continue ;;
                         # tag was moved by deleting more files
-                        openssh/5.9p1) diff_it $t/$b$s@225833 vendor/$b$s; continue ;;
+                        openssh/5.9p1) diff_it $t/$b/$s@225833 vendor/$b/$s; continue ;;
                         # unflattened tags, 2007 and following are identical again
-                        acpica/2000*|acpica/2001*|acpica/2002*|acpica/2003*|acpica/2004*|acpica/2005*|acpica/20070320) diff_it $t/$b$s@192383 vendor/$b$s; continue ;;
+                        acpica/2000*|acpica/2001*|acpica/2002*|acpica/2003*|acpica/2004*|acpica/2005*|acpica/20070320) diff_it $t/$b/$s@192383 vendor/$b/$s; continue ;;
                         # compare against pre-flattening
-                        ath/0.9.14*|ath/0.9.16*|ath/0.9.4*|ath/0.9.5*|ath/0.9.6*) diff_it $t/$b$s@182296 vendor/$b$s; continue ;;
+                        ath/0.9.14*|ath/0.9.16*|ath/0.9.4*|ath/0.9.5*|ath/0.9.6*) diff_it $t/$b/$s@182296 vendor/$b/$s; continue ;;
                         # svn can't checkout the README at the pre-flattened revision :/ git has it, checked manually.
-                        ath/0.9.17.2|ath/0.9.20.3) diff_it -xREADME $t/$b$s@182296 vendor/$b$s; continue ;;
+                        ath/0.9.17.2|ath/0.9.20.3) diff_it -xREADME $t/$b/$s@182296 vendor/$b/$s; continue ;;
                         # git is different, because the tag includes r238575 from the sys branch (plus manpages)
                         # This is bogus anyway, as it has files with copyrights in 2011 and 2012, looks like the tag gone wrong, maybe 20120718 was intended?
-                        illumos/20100818) diff_em -xman vendor/illumos/20100818 vendor-sys/illumos/dist@238575 vendor/$b$s; continue ;;
+                        illumos/20100818) diff_em -xman vendor/illumos/20100818 vendor-sys/illumos/dist@238575 vendor/$b/$s; continue ;;
                         # The original SVN tag of this was omitting r178528 from the userland bits and tagged r178525 instead.
-                        opensolaris/20080410) diff_em vendor-cddl/opensolaris/dist/cddl/contrib/opensolaris@178528 $t/$b$s vendor/$b$s; continue ;;
+                        opensolaris/20080410) diff_em vendor-cddl/opensolaris/dist/cddl/contrib/opensolaris@178528 $t/$b/$s vendor/$b/$s; continue ;;
                         # git is missing the uts/ tree, as we tagged from 178530 and not r194442 or r194452
-                        opensolaris/20080410a) diff_it vendor/$b$s vendor/$b$s; continue ;;
+                        opensolaris/20080410a) diff_it vendor/$b/$s vendor/$b/$s; continue ;;
                         # need to compare 2 branches, basically already handled above for vendor (not vendor-sys) anyway
-                        illumos/*|ngatm/*|opensolaris/*) diff_em $t/$b$s vendor/$b$s vendor/$b$s; continue ;;
+                        illumos/*|ngatm/*|opensolaris/*) diff_em $t/$b/$s vendor/$b/$s vendor/$b/$s; continue ;;
                         # this was merged into the proper dist branch
                         ipfilter/dist-old) continue ;;
                         # these got the new layout compared to SVN
-                        ipfilter/v3-4-16) diff_it -xmlf_ipl.c -xmln_ipl.c $t/$b$s/sys $t/$b$s; continue ;;
+                        ipfilter/v3-4-16) diff_it -xmlf_ipl.c -xmln_ipl.c $t/$b/$s/sys vendor/$b-sys/$s; continue ;;
                         # duplicate tag, "3-4-29" is the real one.
                         ipfilter/v3-4-29) continue ;;
                         # compare against pre-flattening, due to splicing
@@ -469,15 +470,15 @@ case "$type" in
                         # this is more correct, it looks like the files have
                         # fallen off the CVS vendor branch. They are in dist,
                         # they should be in the tag.
-                        ipfilter/3*|ipfilter/v3*|ipfilter/V3*|ipfilter/4*) diff_it -xmlf_ipl.c -xmln_ipl.c $t/$b$s@253466 $t/$b$s; continue ;;
-                        ipfilter/*) diff_it $t/$b$s $t/$b$s; continue ;;
+                        ipfilter/3*|ipfilter/v3*|ipfilter/V3*|ipfilter/4*) diff_it -xmlf_ipl.c -xmln_ipl.c $t/$b/$s@253466 vendor/$b-sys/$s; continue ;;
+                        ipfilter/*) diff_it $t/$b/$s vendor/$b-sys/$s; continue ;;
                         # compare against pre-flattening
-                        pf/3.7.001|pf/4.1) diff_it $t/$b$s@181287 $t/$b$s; continue ;;
-                        pf/*) diff_it $t/$b$s $t/$b$s; continue ;;
+                        pf/3.7.001|pf/4.1) diff_it $t/$b/$s@181287 vendor/$b-sys/$s; continue ;;
+                        pf/*) diff_it $t/$b/$s vendor/$b-sys/$s; continue ;;
                         # we skip some binary backup files
-                        heimdal/*) diff_it -x._ltoptions.m4 -x._ltsugar.m4 -x._lt\~obsolete.m4 $t/$b$s vendor/$b$s; continue ;;
+                        heimdal/*) diff_it -x._ltoptions.m4 -x._ltsugar.m4 -x._lt\~obsolete.m4 $t/$b/$s vendor/$b/$s; continue ;;
                         # We put a newer import into dist, somehow this was missed in cvs2svn, compare to the old git hash
-                        lomac/dist) diff_it $t/$b$s vendor/$b$s\~1; continue ;;
+                        lomac/dist) diff_it $t/$b/$s vendor/$b/$s\~1; continue ;;
                         #### inlined stuff below here ####
                         # the 1 commit on telnet was inlined into main
                         telnet/*) continue ;;
@@ -486,7 +487,7 @@ case "$type" in
                         # inlined
                         eBones/*) continue ;;
                     esac
-                    diff_it $t/$b$s vendor/$b$s
+                    diff_it $t/$b/$s vendor/$b/$s
                 done
             done
         done

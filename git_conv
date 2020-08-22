@@ -201,7 +201,7 @@ svn2git()
 	    git config --local core.autocrlf false
 	    git config --local core.ignorecase false
 	    git config --local diff.renameLimit -1
-	    # Note that user, projects, cvs2svn, vendor, vendor-sys are not
+	    # Note that user, projects, cvs2svn, vendor are not
 	    # being pushed to refs/heads/<foo> on the remote. That means they
 	    # are essentially "hidden" when doing a regular git clone. An extra
 	    # command and fetch is required to pull them down. We think this is
@@ -229,8 +229,6 @@ svn2git()
 		    git config --add remote.freebsd.push '+refs/tags/projects/*:refs/projects/*'
 		    git config --add remote.freebsd.push '+refs/heads/user/*:refs/user/*'
 		    git config --add remote.freebsd.push '+refs/tags/user/*:refs/user/*'
-		    git config --add remote.freebsd.push '+refs/heads/vendor-sys/*:refs/vendor-sys/*'
-		    git config --add remote.freebsd.push '+refs/tags/vendor-sys/*:refs/vendor-sys/*'
 		    git config --add remote.freebsd.push '+refs/heads/vendor/*:refs/vendor/*'
 		    git config --add remote.freebsd.push '+refs/tags/vendor/*:refs/vendor/*'
 		    ;;

@@ -4450,6 +4450,11 @@ match /vendor/bc/
   min revision 362986
   max revision 362986
 end match
+# tagged too soon
+match /vendor/bc/3.1.5/
+  min revision 363896
+  max revision 363898
+end match
 
 # never merged, later deleted.
 match /vendor/fsx/
@@ -5112,14 +5117,14 @@ match /(vendor)/(cortex-strings)/(linaro-eb80ac)/
 end match
 
 # We have some conflicting vendor names here, e.g. illumos, opensolaris, ngatm, pf, ipfilter.
-match /(vendor-sys)/(ipfilter|ngatm|pf)/((?!dist)[^/]+)/
+match /(vendor-sys)/(ipfilter|pf)/((?!dist)[^/]+)/
   repository freebsd-base.git
-  branch refs/tags/\1/\2/\3
+  branch refs/tags/vendor/\2-sys/\3
   annotated true
 end match
-match /(vendor-sys)/(ipfilter|ngatm|pf)/([^/]+)/
+match /(vendor-sys)/(ipfilter|pf)/([^/]+)/
   repository freebsd-base.git
-  branch \1/\2/\3
+  branch vendor/\2-sys/\3
 end match
 
 # Turn non-dist directories into annotated tags. Except release-x under llvm-project isn't a tag.

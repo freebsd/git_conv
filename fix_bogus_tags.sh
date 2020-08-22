@@ -177,9 +177,9 @@ if git rev-list vendor/alpine-hal/dist..vendor/alpine-hal/2.7 | wc -l | grep -q 
     rewrite_tag vendor/alpine-hal/2.7 `git log --format=%h --notes --grep='revision=294835$' vendor/alpine-hal/dist`
 fi
 
-# vendor-sys/ipfilter/5-1-2
-if git rev-list vendor-sys/ipfilter/dist..vendor-sys/ipfilter/5-1-2 | wc -l | grep -q 3; then
-    rewrite_tag vendor-sys/ipfilter/5-1-2 `git log --format=%h --notes --grep='revision=254562$' vendor-sys/ipfilter/dist`
+# vendor/ipfilter-sys/5-1-2
+if git rev-list vendor/ipfilter-sys/dist..vendor/ipfilter-sys/5-1-2 | wc -l | grep -q 3; then
+    rewrite_tag vendor/ipfilter-sys/5-1-2 `git log --format=%h --notes --grep='revision=254562$' vendor/ipfilter-sys/dist`
 fi
 
 # vendor/ck/20161128
