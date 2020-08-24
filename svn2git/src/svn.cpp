@@ -1063,6 +1063,7 @@ int SvnRevision::prepareTransactions()
         296049, 296962, 300828, 328072,
         // eh? records an ipfilter merge on a project branch ...
         288036,
+        312216,
     };
     if (skip_mergeinfo.contains(revnum)) {
         return EXIT_SUCCESS;
@@ -1452,6 +1453,10 @@ int SvnRevision::prepareTransactions()
             printf(" MONKEYMERGE not merging from user, please inspect me: %s", qPrintable(mi.from));
             continue;
         }
+        if (mi.from.startsWith("master") && mi.to.startsWith("master")) {
+            printf(" MONKEYMERGE skipping master -> master merge");
+            continue;
+        }
         printf(" MONKEYMERGE IS HAPPENING!");
         Repository::Transaction *txn = transactions.value(repository + mi.to, 0);
         txn = transactions.first();
@@ -1785,8 +1790,8 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
                 const auto pair = rule.branchpoint.splitRef('@');
                 qWarning() << "Not recording2" << qPrintable(current) << "as branchpoint from" << prevbranch << "rev" << rev_from;
                 prevbranch.clear();
-                if (pair.size() != 2) {
-                    qFatal("Please provide none@<treehash> or otherbranch@ref for this sort of branch creation!");
+                if (pair.size() != 2 && pair.size() != 3) {
+                    qFatal("Please provide none@<treehash> or otherbranch@rev or otherbranch@rev@treehash for this sort of branch creation!");
                 } else {
                     Repository::Transaction *txn = transactions.value(repository + branch, 0);
                     if (!txn) {
@@ -1801,9 +1806,15 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
                         if (repo->createBranch(branch, revnum, pair[1].toString(), txn) == EXIT_FAILURE)
                             return EXIT_FAILURE;
                     } else {
-                        qDebug() << "Creating branch from" << __FILE__ << __LINE__;
-                        if (repo->createBranch(branch, revnum, pair[0].toString(), pair[1].toString().toInt()) == EXIT_FAILURE)
-                            return EXIT_FAILURE;
+                        if (pair.size() == 3) {
+                            qDebug() << "Creating branch from" << __FILE__ << __LINE__;
+                            if (repo->createBranch(branch, revnum, pair[0].toString(), pair[1].toString().toInt(), pair[2].toString(), txn) == EXIT_FAILURE)
+                                return EXIT_FAILURE;
+                        } else {
+                            qDebug() << "Creating branch from" << __FILE__ << __LINE__;
+                            if (repo->createBranch(branch, revnum, pair[0].toString(), pair[1].toString().toInt()) == EXIT_FAILURE)
+                                return EXIT_FAILURE;
+                        }
                     }
                 }
             } else {
@@ -1962,10 +1973,12 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
 
     if (!rule.branchpoint.isEmpty() && rule.branchpoint != "none") {
         const auto pair = rule.branchpoint.splitRef('@');
-        if (pair.size() != 2) {
-            qFatal("Please provide branch@<revnum> for this sort of merge record!");
-        } else {
+        if (/*pair.size() == 2 ||*/ pair.size() == 3) {
+            //txn->noteCopyFromBranch(pair[0].toString(), pair[1].toInt());
+        } else if (pair.size() == 2) {
             txn->noteCopyFromBranch(pair[0].toString(), pair[1].toInt());
+        } else {
+            qFatal("Please provide branch@<revnum> for this sort of merge record!");
         }
     }
 

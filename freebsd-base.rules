@@ -5372,6 +5372,16 @@ match /(releng)/(7.0)/
   branchpoint stable/7@174854
 end match
 
+# release/2.0 branched from head in svn, but should branch from releng/2.0,
+# otherwise the diff looks weird and things are misattributed.
+match /(release)/(2.0)/
+  min revision 4762
+  max revision 4762
+  repository freebsd-base.git
+  branch refs/tags/\1/\2
+  annotated true
+  branchpoint releng/2.0@4761@51a76a83db25bbe2f3fe17d6eef1651ac569d21c
+end match
 match /(release)/([0-9.]+)/
   repository freebsd-base.git
   branch refs/tags/\1/\2
@@ -5379,11 +5389,24 @@ match /(release)/([0-9.]+)/
 end match
 match /(releng)/ALPHA_2_0/
   repository freebsd-base.git
-  branch \1/2.0a
+  branch \1/2.0
+end match
+match /(releng)/BETA_2_0/
+  min revision 4743
+  max revision 4743
+  repository freebsd-base.git
+  branch \1/2.0
+  # git show -s --format=releng/2.0@4683@%T `git log --format=%h --notes -n1 --grep='revision=4743$' releng/2.0b`\~1
+  branchpoint releng/2.0@4683@4e0b4364222f4c2b646014f4442afbd05858a7ec
 end match
 match /(releng)/BETA_2_0/
   repository freebsd-base.git
-  branch \1/2.0b
+  branch \1/2.0
+end match
+# stable/2.0.5 is just a stub, releng/2.0.5 is where the action was
+match /stable/2.0.5
+  min revision 8869
+  max revision 8869
 end match
 match /(stable|releng)/([0-9.]+)/
   repository freebsd-base.git

@@ -270,7 +270,7 @@ case "$type" in
         diff_it releng/BETA_2_0 releng/2.0b
 
         for t in release stable releng; do
-            for b in `svn ls $SVN/$t | grep -v A_2_0`; do
+            for b in `svn ls $SVN/$t | grep -v A_2_0 | grep -v 2.0.5`; do
                 diff_it $t/$b
             done
         done

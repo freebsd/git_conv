@@ -100,6 +100,9 @@ public:
                      const QString &branchFrom, int revFrom);
     int createBranch(const QString &branch, int revnum,
                      const QString &tree_hash, Repository::Transaction* txn);
+    int createBranch(const QString &branch, int revnum,
+                     const QString &branchFrom, int revFrom,
+                     const QString &tree_hash, Repository::Transaction* txn);
     int deleteBranch(const QString &branch, int revnum);
     Repository::Transaction *newTransaction(const QString &branch, const QString &svnprefix, int revnum);
 
@@ -215,6 +218,11 @@ public:
     int createBranch(const QString &branch, int revnum,
                      const QString &tree_hash, Repository::Transaction* txn)
     { return repo->createBranch(branch, revnum, tree_hash, txn); }
+
+    int createBranch(const QString &branch, int revnum,
+                     const QString &branchFrom, int revFrom,
+                     const QString &tree_hash, Repository::Transaction* txn)
+    { return repo->createBranch(branch, revnum, branchFrom, revFrom, tree_hash, txn); }
 
     int deleteBranch(const QString &branch, int revnum)
     { return repo->deleteBranch(branch, revnum); }
@@ -706,6 +714,56 @@ int FastImportRepository::createBranch(const QString &branch, int revnum,
     return EXIT_SUCCESS;
 }
 
+int FastImportRepository::createBranch(const QString &branch, int revnum,
+                                       const QString &branchFrom, int branchRevNum,
+                                       const QString &tree_hash, Repository::Transaction* txn)
+{
+    QByteArray branchFromDesc = "from branch " + branchFrom.toUtf8();
+    long long mark = markFrom(branchFrom, branchRevNum, branchFromDesc);
+
+    if (mark == -1) {
+        qCritical() << branch << "in repository" << name
+                    << "is branching from branch" << branchFrom
+                    << "but the latter doesn't exist. Can't continue.";
+        return EXIT_FAILURE;
+    }
+
+    QByteArray branchFromRef = ":" + QByteArray::number(mark);
+    if (!mark) {
+        qWarning() << "WARN:" << branch << "in repository" << name << "is branching but no exported commits exist in repository"
+                << "creating an empty branch.";
+        branchFromRef = branchFrom.toUtf8();
+        if (!branchFromRef.startsWith("refs/"))
+            branchFromRef.prepend("refs/heads/");
+        branchFromDesc += ", deleted/unknown";
+    }
+
+    qDebug() << "Creating branch:" << branch << "from" << branchFrom << "(" << branchRevNum << branchFromDesc << ")" << " (from tree" << tree_hash << ")";
+
+    // Preserve note
+    branchNotes[branch] = branchNotes.value(branchFrom);
+
+    // This is a copy of resetBranch()
+    QByteArray branchRef = branch.toUtf8();
+    if (!branchRef.startsWith("refs/"))
+        branchRef.prepend("refs/heads/");
+
+    Branch &br = branches[branch];
+    br.created = revnum;
+    br.commits.append(revnum);
+    br.marks.append(mark);
+
+    QByteArray cmd = "reset " + branchRef + "\nfrom " + branchFromRef + "\n\n"
+                     "progress SVN r" + QByteArray::number(revnum)
+                     + " branch " + branch.toUtf8() + " = " + tree_hash.toUtf8()
+                     + "\n\n";
+    resetBranches.append(cmd);
+    resetBranchNames.insert(branchRef);
+    ((FastImportRepository::Transaction *)txn)->resetFromTree.append("M 040000 " + tree_hash.toUtf8() + " \n");
+
+    return EXIT_SUCCESS;
+}
+
 int FastImportRepository::deleteBranch(const QString &branch, int revnum)
 {
     static QByteArray null_sha(40, '0');
@@ -1030,10 +1088,6 @@ void FastImportRepository::Transaction::setLog(const QByteArray &l)
 
 void FastImportRepository::Transaction::noteCopyFromBranch(const QString &branchFrom, int branchRevNum, bool allow_heuristic)
 {
-    if(branch == branchFrom) {
-        qWarning() << "WARN: Cannot merge inside a branch";
-        return;
-    }
     // We are resetting the branch from a nameless tree, don't spew out warnings.
     if (!resetFromTree.isEmpty()) {
         return;
