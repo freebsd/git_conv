@@ -266,8 +266,8 @@ case "$type" in
             done
 
         diff_it head master
-        diff_it releng/ALPHA_2_0 releng/2.0a
-        diff_it releng/BETA_2_0 releng/2.0b
+        diff_it releng/BETA_2_0 releng/2.0
+        diff_it release/2.0 release/2.0
 
         for t in release stable releng; do
             for b in `svn ls $SVN/$t | grep -v A_2_0 | grep -v 2.0.5`; do

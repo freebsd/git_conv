@@ -5372,6 +5372,21 @@ match /(releng)/(7.0)/
   branchpoint stable/7@174854
 end match
 
+# cvs2svn deleted a bunch of files here, and then in rev 4779 it brings em back! Undo this.
+match /release/2.0/share/(FAQ/)?$
+  action recurse
+  min revision 4762
+  max revision 4762
+end match
+match /release/2.0/gnu/usr.bin/man/(manpath/)?$
+  action recurse
+  min revision 4762
+  max revision 4762
+end match
+match /release/2.0/(gnu/usr.bin/man/manpath/manpath.config|release/miscfuncs.sh|release/netinst.sh|share/FAQ/(CONTRIB.FreeBSD|FreeBSD.FAQ|README-2.0|TROUBLESHOOTING)|sys/i386/pci/if_de.c|sys/pci/if_de.c|sys/vm/vm_swap.c)
+  min revision 4762
+  max revision 4762
+end match
 # release/2.0 branched from head in svn, but should branch from releng/2.0,
 # otherwise the diff looks weird and things are misattributed.
 match /(release)/(2.0)/
@@ -5387,9 +5402,24 @@ match /(release)/([0-9.]+)/
   branch refs/tags/\1/\2
   annotated true
 end match
+# don't delete/replace things we later have to manufacture back onto the branch
+match /releng/ALPHA_2_0/share/(FAQ/)?$
+  action recurse
+  min revision 4294
+  max revision 4294
+end match
+match /releng/ALPHA_2_0/(release/(Makefile|bininst)|share/FAQ/(DISKSPACE.FAQ|RELNOTES.FreeBSD)|sys/i386/pci/if_de.c|sys/pci/if_de.c)
+  min revision 4294
+  max revision 4294
+end match
 match /(releng)/ALPHA_2_0/
   repository freebsd-base.git
   branch \1/2.0
+end match
+# don't delete/replace things we later have to manufacture back onto the branch
+match /releng/BETA_2_0/release/(Makefile|bininst|instdist.sh|netinst.sh)
+  min revision 4743
+  max revision 4743
 end match
 match /(releng)/BETA_2_0/
   min revision 4743
