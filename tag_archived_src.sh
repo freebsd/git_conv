@@ -120,21 +120,21 @@ checkout_and_tag() {
     case $rel in
         1.0-RELEASE)
             GIT_DIR=$REPO git worktree add --detach --no-checkout wrk
-            ( cd wrk && git checkout --orphan stable/1 && git reset --hard )
+            ( cd wrk && git checkout --orphan releng/1 && git reset --hard )
             # FIXME
             c_auth="svn2git <svn2git@FreeBSD.org>"
             c_date="1993-11-01T00:00:00-0800"
             c_msg="Release FreeBSD 1.0"
             ;;
         1.1-RELEASE)
-            GIT_DIR=$REPO git worktree add -f --no-checkout wrk stable/1
+            GIT_DIR=$REPO git worktree add -f --no-checkout wrk releng/1
             # FIXME
             c_auth="svn2git <svn2git@FreeBSD.org>"
             c_date="1994-05-01T00:00:00-0800"
             c_msg="Release FreeBSD 1.1"
             ;;
         1.1.5.1-RELEASE)
-            GIT_DIR=$REPO git worktree add -f --no-checkout wrk stable/1
+            GIT_DIR=$REPO git worktree add -f --no-checkout wrk releng/1
             # FIXME
             c_auth="svn2git <svn2git@FreeBSD.org>"
             c_date="1994-07-01T00:00:00-0800"
