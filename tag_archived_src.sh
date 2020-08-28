@@ -121,21 +121,18 @@ checkout_and_tag() {
         1.0-RELEASE)
             GIT_DIR=$REPO git worktree add --detach --no-checkout wrk
             ( cd wrk && git checkout --orphan releng/1 && git reset --hard )
-            # FIXME
             c_auth="svn2git <svn2git@FreeBSD.org>"
             c_date="1993-11-01T00:00:00-0800"
             c_msg="Release FreeBSD 1.0"
             ;;
         1.1-RELEASE)
             GIT_DIR=$REPO git worktree add -f --no-checkout wrk releng/1
-            # FIXME
             c_auth="svn2git <svn2git@FreeBSD.org>"
             c_date="1994-05-01T00:00:00-0800"
             c_msg="Release FreeBSD 1.1"
             ;;
         1.1.5.1-RELEASE)
             GIT_DIR=$REPO git worktree add -f --no-checkout wrk releng/1
-            # FIXME
             c_auth="svn2git <svn2git@FreeBSD.org>"
             c_date="1994-07-01T00:00:00-0800"
             c_msg="Release FreeBSD 1.1.5.1"
@@ -155,24 +152,23 @@ checkout_and_tag() {
     fi
     c_committer=${c_auth%<*}
     c_email=${c_auth#*<}
-    msg="This commit was manufactured to restore the state of the $rel image.
+    case $tag in
+        1*|2*|3*|4*|5.0*|5.1*|5.2*)
+            msg="This commit was manufactured to restore the state of the $rel image.
 Releases prior to 5.3-RELEASE are omitting the secure/ and crypto/ subdirs."
-    #X## TODO: with the git worktree support, I can probably just use a regular
-    #X## old git commit instead?
-    #X#find . -type f -not -name .git | xargs git update-index --add
-    #X#tree=`git write-tree`
-    #X#parent=`git show -s --format=%h release/${tag}\^{commit}`
-    #X## TODO: hoist tagger into author, fix up commit dates
-    #X#commit=`git show -s --pretty=%B release/$tag | \
-    #X#    git commit-tree -p $parent -F - -m "$msg" $tree`
+            ;;
+        *)
+            msg="This commit was manufactured to restore the state of the $rel image."
+            ;;
+    esac
+
     if [ -z "$c_date" -o -z "$c_committer" -o -z "$c_email" -o -z "$c_auth" -o -z "$c_msg" -o -z "$msg" ]; then
         echo "Don't know what to commit for rel $rel and tag $tag"
         exit 1
     fi
     git add -fN .
     GIT_COMMITTER_DATE="$c_date" GIT_COMMITTER_NAME="$c_committer" GIT_COMMITTER_EMAIL="$c_email" git commit -q -a --author="$c_auth" --date="$c_date" -m "$c_msg" -m "$msg"
-    # TODO: what's in a name?
-    GIT_COMMITTER_DATE="$c_date" GIT_COMMITTER_NAME="$c_committer" GIT_COMMITTER_EMAIL="$c_email" git tag -a -f -m "Tag $rel as it was shipped on the ISOs." release/${tag}_cvs $commit
+    GIT_COMMITTER_DATE="$c_date" GIT_COMMITTER_NAME="$c_committer" GIT_COMMITTER_EMAIL="$c_email" git tag -a -f -m "Tag $rel as it was shipped on the release image." release/${tag}_cvs $commit
 
     cd ..
     GIT_DIR=$REPO git worktree remove --force wrk
