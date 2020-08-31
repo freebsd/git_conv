@@ -66,7 +66,7 @@ extract() {
         9*|10*|11*|12*|13*)
             tar xf src.txz -s',^usr/src/,,' -C wrk
             ;;
-        1.*-RELEASE)
+        1.*-RELEASE|2.0-RELEASE)
             for f in *.aa; do
                 cat ${f%.aa}.?? | tar xf - -s',^usr/src/,,' -C wrk
             done
