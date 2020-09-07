@@ -152,7 +152,9 @@ https://github.com/freebsd/git_conv/wiki
 git ls-tree -r --name-only -z HEAD|xargs -0n1 git blame -e --line-porcelain | sed -n 's/^author-mail //p' | sort -f | uniq -ic | sort -nr
 ```
 It only blames the current state of the repo, not all of history, mind you.
-Sadly, it currently comes up with 6484 lines owned by "cvs2svn".
+After several hairy fixes, this could be reduced from more than 6000 lines down
+to just 182 lines that are now falsely attributed to author "cvs2svn". The
+files are `gnu/usr.bin/grep/AUTHORS` and a few under `usr.sbin/ppp`.
 
 ## License
 The included svn2git is GPLv3; see svn2git/LICENSE. The scripts and configuration files are licensed under

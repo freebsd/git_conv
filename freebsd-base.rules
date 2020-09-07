@@ -3258,6 +3258,37 @@ match /vendor/ncftp/dist/
   max revision 13122
 end match
 
+# cvs2svn manufactures that are pointless as the files should've taken the
+# route via a proper vendor import (which they later do).
+match /vendor/tzdata/dist/
+  min revision 2743
+  max revision 2743
+end match
+match /vendor/SGI/dist/
+  min revision 16005
+  max revision 16005
+end match
+match /vendor/SGI/dist/
+  min revision 17841
+  max revision 17841
+end match
+match /vendor/libpcap/dist/
+  min revision 17750
+  max revision 17750
+end match
+match /vendor/tzdata/dist/
+  min revision 19875
+  max revision 19875
+end match
+match /vendor/tcpdump/dist/
+  min revision 44166
+  max revision 44166
+end match
+match /vendor-crypto/openssh/dist/
+  min revision 69592
+  max revision 69592
+end match
+
 # Ok, routed vendor is special. Till r17843 everything was imported under dist.
 # After that, things were imported into both dist2 *and* dist_v_2_21. The
 # prefix was different though, so we can just delete the old prefix.
@@ -3350,11 +3381,25 @@ match /vendor/misc-GNU/dist[12]/
   repository freebsd-base.git
   branch vendor/misc-GNU/grep/dist
 end match
+match /cvs2svn/tags/grep_2_0/(gnu/(usr.bin/(grep/(tests/)?)?)?)?$
+  action recurse
+  min revision 95
+  max revision 95
+end match
+match /cvs2svn/tags/grep_2_0/gnu/usr.bin/grep/(AUTHORS|COPYING|Makefile|NEWS|PROJECTS|README|grep.h|regex.c|regex.h|tests$)
+  min revision 95
+  max revision 95
+end match
+match /cvs2svn/tags/grep_2_0/
+  min revision 95
+  max revision 95
+  repository freebsd-base.git
+  branchpoint vendor/misc-GNU/grep/dist@63@ca8c8ea4e51223ded295999ec6a3751a752e05a2
+  branch vendor/misc-GNU/grep/dist
+end match
 match /vendor/misc-GNU/dist1/
   min revision 96
   max revision 96
-  repository freebsd-base.git
-  branch vendor/misc-GNU/grep/dist
 end match
 match /vendor/misc-GNU/dist1/
   min revision 53469
