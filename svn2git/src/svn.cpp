@@ -1973,8 +1973,10 @@ int SvnRevision::exportInternal(const char *key, const svn_fs_path_change2_t *ch
 
     if (!rule.branchpoint.isEmpty() && rule.branchpoint != "none") {
         const auto pair = rule.branchpoint.splitRef('@');
-        if (/*pair.size() == 2 ||*/ pair.size() == 3) {
-            //txn->noteCopyFromBranch(pair[0].toString(), pair[1].toInt());
+        if (pair.size() == 3) {
+            qDebug() << "Creating branch from" << __FILE__ << __LINE__;
+            if (repo->createBranch(branch, revnum, pair[0].toString(), pair[1].toString().toInt(), pair[2].toString(), txn) == EXIT_FAILURE)
+                return EXIT_FAILURE;
         } else if (pair.size() == 2) {
             txn->noteCopyFromBranch(pair[0].toString(), pair[1].toInt());
         } else {
