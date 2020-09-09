@@ -741,6 +741,7 @@ rew = Robert Wing <rew@FreeBSD.org>
 rezny = Matthew Rezny <rezny@FreeBSD.org>
 rgrimes = Rodney W. Grimes <rgrimes@FreeBSD.org>
 rhh = Randall Hopper <rhh@FreeBSD.org>
+rhurlin = Rainer Hurling <rhurlin@FreeBSD.org>
 ricardag = Ricardo AG <ricardag@FreeBSD.org>
 rich = Rich Murphey <rich@FreeBSD.org>
 rick = Rick Weldon <rick@FreeBSD.org>
