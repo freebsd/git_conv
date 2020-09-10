@@ -20,17 +20,6 @@ SOURCE=ftp://ftp-archive.freebsd.org/pub/FreeBSD-Archive/old-releases/i386
 # http://ftp-archive.freebsd.org/pub/FreeBSD-Archive/old-releases/i386/ISO-IMAGES/FreeBSD-1.1-RELEASE/cd1.iso
 # http://ftp-archive.freebsd.org/pub/FreeBSD-Archive/old-releases/i386/ISO-IMAGES/FreeBSD-1.1.5.1/cd1.iso
 
-# NOTE NOTE NOTE
-# Most of these images are fake and have obviously been created by checking out
-# a CVS tree long after the release was actually created. This means that
-# repo-copied files appear twice on them. For example 5.1--5.4 have
-# etc/rc.d/ppp but this has only for 6.0 been renamed from etc/rc.d/ppp-user to
-# etc/rc.d/ppp. But these old images have both files! What's more, their
-# NETWORKING clearly references ppp-user, not ppp. Only the 5.5 image seems to
-# be a true image, as it doesn't have etc/rc.d/ppp
-# We keep the others here still, as at least you get the CVS keywords expanded.
-# NOTE NOTE NOTE
-
 fetch_archive() {
     local r dest
     r=$1; shift

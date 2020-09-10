@@ -454,37 +454,6 @@ match /cvs2svn/
   max revision 260580
 end match
 
-# Don't let ppp appear before this revision. 5.x never had it, SVN is lying.
-match /(head|stable/5|releng/5..)/etc/rc.d/ppp$
-  max revision 151840
-end match
-match /head/
-  min revision 151841
-  max revision 151841
-  rename etc/rc.d/ppp-user etc/rc.d/ppp
-  repository freebsd-base.git
-  branch master
-end match
-# this is the old file deletion, which we now need to skip as we've done the
-# move above. Doing it this way allows git blame to work properly.
-match /head/
-  min revision 151844
-  max revision 151844
-end match
-# NOTE: release 5.x ISOs as on the ftp archive are fake and have both files.
-# 5.5 seems a true archive copy of the ISO though and *doesn't* have the new
-# file again.
-match /stable/6/etc/rc.d/ppp$
-  max revision 154656
-end match
-match /(stable)/(6)/
-  min revision 154657
-  max revision 154657
-  rename etc/rc.d/ppp-user etc/rc.d/ppp
-  repository freebsd-base.git
-  branch \1/\2
-end match
-
 # NOTE ATTENTION ACHTUNG: I'm working my way backwards through all the
 # revisions that pulled in stuff from /cvs2svn/branches into head and see if
 # they can't be patched up better. So far, it seems that the later ones were

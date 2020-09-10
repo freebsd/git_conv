@@ -242,9 +242,6 @@ case "$type" in
             while read ref rev; do
                 if [ $rev -lt 77859 ]; then
                     diff_it -r's/sys/contrib/ipfilter/netinet' head@$rev $ref
-                elif [ $rev -le 151841 ]; then
-                    # ppp-user -> ppp repo-copy was corrected
-                    diff_it -xppp head@$rev $ref
                 else
                     diff_it head@$rev $ref
                 fi
@@ -257,9 +254,6 @@ case "$type" in
                     diff_it -r's/sys/contrib/ipfilter/netinet' head@$((rev+1)) $ref
                 elif [ $rev -lt 77859 ]; then
                     diff_it -r's/sys/contrib/ipfilter/netinet' head@$rev $ref
-                elif [ $rev -le 151841 ]; then
-                    # ppp-user -> ppp repo-copy was corrected
-                    diff_it -xppp head@$rev $ref
                 else
                     diff_it head@$rev $ref
                 fi
@@ -531,8 +525,6 @@ case "$type" in
                         ;;
                     # missing the .git in git
                     git_conv/) diff_it -x.git -xconfig user/$u$b; continue ;;
-                    # has the bogus /etc/rc.d/ppp repo-copied script
-                    head_146698/) diff_it -xppp user/$u$b; continue ;;
                 esac
                 diff_it user/$u$b
             done
