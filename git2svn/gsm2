@@ -1,0 +1,222 @@
+#! /bin/sh
+
+set -e
+
+#
+# Git to Subversion Mirror
+#
+# This is the control script that runs out of the cron tab or
+# manually.
+#
+
+clone_lock=./clone-lock-file
+mirror_lock=./mirror-lock-file
+
+die() {
+    echo $*
+    exit 1
+}
+
+warn() {
+    echo "***************************************************"
+    echo "WARNING: $*"
+    echo "***************************************************"
+}
+
+usage() {
+    echo "gsm [-b branch] [-n] cmd"
+    echo "   supported commands: mirror clone-init branch-init"
+    exit 1
+}
+
+# Set the standard variables. This has to run in the same shell
+# so they are in the caller's shell when we return. For each
+# branch we're doing, we take it's name and use $name_X for each
+# of the variables X.
+set_vars() {
+    local bb=$1 tmp
+
+    for i in name path; do
+	eval tmp=\$${bb}_${i}
+	eval ${i}="${tmp}"
+    done
+}
+
+#
+# All configuration of this script is done via the git2svn.conf file.
+# For simplicity, it's assumed to be sourcable that sets a number of variables.
+#
+
+. ./git2svn.conf
+
+#
+# The branches variable lists all of the branches we are mirroring. Or
+# more precisely, it is a list of names that we use to mirror. Each
+# name is then used to look at additional labels. However, it can be
+# overriden from the -b xxxx command line switch.
+#
+
+while getopts "b:hnx" opt; do
+    case "$opt" in
+	b)
+	    bbb="$bbb $OPTARG"
+	    ;;
+	n)
+	    DRY_RUN=1
+	    ;;
+	x)
+	    set -x
+	    ;;
+	h|*)
+	    usage
+	    ;;
+    esac
+done
+
+# If -b was on the command line, override branches we're doing
+[ -n "$bbb" ] && branches="$bbb"
+
+#
+# There's a number of commands that we can do
+#
+shift $(( ${OPTIND} - 1 ))
+cmd=$1
+
+case $cmd in
+    mirror)
+	# Fetch latest from upstream
+	[ -d $gitpath/branches ] || die "No cloned repo yet"
+	(cd ${gitpath}; git fetch)
+
+	# Run all the mirrors, skip the ones not properly initialized
+	for b in $branches; do
+	    (
+		lockf -t 0 ${mirror_lock}-${b} $0 -b $b mirror-locked || warn "Mirroring of $b prevented by lock file"
+	    )
+	done
+    ;;
+    mirror-locked)
+	for b in $branches; do
+	    (
+		set_vars $b
+
+		[ -d $gitpath/branches ] || die "No cloned repo yet"
+		([ -f $path/.git/config ] && grep -q -s svn-remote $path/.git/config) || die "Branch $b not yet initalized"
+
+		cd $path
+		branch=${name}
+		ref=upstream/${branch}-last-update
+		export TMPDIR=$(pwd)
+		dir=$(mktemp -d -t git-svn-gw-xxxxxxxxxx)
+		export EDITOR=$dir/editor
+		svnurl=$(git config svn-remote.svn.pushurl) || svnurl=$(git config svn-remote.svn.url)
+
+		# git-svn-setup sets things up so upstream/branch is the root of the
+		# trunk used by git svn to do it's thing. We don't merge (even fast
+		# forward) from upstream into the proper branch. Instead, we
+		# cherry-pick everything.  But we use tags/refs to keep track of what
+		# we've done and therefore need to do.
+
+		# Get new bits from upstream (which will be local since we cloned from there)
+		git fetch upstream $branch
+		git checkout $branch
+
+		for hash in $(git rev-list ${ref}..upstream/${branch} | tail -r); do
+		    author=$(git show -s --format="%ae" $hash)
+		    (
+			echo echo '"'"Git Hash:   $hash"'"' '>> $1'
+			echo echo '"'"Git Author: $author"'"' '>> $1'
+		    ) > $EDITOR
+		    chmod +x $EDITOR
+		    echo git cherry-pick --edit $hash
+		    git cherry-pick --edit $hash || exit
+		    git svn dcommit
+		    # Try to set the author in the svn repo, if from a freebsd.org address
+		    case $author in
+			*@FreeBSD.org)
+			    aa=${author%@FreeBSD.org}
+			    r=$(git svn log HEAD^..HEAD | head -2 | tail -1 | awk -F'|' '{print $1;}')
+			    svn propset svn:author "$aa" --revprop -$r $svnurl
+			    ;;
+		    esac
+		    old=$(git show-ref --hash $ref)
+		    git update-ref refs/remotes/$ref $hash $old
+		done
+		rm -rf $dir
+	    )
+	done
+    ;;
+    branch-init)
+	for b in $branches; do
+	    (
+		lockf -t 0 ${mirror_lock}-${b} $0 -b $b branch-init-locked || warn "Branch init of $b prevented by lock file"
+	    )
+	done
+	;;
+    branch-init-locked)
+	# Check the setup for each of thee branches, and initialize
+	for b in $branches; do
+	    (
+		set_vars $b
+
+		[ -d $gitpath/branches ] || die "No cloned repo yet"
+		[ -f $path/.git/config ] && grep -q -s svn-remote $path/.git/config && die "Branch $b already inited"
+
+		if [ ! -f $path/.git/config ]; then
+		    # There's no checked out tree, so check it out
+		    git clone -b $name -o upstream $gitpath $path
+		    cd $path
+		    git config --add remote.upstream.fetch "+refs/notes/*:refs/notes/*"
+		    git fetch
+		fi
+		cd $path
+		# init the git subversion link
+		git svn init -T${name} $svnurl
+
+		# Replace to use upstream instead of the default origin
+		git config svn-remote.svn.fetch ${name}:refs/remotes/upstream/trunk
+
+		# Now make a git branch 'trunk' for git-svn to follow. What we want to
+		# do it set it to point to the final commit in upstream/${name}
+		svn_head_sha=$(git show-ref upstream/${name}|cut -d" " -f1)
+		git update-ref refs/remotes/upstream/trunk $svn_head_sha # git-svn really needs this branch
+
+		# Fetch just the tip of the branch. This breaks git svn blame, but we don't care
+		# because we're just exporting changes. This import takes seconds, not days, though
+		# and is sufficient for our needs.
+		head=$(svn log --verbose --limit 1 ${svnurl}/${name} | tail +2 | head -1 | awk -F'|' '{print $1;}')
+		head=${head%% }
+		head=${head##r}
+		git svn fetch -r${head}
+
+		# Arrange to have the git branch refer to trunk
+		git checkout trunk
+		git checkout -B ${name}
+
+		git svn rebase
+
+		# Seed the tag that tracks where we updated to. Use the notes to make sure
+		# we tag the right revision in case there's a skew between the svn tree and
+		# git tree as is all too common
+		hash=$(git log --grep revision=$head -1 upstream/${name} | head -1 | awk '{print $2;}')
+		git update-ref refs/remotes/upstream/${name}-last-update $hash
+	    )
+	done
+	;;
+    clone-init)
+	lockf -t 0 $clone_lock $0 clone-init-locked $* || warn "Clone init lock file prevented cloning"
+	;;
+    clone-init-locked)
+	# Clone the github tree into $gitpath
+	if [ -d ${gitpath}/branches ] ; then
+	    echo "You have already cloned $giturl into $gitpath"
+	    exit 0
+	fi
+	mkdir -p ${gitpath}
+	git clone --mirror ${giturl} ${gitpath}
+    ;;
+    *)
+	echo "Don't know about command $cmd"
+	usage
+	;;
+esac
