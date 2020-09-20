@@ -635,6 +635,10 @@ SvnRevision::maybeParseSimpleMergeinfo(const int revnum, QList<mergeinfo>* mi_li
 ## -0,0 \+0,0 ##$)", QRegularExpression::MultilineOption));
 
     if ((del_mi+add_mi+diff_mi) == 0) {
+#if 0
+        printf(" ===Skipping non-existant mergeinfo (why are we even here?) on %d=== ", revnum);
+        return true;
+#endif
         qFatal("Something went wrong parsing the mergeinfo!");
     }
 
@@ -1064,6 +1068,18 @@ int SvnRevision::prepareTransactions()
         // eh? records an ipfilter merge on a project branch ...
         288036,
         312216,
+        // When switching from svn.freebsd.org to repo.freebsd.org, we get a
+        // whole new set of useless mergeinfo. WTF? Why would this be different
+        // between an svnsync mirror and the source?
+        290053, 290770, 291769, 291879, 292587, 292913, 293308, 293623, 293881,
+        294083, 295185, 295706, 296971, 297890, 298064, 298078, 298081, 298865,
+        299558, 300381, 300924, 301834, 302315, 302406, 303250, 303899, 303985,
+        304258, 306791, 309166, 310103, 311132, 311262, 312125, 313466, 316992,
+        318362, 319693, 319730, 319973, 319998, 320180, 320793, 321438, 322018,
+        325752, 326936, 327980, 329557, 330244, 331530, 334067, 336666, 336870,
+        338661, 338668, 343202, 344081, 345048, 345747, 345824, 345857, 345877,
+        346083, 346102, 346444, 347206, 351317, 354426, 354454, 356848, 357124,
+        358915, 363583,
     };
     if (skip_mergeinfo.contains(revnum)) {
         return EXIT_SUCCESS;
@@ -1093,6 +1109,9 @@ int SvnRevision::prepareTransactions()
         276402, 293215, 298094, 337607, 349592,
         // Other mergeinfo that copies everything from head around
         296962,
+        // See above, repo.freebsd.org has some _more_ of these that are
+        // missing on svn.freebsd.org. Some have svk:merge (sic) attributes.
+        180563, 186334, 190422, 202064, 202065, 245678
     };
     if (empty_mergeinfo.contains(revnum)) {
         return EXIT_SUCCESS;
