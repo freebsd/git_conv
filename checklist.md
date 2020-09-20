@@ -11,7 +11,8 @@
 ## Flag day
 *  send email that migration process is starting
 *  make SVN repo read-only
-*  create 3 SVN repo dump tarballs
+*  update our canonical svnsync copy, verify metadata matches
+*  make an archive of the 3 repos
 
 ## Conversion process
 *  [1h] copy and extra repo tarballs
@@ -23,6 +24,7 @@
 *  [1h] run fix_bogus_tags.sh
 *  [8h, but can start shortly after the conversion kicked off] run compare_branches.sh -k
   *  This requires sudo and likely doesn't work in the jail anyway, need to undo the mdconfig hack
+  *  Our just run the copy @home and compare final hashes for a quorum vote.
 *  [1h] git push
 *  **WE ARE LIVE**
 *  run gc --aggressive on the server repo
