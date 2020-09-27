@@ -16,22 +16,24 @@ rsync -va --del compost:/j/jails/repo/s/svn/ repo/
 # % host 96.47.72.69
 # 69.72.47.96.in-addr.arpa domain name pointer svnmir.nyi.freebsd.org.
 ssh cgit "cd git_conv && ./svnmir.sh -1 -s doc\ base\ ports"
-rsync -va --del cgit:/home/uqs/git_conv/doc .
-rsync -va --del cgit:/home/uqs/git_conv/base .
-rsync -va --del cgit:/home/uqs/git_conv/ports .
+rsync -va --del cgit:/home/uqs/git_conv/doc . &
+rsync -va --del cgit:/home/uqs/git_conv/base . &
+rsync -va --del cgit:/home/uqs/git_conv/ports . &
+wait
 
 # dump their logs
-svn log -vr 1:HEAD file:///$PWD/repo/doc > repo_doc.log
-svn log -vr 1:HEAD file:///$PWD/repo/base > repo_base.log
-svn log -vr 1:HEAD file:///$PWD/repo/ports > repo_ports.log
+svn log -vr 1:HEAD file:///$PWD/repo/doc | gzip > repo_doc.log.gz &
+svn log -vr 1:HEAD file:///$PWD/repo/base | gzip > repo_base.log.gz &
+svn log -vr 1:HEAD file:///$PWD/repo/ports | gzip > repo_ports.log.gz &
 
-svn log -vr 1:HEAD file:///$PWD/doc > mirror_doc.log
-svn log -vr 1:HEAD file:///$PWD/base > mirror_base.log
-svn log -vr 1:HEAD file:///$PWD/ports > mirror_ports.log
+svn log -vr 1:HEAD file:///$PWD/doc | gzip > mirror_doc.log.gz &
+svn log -vr 1:HEAD file:///$PWD/base | gzip > mirror_base.log.gz &
+svn log -vr 1:HEAD file:///$PWD/ports | gzip > mirror_ports.log.gz &
+wait
 
 # grab revisions where the metadata differs, usually in the timestamp.
 for t in doc base ports; do
-    set -- `diff -e =(grep "^r[0-9]" mirror_$t.log) =(grep "^r[0-9]" repo_$t.log) | egrep -o '^r[0-9]* '`
+    set -- `diff -e =(zgrep "^r[0-9]" mirror_$t.log.gz) =(zgrep "^r[0-9]" repo_$t.log.gz) | egrep -o '^r[0-9]* '`
     if [ $# -ge 1 ]; then
         echo "Found bad metadata in $t for revs $*" >&2
 	# And patch them add the remote end. We then need to pull again, of course.
