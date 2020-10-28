@@ -15,12 +15,6 @@ LOG="$PWD/`date +%Y-%m-%d`_${TYPE}.log"
 
 case "$1" in
     base)
-	# test for certain time of day, or maybe test for the age of the previous run? (logfile or HEAD or whatever)
-	eval `/usr/bin/stat -s log-freebsd-base.git`
-	if [ -n "$st_mtime" -a "$st_mtime" -ge `date -v -6H +%s` ]; then
-	    echo "Skipping run for $1 as last result is not yet 6h old" >&2
-	    exit 0
-	fi
 	rm -rf freebsd-$1.git/ gitlog-freebsd-$1.git log-freebsd-$1.git log-freebsd-$1.git.old log-$1
 	rm -rf mi
 	rm -rf archive/*/wrk 2>/dev/null
