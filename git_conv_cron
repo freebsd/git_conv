@@ -43,5 +43,6 @@ if [ $? != 0 ]; then
     tail -30 $LOG
     exit 1
 else
-    cd freebsd-$1.git && git push -q freebsd && cd $HOME/repositories/$REPO.git && git gc --aggressive --prune=now --force --quiet
+    cd freebsd-$1.git && git push -q freebsd
+    #&& cd $HOME/repositories/$REPO.git && git gc --aggressive --prune=now --force --quiet
 fi
