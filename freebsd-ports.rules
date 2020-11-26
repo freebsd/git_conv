@@ -2,16 +2,24 @@
 create repository freebsd-ports.git
 end repository
 
+# retain access history
+match /(head/CVSROOT|svnadmin/conf)/(?!access|mentors)
+end match
+match /(head/CVSROOT|svnadmin/conf)/
+  repository freebsd-ports.git
+  branch admin
+end match
+
+# ignore this stuff
+match /head/CVSROOT/
+end match
+match /svnadmin/
+end match
+
 match /head/
   repository freebsd-ports.git
   branch master
 end match
-
-# ignore this stuff
-match /svnadmin/.*
-end match
-
-# FIXME: should CVSROOT be excluded?
 
 # FIXME: this whole scheme needs to be blessed by portmgr
 

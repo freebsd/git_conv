@@ -7,9 +7,17 @@ match /head/
   branch master
 end match
 
-# ignore this stuff
-match /svnadmin/.*
+# retain access history
+match /svnadmin/conf/(?!access|mentors)
 end match
+match /svnadmin/conf/
+  repository freebsd-doc.git
+  branch admin
+end match
+match /svnadmin/
+end match
+
+# ignore this stuff
 match /doc-branch-policy.txt
 end match
 

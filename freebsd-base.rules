@@ -35,8 +35,6 @@ match /projects/
 min revision 244487
 max revision 244487
 end match
-match /svnadmin/
-end match
 # Skip branch creation and deletion at wrong level
 match /user/bz/
 min revision 262833
@@ -53,6 +51,17 @@ end match
 match /projects/doctools/
 min revision 306856
 max revision 306858
+end match
+
+# retain access history
+match /svnadmin/conf/(?!access|mentors)
+end match
+match /svnadmin/conf/
+#action recurse
+  repository freebsd-base.git
+  branch admin
+end match
+match /svnadmin/
 end match
 
 # cvs2svn sprayed several revisions all over the place, only to manufacture
