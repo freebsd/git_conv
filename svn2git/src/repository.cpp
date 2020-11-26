@@ -848,7 +848,8 @@ Repository::Transaction *FastImportRepository::newTransaction(const QString &bra
     txn->datetime = 0;
     txn->revnum = revnum;
 
-    if ((++commitCount % CommandLineParser::instance()->optionArgument(QLatin1String("commit-interval"), QLatin1String("10000")).toInt()) == 0) {
+    static auto n = CommandLineParser::instance()->optionArgument(QLatin1String("commit-interval"), QLatin1String("25000")).toInt();
+    if (++commitCount % n == 0) {
         startFastImport();
         // write everything to disk every 10000 commits
         fastImport.write("checkpoint\n");
