@@ -264,6 +264,20 @@ svn2git()
     fi
 
     if $first_run; then
+	# Convert the access RCS file and prepend it to the SVN history.
+	case "$TYPE" in
+	    base)
+		svn cat file://$source/svnadmin/conf/cvs-access,v > access,v
+		(
+		    cd $target && echo ../access,v | ../parsecvs/parsecvs -A ../authors.txt | sed 's,^commit refs/heads/master,commit refs/heads/admin_cvs,' | git fast-import --quiet --export-marks=marks-$target
+		    # graft the cvs access history in front of the SVN admin branch
+		    git replace --graft `git rev-list --max-parents=0 admin` admin_cvs
+		    # collapse it and fix a latin1 snafu, git expects UTF-8
+		    FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch -f --tag-name-filter "LC_ALL=C sed 's/Hand Thomas M.stl/Hand Thomas Möstl/'" admin
+		    git update-ref -d refs/heads/admin_cvs
+		)
+		;;
+	esac
 	(
 	    cd $target
 	    echo "Compacting, showing before and after numbers:"

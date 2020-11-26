@@ -10,6 +10,7 @@ cd $HOME/git_conv
 LOG="$PWD/`date +%Y-%m-%d`_${TYPE}.log"
 
 (git pull && cd svn2git && make) >> $LOG 2>&1
+(cd parsecvs && make) >> $LOG 2>&1
 
 ./svnmir.sh -1
 
