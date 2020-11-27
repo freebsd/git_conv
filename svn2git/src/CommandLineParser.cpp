@@ -33,7 +33,7 @@ public:
 
     // functions
     void addDefinitions(const CommandLineOption * options);
-    void setArgumentDefinition(const char *definition);
+    void setArgumentDefinition(const char *defs);
     void parse();
 
     // variables;

@@ -98,7 +98,7 @@ public:
         }
     };
 
-    Rules(const QString &filename);
+    Rules(const QString &fn);
     ~Rules();
 
     const QList<Repository> repositories() const;

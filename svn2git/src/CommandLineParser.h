@@ -54,7 +54,7 @@ class CommandLineParser
 {
 public:
     static void init(int argc, char *argv[]);
-    static void addOptionDefinitions(const CommandLineOption *definitions);
+    static void addOptionDefinitions(const CommandLineOption *optionList);
     static void setArgumentDefinition(const char *definition);
     static CommandLineParser *instance();
 

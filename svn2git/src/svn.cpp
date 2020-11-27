@@ -470,12 +470,12 @@ public:
     int fetchRevProps();
     int commit();
 
-    int exportEntry(const char *path, const svn_fs_path_change2_t *change, apr_hash_t *changes);
-    int exportDispatch(const char *path, const svn_fs_path_change2_t *change,
+    int exportEntry(const char *key, const svn_fs_path_change2_t *change, apr_hash_t *changes);
+    int exportDispatch(const char *key, const svn_fs_path_change2_t *change,
                        const char *path_from, svn_revnum_t rev_from,
                        apr_hash_t *changes, const QString &current, const Rules::Match &rule,
                        const MatchRuleList &matchRules, apr_pool_t *pool);
-    int exportInternal(const char *path, const svn_fs_path_change2_t *change,
+    int exportInternal(const char *key, const svn_fs_path_change2_t *change,
                        const char *path_from, svn_revnum_t rev_from,
                        const QString &current, const Rules::Match &rule, const MatchRuleList &matchRules);
     int recurse(const char *path, const svn_fs_path_change2_t *change,

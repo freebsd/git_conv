@@ -78,7 +78,7 @@ public:
         void setDateTime(uint dt);
         void setLog(const QByteArray &log);
 
-        void noteCopyFromBranch(const QString &prevbranch, int revFrom, bool allow_heuristic=true);
+        void noteCopyFromBranch(const QString &branchFrom, int branchRevNum, bool allow_heuristic=true);
 
         void deleteFile(const QString &path);
         void renameFile(const QString &from, const QString &to);
@@ -97,16 +97,16 @@ public:
 
     void reloadBranches();
     int createBranch(const QString &branch, int revnum,
-                     const QString &branchFrom, int revFrom);
+                     const QString &branchFrom, int branchRevNum);
     int createBranch(const QString &branch, int revnum,
                      const QString &tree_hash, Repository::Transaction* txn);
     int createBranch(const QString &branch, int revnum,
-                     const QString &branchFrom, int revFrom,
+                     const QString &branchFrom, int branchRevNum,
                      const QString &tree_hash, Repository::Transaction* txn);
     int deleteBranch(const QString &branch, int revnum);
     Repository::Transaction *newTransaction(const QString &branch, const QString &svnprefix, int revnum);
 
-    void createAnnotatedTag(const QString &name, const QString &svnprefix, int revnum,
+    void createAnnotatedTag(const QString &ref, const QString &svnprefix, int revnum,
                             const QByteArray &author, uint dt,
                             const QByteArray &log);
     void finalizeTags();
@@ -205,7 +205,7 @@ public:
 
     ForwardingRepository(const QString &n, Repository *r, const QString &p) : name(n), repo(r), prefix(p) {}
 
-    int setupIncremental(int &) { return 1; }
+    int setupIncremental(int &cutoff) { return 1; }
     void restoreAnnotatedTags() {}
     void restoreBranchNotes() {}
     void restoreLog() {}
@@ -859,7 +859,7 @@ Repository::Transaction *FastImportRepository::newTransaction(const QString &bra
     return txn;
 }
 
-void FastImportRepository::forgetTransaction(Transaction *)
+void FastImportRepository::forgetTransaction(Transaction * /*unused*/)
 {
     if (!--outstandingTransactions)
         next_file_mark = maxMark - 1;
