@@ -398,7 +398,7 @@ static QString logFileName(QString name)
     return name;
 }
 
-static mark_t lastValidMark(QString name)
+static mark_t lastValidMark(const QString& name)
 {
     QFile marksfile(name + "/" + marksFileName(name));
     if (!marksfile.open(QIODevice::ReadOnly))

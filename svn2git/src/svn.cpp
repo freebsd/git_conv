@@ -481,7 +481,7 @@ public:
     int recurse(const char *path, const svn_fs_path_change2_t *change,
                 const char *path_from, const MatchRuleList &matchRules, svn_revnum_t rev_from,
                 apr_hash_t *changes, apr_pool_t *pool);
-    int addGitIgnore(apr_pool_t *pool, const char *key, QString path,
+    int addGitIgnore(apr_pool_t *pool, const char *key, const QString& path,
                      svn_fs_root_t *fs_root, Repository::Transaction *txn, const char *content = NULL);
     int fetchIgnoreProps(QString *ignore, apr_pool_t *pool, const char *key, svn_fs_root_t *fs_root);
     int fetchUnknownProps(apr_pool_t *pool, const char *key, svn_fs_root_t *fs_root);
@@ -2107,7 +2107,7 @@ int SvnRevision::recurse(const char *path, const svn_fs_path_change2_t *change,
     return EXIT_SUCCESS;
 }
 
-int SvnRevision::addGitIgnore(apr_pool_t *pool, const char *key, QString path,
+int SvnRevision::addGitIgnore(apr_pool_t *pool, const char *key, const QString& path,
                               svn_fs_root_t *fs_root, Repository::Transaction *txn, const char *content)
 {
     // Check for number of subfiles if no content
