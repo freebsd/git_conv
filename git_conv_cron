@@ -5,14 +5,22 @@ set -e
 TYPE=$1
 REPO=$TYPE
 case $TYPE in base) REPO=src;; esac
+: ${GIT_USER:=git}
 
-cd $HOME/git_conv
-LOG="$PWD/`date +%Y-%m-%d`_${TYPE}.log"
+case "$1" in
+    base|ports|doc)
+	LOG="$PWD/`date +%Y-%m-%d`_${TYPE}.log"
+	;;
+    *)
+	echo "Need to specify which repo to convert" >&2
+	exit 1
+	;;
+esac
+
+test `whoami` = $GIT_USER && cd $HOME/git_conv && ./svnmir.sh -1
 
 (git pull && cd svn2git && make) >> $LOG 2>&1
 (cd parsecvs && make) >> $LOG 2>&1
-
-./svnmir.sh -1
 
 case "$1" in
     base)
@@ -30,10 +38,6 @@ case "$1" in
 	rm -rf gitlog-freebsd-$1.git log-freebsd-$1.git log-freebsd-$1.git.old log-$1
 	./git_conv "$@" >> $LOG 2>&1
         ;;
-    *)
-        echo "Need to specify which repo to convert" >&2
-        exit 1
-        ;;
 esac
 
 if [ $? != 0 ]; then
@@ -42,6 +46,6 @@ if [ $? != 0 ]; then
     exit 1
 else
     # guard against me messing this up ...
-    test `whoami` = git && cd freebsd-$1.git && git push -q freebsd
+    test `whoami` = $GIT_USER && cd freebsd-$1.git && git push -q freebsd
     #&& cd $HOME/repositories/$REPO.git && git gc --aggressive --prune=now --force --quiet
 fi
