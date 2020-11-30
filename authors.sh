@@ -33,6 +33,9 @@ EOS
 
 ssh freefall "getent passwd" | \
 awk -F: '$3 >= 500 && $3 < 65534 {sub(/,.*/, "", $5); sub(/;.*/, "", $5); printf "%s = %s <%s@FreeBSD.org>\n", $1, $5, $1}'
+cat << EOS
+brucec = Rebecca Cran <brucec@FreeBSD.org>
+EOS
 ) | \
 # squash duplicates
 awk '{a[$1] = $0} END{for (v in a) {print a[v]}}' | sort > authors.txt
