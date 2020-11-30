@@ -7,7 +7,7 @@ match /(head/CVSROOT|svnadmin/conf)/(?!access|mentors)
 end match
 match /(head/CVSROOT|svnadmin/conf)/
   repository freebsd-ports.git
-  branch admin
+  branch internal/admin
 end match
 
 # ignore this stuff

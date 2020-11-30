@@ -31,7 +31,7 @@ case "$1" in
 	./git_conv "$@" >> $LOG 2>&1
 	./tag_archived_src.sh >> $LOG 2>&1
 	./fix_bogus_tags.sh >> $LOG 2>&1
-	(cd freebsd-$1.git && git repack) >> $LOG 2>&1
+	(cd freebsd-$1.git && git repack >> $LOG 2>&1)
         ;;
     ports|doc)
 	test -d freebsd-$1.git && find freebsd-$1.git -not -path "*/objects*" -type f -delete || true

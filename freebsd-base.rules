@@ -59,7 +59,7 @@ end match
 match /svnadmin/conf/
 #action recurse
   repository freebsd-base.git
-  branch admin
+  branch internal/admin
 end match
 match /svnadmin/
 end match

@@ -12,7 +12,7 @@ match /svnadmin/conf/(?!access|mentors)
 end match
 match /svnadmin/conf/
   repository freebsd-doc.git
-  branch admin
+  branch internal/admin
 end match
 match /svnadmin/
 end match
