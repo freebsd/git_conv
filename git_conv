@@ -282,15 +282,13 @@ svn2git()
 	esac
 	(
 	    cd $target
-	    if [ `du -sg . | awk '{print $1}'` -ge 2 ]; then
+	    if [ `du -sm . | awk '{print $1}'` -ge 2200 ]; then
 		echo "Compacting, showing before and after numbers:"
 		du -sh .
 		# Takes much longer, but compresses better:
 		#du -sh .; git gc --aggressive --prune=now --force; du -sh .
 		git repack -adf
 		du -sh .
-	    else
-		git repack --quiet
 	    fi
 	    git log --reverse --date=short --pretty="format:%ai %an %d %T %N%B" > ../$TYPE-gitlog
 	)
