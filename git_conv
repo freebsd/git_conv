@@ -222,7 +222,7 @@ svn2git()
 		    git config --add remote.freebsd.push '+refs/notes/*:refs/notes/*'
 		    git config --add remote.freebsd.push '+refs/heads/internal/*:refs/internal/*'
 
-		    git config --add remote.freebsd.push '+refs/backups/*:refs/backups/*'
+		    # These are not user visible
 		    git config --add remote.freebsd.push '+refs/tags/backups/*:refs/backups/*'
 		    git config --add remote.freebsd.push '+refs/heads/cvs2svn/*:refs/cvs2svn/*'
 		    git config --add remote.freebsd.push '+refs/tags/cvs2svn/*:refs/cvs2svn/*'
@@ -235,12 +235,12 @@ svn2git()
 		    ;;
 		doc)
 		    git config --add remote.freebsd.push '+refs/heads/master:refs/heads/main'
-		    git config --add remote.freebsd.push '+refs/tags/backups/*:refs/backups/*'
-		    git config --add remote.freebsd.push '+refs/tags/release/*:refs/tags/release/*'
+		    git config --add remote.freebsd.push '+refs/tags/backups/*:refs/backups/*'  # hidden
 		    git config --add remote.freebsd.push '+refs/tags/*:refs/tags/*'
 		    git config --add remote.freebsd.push '+refs/notes/*:refs/notes/*'
 		    git config --add remote.freebsd.push '+refs/heads/internal/*:refs/internal/*'
 
+		    # These are not user visible
 		    git config --add remote.freebsd.push '+refs/heads/projects/*:refs/projects/*'
 		    git config --add remote.freebsd.push '+refs/heads/user/*:refs/user/*'
 
@@ -248,10 +248,12 @@ svn2git()
 		ports)
 		    git config --add remote.freebsd.push '+refs/heads/master:refs/heads/main'
 		    git config --add remote.freebsd.push '+refs/heads/branches/*:refs/heads/branches/*'
+		    git config --add remote.freebsd.push '+refs/tags/backups/*:refs/backups/*'   # hidden
 		    git config --add remote.freebsd.push '+refs/tags/*:refs/tags/*'
 		    git config --add remote.freebsd.push '+refs/notes/*:refs/notes/*'
 		    git config --add remote.freebsd.push '+refs/heads/internal/*:refs/internal/*'
 
+		    # These are not user visible
 		    git config --add remote.freebsd.push '+refs/heads/releng/*:refs/releng/*'
 		    git config --add remote.freebsd.push '+refs/heads/projects/*:refs/projects/*'
 		    ;;
