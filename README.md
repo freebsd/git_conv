@@ -20,7 +20,9 @@ sense.
 
 Neither `vendor`, `user` or `projects` branches are "visible" by default.
 `backups` refs are deleted branches and `cvs2svn` contains some of the detritus
-left over from the CVS days and the cvs2svn conversion.
+left over from the CVS days and the cvs2svn conversion. The `internal`
+namespace for now only has the `access` and `mentors` file, detailing when
+people got their various commit bits.
 
 ```
 git config --add remote.origin.fetch '+refs/vendor/*:refs/vendor/*'
@@ -28,12 +30,13 @@ git config --add remote.origin.fetch '+refs/projects/*:refs/projects/*'
 git config --add remote.origin.fetch '+refs/user/*:refs/user/*'
 git config --add remote.origin.fetch '+refs/backups/*:refs/backups/*'
 git config --add remote.origin.fetch '+refs/cvs2svn/*:refs/cvs2svn/*'
+git config --add remote.origin.fetch '+refs/internal/*:refs/internal/*'
 git fetch
 ```
 
-Note that `projects` and `user` branches also exist for the `doc` repo and
-`ports` has `projects` and `releng` as well. vendor, cvs2svn and backups
-are exclusive to the `src` repo though.
+Note that `internal`, `projects` and `user` branches also exist for the `doc`
+repo and `ports` has `projects` and `releng` as well. vendor, cvs2svn and
+backups are exclusive to the `src` repo though.
 
 - `user/` branches are never merged back into `master`
 - MFHs into `user/` or `projects/` branches are just cherry-picks to keep `git
@@ -71,7 +74,7 @@ git gnlog `git show-ref|grep vendor/sendmail|cut -d" " -f1`
 ### Find a certain SVN revision on master
 
 ```
-git show -p `git log --format=%h --notes --grep=revision=294706`
+git show -p `git log --format=%h --notes --grep=revision=294706$`
 ```
 
 ### Show how/where/when a vendor branch was merged into master over time
@@ -88,7 +91,6 @@ being merged, if you know a better way to represent this, please let us know!)
 git log --format='%H %P' --all|awk '{if (NF > 5) { print NF " " $0}}'|sort -rn|cut -d" " -f2|xargs -n1 -I% git snlog -n 1 %
 ```
 
-
 If you want to run the conversion yourself and play with the rules, read on.
 
 ## Required Software
@@ -100,13 +102,21 @@ If you want to run the conversion yourself and play with the rules, read on.
 A patched copy of svn2git aka. svn-all-fast-export has been added to this repo using:
 `git subtree add --squash --prefix svn2git https://github.com/freebsd/svn2git master`
 
+A copy of `parsecvs` has been added using:
+`git subtree add --squash --prefix parsecvs https://github.com/BartMassey/parsecvs master`
+
 ```shell
 cd svn2git && qmake && make && cd ..
+cd parsecvs && make && cd ..
 ```
 
 ## Setup
 
 You'll need to download a seed of the SVN repository dump (it takes weeks to bootstrap otherwise).
+NOTE: Depending on the mirror nearest to you, the metadata of this mirrors is
+actually off by several seconds for several of the commits and is also
+sometimes missing the author. Furthermore, using the one-true SVN repo as the
+source will drop all forced commits. Don't ask me why this happens.
 
 ```shell
 fetch https://download.freebsd.org/ftp/development/subversion/svnmirror-base-r358354.tar.xz
@@ -131,6 +141,9 @@ file to eat up all RAM and eventually crash with out of memory.
 On on moderately fast system with an SSD and/or enough RAM for the buffer cache,
 this should take about 2h to finish for `src` and will produce about 10GiB of
 intermediate data. The final `src` repo size should be around 1.7GiB.
+
+Re-runs will re-use the previous packfiles and will likely be faster. Currently
+`src` finishes in about 1 hour, `doc` in 2 minutes and `ports` in 45 minutes.
 
 ## What you get
 
@@ -157,5 +170,7 @@ to just 182 lines that are now falsely attributed to author "cvs2svn". The
 files are `gnu/usr.bin/grep/AUTHORS` and a few under `usr.sbin/ppp`.
 
 ## License
-The included svn2git is GPLv3; see svn2git/LICENSE. The scripts and configuration files are licensed under
+The included svn2git is GPLv3; see svn2git/LICENSE.
+The included parsecvs is GPLv2; see parsecvs/COPYING.
+The scripts and configuration files are licensed under
 [CC0](https://creativecommons.org/publicdomain/zero/1.0/legalcode).
