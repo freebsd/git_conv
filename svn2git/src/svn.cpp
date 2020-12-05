@@ -1079,7 +1079,7 @@ int SvnRevision::prepareTransactions()
         325752, 326936, 327980, 329557, 330244, 331530, 334067, 336666, 336870,
         338661, 338668, 343202, 344081, 345048, 345747, 345824, 345857, 345877,
         346083, 346102, 346444, 347206, 351317, 354426, 354454, 356848, 357124,
-        358915, 363583,
+        358915, 363583, 367395,
     };
     if (skip_mergeinfo.contains(revnum)) {
         return EXIT_SUCCESS;
@@ -1360,6 +1360,9 @@ int SvnRevision::prepareTransactions()
         { 358131, { .from = "master", .rev = 358130, .to = "projects/clang1000-import" } },
         // I have no words ...
         { 361802, { .from = "vendor/edk2/dist", .rev = 361765, .to = "master" } },
+        { 366318, { .from = "vendor/bc/dist", .rev = 366316, .to = "master" } },
+        { 366412, { .from = "vendor/lib9p/dist", .rev = 365621, .to = "master" } },
+
     };
 
     bool parse_ok = false;
