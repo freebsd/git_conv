@@ -2750,7 +2750,7 @@ end match
 match /cvs2svn/tags/LOMAC_2_2_0/
   repository freebsd-base.git
   branch refs/tags/vendor/lomac/2.2.0
-  annotated yes
+  annotated true
 end match
 
 # cvs2svn manufactured commits that are useless, as a later commits will update
