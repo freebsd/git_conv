@@ -2,10 +2,21 @@
 
 set -e
 
+: ${GIT_USER:=git}
+
+debug=
+while getopts "d" OPT; do
+    case "$OPT" in
+	d)
+	    debug=-d
+	    ;;
+    esac
+done
+shift $(($OPTIND - 1))
+
 TYPE=$1
 REPO=$TYPE
 case $TYPE in base) REPO=src;; esac
-: ${GIT_USER:=git}
 
 case "$1" in
     base|ports|doc)
@@ -19,7 +30,7 @@ esac
 test `whoami` = $GIT_USER && cd $HOME/git_conv && ./svnmir.sh -1
 
 LOG="$PWD/`date +%Y-%m-%d`_${TYPE}.log"
-git pull >> $LOG 2>&1
+git pull --autostash >> $LOG 2>&1
 (cd svn2git && make) >> $LOG 2>&1
 (cd parsecvs && make) >> $LOG 2>&1
 
@@ -29,15 +40,26 @@ case "$1" in
 	rm -rf gitlog-freebsd-$1.git log-freebsd-$1.git log-freebsd-$1.git.old log-$1
 	rm -rf mi
 	rm -rf archive/*/wrk 2>/dev/null
-	./git_conv "$@" >> $LOG 2>&1
+	./git_conv $debug "$@" >> $LOG 2>&1
 	./tag_archived_src.sh >> $LOG 2>&1
 	./fix_bogus_tags.sh >> $LOG 2>&1
+	#./reorder_notes_chronologically.sh freebsd-$1.git >> $LOG 2>&1
 	(cd freebsd-$1.git && git gc --prune=now >> $LOG 2>&1)
         ;;
     ports|doc)
 	test -d freebsd-$1.git && find freebsd-$1.git -not -path "*/objects*" -type f -delete || true
 	rm -rf gitlog-freebsd-$1.git log-freebsd-$1.git log-freebsd-$1.git.old log-$1
-	./git_conv "$@" >> $LOG 2>&1
+	./git_conv $debug "$@" >> $LOG 2>&1
+	#./reorder_notes_chronologically.sh freebsd-$1.git >> $LOG 2>&1
+	(cd freebsd-$1.git && git gc --prune=now >> $LOG 2>&1)
+        ;;
+esac
+
+# Only works for doc for now
+case "$1" in
+    doc)
+	./reorder_notes_chronologically.sh freebsd-$1.git >> $LOG 2>&1
+	(cd freebsd-$1.git && git gc --prune=now >> $LOG 2>&1)
         ;;
 esac
 
