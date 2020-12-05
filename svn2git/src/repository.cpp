@@ -908,10 +908,13 @@ void FastImportRepository::finalizeTags()
     printf("Finalising annotated tags for %s...", qPrintable(name));
     startFastImport();
 
-    QHash<QString, AnnotatedTag>::ConstIterator it = annotatedTags.constBegin();
-    for ( ; it != annotatedTags.constEnd(); ++it) {
-        const QString &tagName = it.key();
-        const AnnotatedTag &tag = it.value();
+    // Plain sort of course puts release/4.10 before release/4.9, we rewrite
+    // them later anyway, so this should be fine, except when there's a merge
+    // conflict.
+    auto sorted_tags = annotatedTags.keys();
+    std::sort(sorted_tags.begin(), sorted_tags.end());
+    for (const auto &tagName : sorted_tags) {
+        const AnnotatedTag &tag = annotatedTags[tagName];
 
         QByteArray message = tag.log;
         if (!message.endsWith('\n'))
