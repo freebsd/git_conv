@@ -1461,7 +1461,7 @@ int SvnRevision::prepareTransactions()
 
     if (!parse_ok) {
         printf(" Couldn't parse mergeinfo!");
-        return EXIT_SUCCESS;
+        return EXIT_FAILURE;
     } else if (parse_ok && mi.isEmpty()) {
         // Parsed ok but maybe was a reverse-merge or something.
         return EXIT_SUCCESS;
