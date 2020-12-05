@@ -1051,8 +1051,9 @@ const QByteArray FastImportRepository::branchNote(const QString& branch) const
 
 void FastImportRepository::setBranchNote(const QString& branch, const QByteArray& noteText)
 {
-    if (branches.contains(branch))
+    if (branches.contains(branch)) {
         branchNotes[branch] = noteText;
+    }
 }
 
 bool FastImportRepository::hasPrefix() const
@@ -1257,6 +1258,17 @@ bool FastImportRepository::Transaction::commitNote(const QByteArray &noteText, b
     }
 
     QByteArray branchNote = repository->branchNote(branch);
+    // branchNote is "svn path=/branches/RELENG_2_1_0/; revision=428\n"
+    // we add:       "svn path=/release/2.1.5/; revision=429; tag=release/2.1.5\n"
+    //     or:       "svn path=/release/2.1.6/; revision=430; tag=release/2.1.6\n"
+    // instead, if the branchNote is a substring of the note, replace it.
+    // also replace it with what we add, so a 2nd tag for the same ref gets
+    // the full commit note. This fixes the dropped release tags for doc
+    // for release/2.1.5 and release/2.1.6 (they only get release/2.1.7)
+    // We do this via a local cache of the content of the original branch note,
+    // that way all the potential tags off of that revision should get listed.
+    static auto multi_tags = QMap<QByteArray, QByteArray>{};
+
     if (!branchNote.isEmpty() && (branchNote[branchNote.size() - 1] != '\n'))
     {
         branchNote += '\n';
@@ -1265,14 +1277,22 @@ bool FastImportRepository::Transaction::commitNote(const QByteArray &noteText, b
         repository->branchExists(branch) &&
         !branchNote.isEmpty())
     {
-        int i = branchNote.indexOf(text);
-        if ((i == 0) || ((i != -1) && (branchNote[i - 1] == '\n')))
-        {
-            // note is already present at the start or somewhere within following a newline
-            return false;
+        qDebug() << "\nbranchNote for" << branch << "is" << branchNote << "and text is" << text;
+        if (multi_tags.contains(branchNote)) {
+            text = multi_tags[branchNote] + text;
+            qDebug() << " map has" << branchNote << "->" << multi_tags[branchNote];
+            message = "Reusing Git note for current " + commitRef + "\n";
+            multi_tags.insert(branchNote, text);
+        } else {
+            if (text.startsWith(branchNote.chopped(1))) {
+                // text stays unaltered
+                message = "Replacing Git note for current " + commitRef + "\n";
+            } else {
+                text = branchNote + text;
+                message = "Appending Git note for current " + commitRef + "\n";
+                multi_tags.insert(branchNote, text);
+            }
         }
-        text = branchNote + text;
-        message = "Appending Git note for current " + commitRef + "\n";
     }
 
     QByteArray s("");
@@ -1416,8 +1436,12 @@ int FastImportRepository::Transaction::commit()
            qPrintable(repository->name), branch.data());
 
     // Commit metadata note if requested
-    if (CommandLineParser::instance()->contains("add-metadata-notes"))
+    // All our refs/tags are annotated and will be exported last. This is to
+    // avoid duplicate notes commits that later cannot be readily sorted into
+    // chronological order.
+    if (CommandLineParser::instance()->contains("add-metadata-notes") && !branch.startsWith("refs/tags/")) {
         commitNote(Repository::formatMetadataMessage(svnprefix, revnum), false);
+    }
 
     while (repository->fastImport.bytesToWrite())
         if (!repository->fastImport.waitForBytesWritten(-1))
