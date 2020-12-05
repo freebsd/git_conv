@@ -1275,7 +1275,7 @@ bool FastImportRepository::Transaction::commitNote(const QByteArray &noteText, b
     QByteArray s("");
     s.append("commit refs/notes/commits\n");
     s.append("mark :" + QByteArray::number(maxMark) + "\n");
-    s.append("committer " + author + " " + QString::number(datetime) + " +0000" + "\n");
+    s.append("committer svn2git <svn2git@FreeBSD.org> " + QString::number(datetime) + " +0000" + "\n");
     s.append("data " + QString::number(message.length()) + "\n");
     s.append(message + "\n");
     s.append("N inline " + commitRef + "\n");
