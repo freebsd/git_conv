@@ -28,15 +28,18 @@ case "$1" in
 	rm -rf gitlog-freebsd-$1.git log-freebsd-$1.git log-freebsd-$1.git.old log-$1
 	rm -rf mi
 	rm -rf archive/*/wrk 2>/dev/null
-	./git_conv "$@" >> $LOG 2>&1
+	./git_conv -d "$@" >> $LOG 2>&1
 	./tag_archived_src.sh >> $LOG 2>&1
 	./fix_bogus_tags.sh >> $LOG 2>&1
+	./reorder_notes_chronologically.sh freebsd-$1.git >> $LOG 2>&1
 	(cd freebsd-$1.git && git gc --prune=now >> $LOG 2>&1)
         ;;
     ports|doc)
 	test -d freebsd-$1.git && find freebsd-$1.git -not -path "*/objects*" -type f -delete || true
 	rm -rf gitlog-freebsd-$1.git log-freebsd-$1.git log-freebsd-$1.git.old log-$1
-	./git_conv "$@" >> $LOG 2>&1
+	./git_conv -d "$@" >> $LOG 2>&1
+	./reorder_notes_chronologically.sh freebsd-$1.git >> $LOG 2>&1
+	(cd freebsd-$1.git && git gc --prune=now >> $LOG 2>&1)
         ;;
 esac
 
