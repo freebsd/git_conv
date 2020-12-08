@@ -7,7 +7,6 @@
 *  ./pull_and_patch_mirror.sh
 *  [1h]
 *  commit repo_doc.log.gz to git_conv repo
-*  run svneverever, capture output, commit to git_conv repo (subdir logs/)
 *  [10m] run author.sh, commit to git_conv repo should there be changes
 *  convert with debug rules locally with a clean start!
   * **CHECK FOR NEW UNHANDLED MERGEINFO**
@@ -24,4 +23,3 @@
 *  configure Github's default branch to main  (and don't forget to eventually GC master)
 *  xz/gzip log-base log-freebsd-base.git gitlog-freebsd-base.git and commit to git_conv repo
 *  ditto for doc and ports
-*  add a README to the logs/ dir, explaining which logfile is what
