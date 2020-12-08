@@ -22,16 +22,21 @@ cd $git
 rm -rf notes-sort
 git worktree prune
 git worktree add notes-sort refs/notes/commits
+git config --global log.date iso
 # This list can be spot checked for duplicate timestamps, which would result in
 # non-deterministic ordering of the picks later on.
-git log --pretty='%H %at %ad' refs/notes/commits | sort -k2 -n > rebase_list_human
+# NOTE: non-numeric sort, so we can sort on the ISO timestamp + message, because we have dupes for that :/
+git log --pretty='%H %at %ad %f %t' --reverse refs/notes/commits | sort -k3,6 -s > rebase_list_human
 cat rebase_list_human | awk '{ print "pick "$1 }' > rebase_list
 
 (
   cd notes-sort
+  # sadly cannot use --committer-date-is-author-date :( and wouldn't be enough anyway
   EDITOR="sed -i.bak -n -e '1r ../rebase_list'" git rebase -i --root --strategy=recursive --strategy-option=ours
   if [ $? = 0 ]; then
+      env FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch --env-filter 'export GIT_COMMITTER_DATE="$GIT_AUTHOR_DATE" GIT_COMMITTER_NAME="$GIT_AUTHOR_NAME" GIT_COMMITTER_EMAIL="$GIT_AUTHOR_EMAIL"' HEAD
       git update-ref refs/notes/commits HEAD
+      git update-ref -d refs/original/HEAD
   fi
 )
 git worktree remove notes-sort
