@@ -899,11 +899,13 @@ void FastImportRepository::finalizeTags()
     if (annotatedTags.isEmpty())
         return;
 
-    QFile annotatedTagsFile(name + "/" + annotatedTagsFileName(name));
-    annotatedTagsFile.open(QIODevice::WriteOnly);
-    QDataStream annotatedTagsStream(&annotatedTagsFile);
-    annotatedTagsStream << annotatedTags;
-    annotatedTagsFile.close();
+    if (!CommandLineParser::instance()->contains("dry-run") && !CommandLineParser::instance()->contains("create-dump")) {
+        QFile annotatedTagsFile(name + "/" + annotatedTagsFileName(name));
+        annotatedTagsFile.open(QIODevice::WriteOnly);
+        QDataStream annotatedTagsStream(&annotatedTagsFile);
+        annotatedTagsStream << annotatedTags;
+        annotatedTagsFile.close();
+    }
 
     printf("Finalising annotated tags for %s...", qPrintable(name));
     startFastImport();
@@ -938,7 +940,7 @@ void FastImportRepository::finalizeTags()
         fastImport.write(message);
         fastImport.putChar('\n');
         if (!fastImport.waitForBytesWritten(-1))
-            qFatal("Failed to write to process: %s", qPrintable(fastImport.errorString()));
+            qFatal("Failed to write to process 1: %s", qPrintable(fastImport.errorString()));
 
         // Append note to the tip commit of the supporting ref. There is no
         // easy way to attach a note to the tag itself with fast-import.
@@ -950,7 +952,7 @@ void FastImportRepository::finalizeTags()
             delete txn;
 
             if (written && !fastImport.waitForBytesWritten(-1))
-                qFatal("Failed to write to process: %s", qPrintable(fastImport.errorString()));
+                qFatal("Failed to write to process 2: %s", qPrintable(fastImport.errorString()));
         }
 
         printf(" %s", qPrintable(tagName));
@@ -959,7 +961,7 @@ void FastImportRepository::finalizeTags()
 
     while (fastImport.bytesToWrite())
         if (!fastImport.waitForBytesWritten(-1))
-            qFatal("Failed to write to process: %s", qPrintable(fastImport.errorString()));
+            qFatal("Failed to write to process 3: %s", qPrintable(fastImport.errorString()));
     printf("\n");
 }
 
@@ -968,11 +970,13 @@ void FastImportRepository::saveBranchNotes()
     if (branchNotes.isEmpty())
         return;
 
-    QFile branchNotesFile(name + "/" + branchNotesFileName(name));
-    branchNotesFile.open(QIODevice::WriteOnly);
-    QDataStream branchNotesStream(&branchNotesFile);
-    branchNotesStream << branchNotes;
-    branchNotesFile.close();
+    if (!CommandLineParser::instance()->contains("dry-run") && !CommandLineParser::instance()->contains("create-dump")) {
+        QFile branchNotesFile(name + "/" + branchNotesFileName(name));
+        branchNotesFile.open(QIODevice::WriteOnly);
+        QDataStream branchNotesStream(&branchNotesFile);
+        branchNotesStream << branchNotes;
+        branchNotesFile.close();
+    }
 }
 
 QByteArray
