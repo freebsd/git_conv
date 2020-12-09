@@ -132,6 +132,7 @@ private:
     QHash<QString, Branch> branches;
     QHash<QString, QByteArray> branchNotes;
     QHash<QString, AnnotatedTag> annotatedTags;
+    std::vector<std::pair<uint, std::unique_ptr<QByteArray>>> delayed_notes;
     QString name;
     QString prefix;
     LoggingQProcess fastImport;
@@ -958,6 +959,15 @@ void FastImportRepository::finalizeTags()
         printf(" %s", qPrintable(tagName));
         fflush(stdout);
     }
+    // commitNote didn't actually commit anything, fool! But now we have all
+    // the potential refs/notes/commits gathered, can sort them and dump them
+    // out.
+    std::stable_sort(
+        delayed_notes.begin(), delayed_notes.end(),
+        [](const auto &a, const auto &b) { return a.first < b.first; });
+    for (const auto &n : delayed_notes) {
+        fastImport.write(*n.second);
+    }
 
     while (fastImport.bytesToWrite())
         if (!fastImport.waitForBytesWritten(-1))
@@ -1254,7 +1264,7 @@ bool FastImportRepository::Transaction::commitNote(const QByteArray &noteText, b
         branchRef.prepend("refs/heads/");
     }
     const QByteArray &commitRef = commit.isNull() ? branchRef : commit;
-    QByteArray message = "Adding Git note for current " + commitRef + "\n";
+    QByteArray message = "Adding Git note for current " + branchRef + "\n";
     QByteArray text = noteText;
     if (noteText[noteText.size() - 1] != '\n')
     {
@@ -1281,42 +1291,40 @@ bool FastImportRepository::Transaction::commitNote(const QByteArray &noteText, b
         repository->branchExists(branch) &&
         !branchNote.isEmpty())
     {
-        qDebug() << "\nbranchNote for" << branch << "is" << branchNote << "and text is" << text;
+        //qDebug() << "\nbranchNote for" << branch << "is" << branchNote << "and text is" << text;
         if (multi_tags.contains(branchNote)) {
             text = multi_tags[branchNote] + text;
-            qDebug() << " map has" << branchNote << "->" << multi_tags[branchNote];
-            message = "Reusing Git note for current " + commitRef + "\n";
+            //qDebug() << " map has" << branchNote << "->" << multi_tags[branchNote];
+            message = "Reusing Git note for current " + branchRef + "\n";
             multi_tags.insert(branchNote, text);
         } else {
             if (text.startsWith(branchNote.chopped(1))) {
                 // text stays unaltered
-                message = "Replacing Git note for current " + commitRef + "\n";
+                message = "Replacing Git note for current " + branchRef + "\n";
             } else {
                 text = branchNote + text;
-                message = "Appending Git note for current " + commitRef + "\n";
+                message = "Appending Git note for current " + branchRef + "\n";
                 multi_tags.insert(branchNote, text);
             }
         }
     }
 
-    QByteArray s("");
-    s.append("commit refs/notes/commits\n");
-    s.append("mark :" + QByteArray::number(maxMark) + "\n");
-    s.append("committer svn2git <svn2git@FreeBSD.org> " + QString::number(datetime) + " +0000" + "\n");
-    s.append("data " + QString::number(message.length()) + "\n");
-    s.append(message + "\n");
-    s.append("N inline " + commitRef + "\n");
-    s.append("data " + QString::number(text.length()) + "\n");
-    s.append(text + "\n");
-    repository->startFastImport();
-    repository->fastImport.write(s);
+    repository->setBranchNote(QString::fromUtf8(branch), text);
 
-    if (commit.isNull())
-    {
-        repository->setBranchNote(QString::fromUtf8(branch), text);
-    }
+    auto s = std::make_unique<QByteArray>("");
+    s->append("commit refs/notes/commits\n");
+    s->append("mark :" + QByteArray::number(maxMark) + "\n");
+    s->append("committer svn2git <svn2git@FreeBSD.org> " + QString::number(datetime) + " +0000" + "\n");
+    s->append("data " + QString::number(message.length()) + "\n");
+    s->append(message + "\n");
+    s->append("N inline " + commitRef + "\n");
+    s->append("data " + QString::number(text.length()) + "\n");
+    s->append(text + "\n");
+    repository->delayed_notes.emplace_back(datetime, std::move(s));
 
-    return true;
+    // We delay this till the end so we can sort the notes into the regular
+    // refs/notes/commits stream.
+    return false;
 }
 
 int FastImportRepository::Transaction::commit()
@@ -1444,7 +1452,7 @@ int FastImportRepository::Transaction::commit()
     // avoid duplicate notes commits that later cannot be readily sorted into
     // chronological order.
     if (CommandLineParser::instance()->contains("add-metadata-notes") && !branch.startsWith("refs/tags/")) {
-        commitNote(Repository::formatMetadataMessage(svnprefix, revnum), false);
+        commitNote(Repository::formatMetadataMessage(svnprefix, revnum), false, ":"+QByteArray::number(mark));
     }
 
     while (repository->fastImport.bytesToWrite())

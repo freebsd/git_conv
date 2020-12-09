@@ -50,15 +50,6 @@ case "$1" in
 	test -d freebsd-$1.git && find freebsd-$1.git -not -path "*/objects*" -type f -delete || true
 	rm -rf gitlog-freebsd-$1.git log-freebsd-$1.git log-freebsd-$1.git.old log-$1
 	./git_conv $debug "$@" >> $LOG 2>&1
-	#./reorder_notes_chronologically.sh freebsd-$1.git >> $LOG 2>&1
-	(cd freebsd-$1.git && git gc --prune=now >> $LOG 2>&1)
-        ;;
-esac
-
-# Only works for doc for now
-case "$1" in
-    doc)
-	./reorder_notes_chronologically.sh freebsd-$1.git >> $LOG 2>&1
 	(cd freebsd-$1.git && git gc --prune=now >> $LOG 2>&1)
         ;;
 esac
