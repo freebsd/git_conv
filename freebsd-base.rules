@@ -4185,6 +4185,11 @@ match /vendor-crypto/openssh/dist/
   min revision 239846
   max revision 239846
 end match
+# don't advance tags
+match /vendor/atf/atf-0.16/
+  min revision 240140
+  max revision 240140
+end match
 # bad tags
 match /vendor/NetBSD/bmake/20120831
   max revision 240331
@@ -4280,6 +4285,13 @@ end match
 match /vendor/elftoolchain/r3163
   min revision 278899
   max revision 278901
+end match
+match /(vendor)/(sqlite3)/(3080702|3080900)/
+  min revision 274882
+  max revision 282327
+  repository freebsd-base.git
+  branch refs/tags/\1/\2/sqlite-\3
+  annotated true
 end match
 # got retried later on
 match /vendor/ficl
@@ -4413,6 +4425,11 @@ end match
 match /vendor-crypto/heimdal/dist/cf/\._lt.*
   min revision 331978
   max revision 331978
+end match
+# tag will later be done with proper name
+match /vendor/sqlite3/sqlite-autoconf-3290000/
+  min revision 350081
+  max revision 350081
 end match
 # this was done exactly the wrong way round, need to revert it, but also use a
 # recurse rule to skip the actual SVN copy and make the commit into dist/ a
