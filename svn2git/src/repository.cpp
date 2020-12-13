@@ -1272,17 +1272,6 @@ bool FastImportRepository::Transaction::commitNote(const QByteArray &noteText, b
     }
 
     QByteArray branchNote = repository->branchNote(branch);
-    // branchNote is "svn path=/branches/RELENG_2_1_0/; revision=428\n"
-    // we add:       "svn path=/release/2.1.5/; revision=429; tag=release/2.1.5\n"
-    //     or:       "svn path=/release/2.1.6/; revision=430; tag=release/2.1.6\n"
-    // instead, if the branchNote is a substring of the note, replace it.
-    // also replace it with what we add, so a 2nd tag for the same ref gets
-    // the full commit note. This fixes the dropped release tags for doc
-    // for release/2.1.5 and release/2.1.6 (they only get release/2.1.7)
-    // We do this via a local cache of the content of the original branch note,
-    // that way all the potential tags off of that revision should get listed.
-    static auto multi_tags = QMap<QByteArray, QByteArray>{};
-
     if (!branchNote.isEmpty() && (branchNote[branchNote.size() - 1] != '\n'))
     {
         branchNote += '\n';
@@ -1292,20 +1281,12 @@ bool FastImportRepository::Transaction::commitNote(const QByteArray &noteText, b
         !branchNote.isEmpty())
     {
         //qDebug() << "\nbranchNote for" << branch << "is" << branchNote << "and text is" << text;
-        if (multi_tags.contains(branchNote)) {
-            text = multi_tags[branchNote] + text;
-            //qDebug() << " map has" << branchNote << "->" << multi_tags[branchNote];
-            message = "Reusing Git note for current " + branchRef + "\n";
-            multi_tags.insert(branchNote, text);
+        if (text.startsWith(branchNote.chopped(1))) {
+            // text stays unaltered
+            //message = "Replacing Git note for current " + branchRef + "\n";
         } else {
-            if (text.startsWith(branchNote.chopped(1))) {
-                // text stays unaltered
-                message = "Replacing Git note for current " + branchRef + "\n";
-            } else {
-                text = branchNote + text;
-                message = "Appending Git note for current " + branchRef + "\n";
-                multi_tags.insert(branchNote, text);
-            }
+            text = branchNote + text;
+            message = "Appending Git note for current " + branchRef + "\n";
         }
     }
 
