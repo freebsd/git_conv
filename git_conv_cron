@@ -60,6 +60,6 @@ if [ $? != 0 ]; then
     exit 1
 else
     # guard against me messing this up ...
-    test `whoami` = $GIT_USER && cd freebsd-$1.git && git push -q freebsd
+    test `whoami` = $GIT_USER && cd freebsd-$1.git && git push --prune freebsd >> $LOG
     #&& cd $HOME/repositories/$REPO.git && git gc --aggressive --prune=now --force --quiet
 fi
