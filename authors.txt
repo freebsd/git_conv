@@ -682,6 +682,7 @@ orion = Orion Hodson <orion@FreeBSD.org>
 osa = Sergey A. Osokin <osa@FreeBSD.org>
 oshogbo = Mariusz Zaborski <oshogbo@FreeBSD.org>
 osyjm = Jaye Mathisen <osyjm@FreeBSD.org>
+otis = Juraj Lutter <otis@FreeBSD.org>
 pat = Patrick Li <pat@FreeBSD.org>
 patrick = Patrick S. Gardella <patrick@FreeBSD.org>
 paul = Paul Richards <paul@FreeBSD.org>
