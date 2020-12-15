@@ -1,7 +1,7 @@
 #!/bin/sh
 
 git=${1:-freebsd-base.git}
-export GIT_DIR=$git
+cd $git
 
 # Fix a whole bunch of svn vendor tags, that are created bogusly and result in
 # an extra commit that hangs off the mainline branch. See
@@ -35,6 +35,13 @@ rewrite_tag()
     GIT_COMMITTER_DATE="$c_date" GIT_COMMITTER_NAME="$c_committer" GIT_COMMITTER_EMAIL="$c_email" GIT_AUTHOR_DATE="$c_date" GIT_AUTHOR_NAME="$c_committer" GIT_AUTHOR_EMAIL="$c_email" git tag -a -f -m "$c_msg" ${tag} ${target}
     # NOTE: convoluted to put only 1 edit into refs/commits/notes that doesn't have the extra newline.
     GIT_COMMITTER_DATE="$c_date" GIT_COMMITTER_NAME="svn2git <svn2git@FreeBSD.org>" GIT_COMMITTER_EMAIL="$c_email" GIT_AUTHOR_DATE="$c_date" GIT_AUTHOR_NAME="svn2git <svn2git@FreeBSD.org>" GIT_AUTHOR_EMAIL="$c_email" EDITOR="{ printf 'g/^\$/d\n\$a\n'; git notes show $old_commit|tail -1; printf '.\nwq\n'; } | ed -" git notes edit "$tag^{commit}"
+    # Now we mark the old, now unused, note for deletion when re-sorting all notes.
+    # NOTE: There's no easy way to go from blob ID to commit that introduced
+    # it. git-describe can do it, but when given a blob it seems to only search
+    # for tags, even with --all given. It however works when we later run this
+    # inside a checkout of refs/notes/commits, as HEAD then points to where we
+    # want it to search.
+    git notes list $old_commit >> rebase_list_notes_blobs
     set +e
 }
 
@@ -60,11 +67,11 @@ graft_and_filter() {
     git update-ref -d refs/original/refs/tags/$tag
 }
 
-git --git-dir=$git for-each-ref --format='%(refname:short)' refs/tags |
+git for-each-ref --format='%(refname:short)' refs/tags |
     egrep -v "^(backups|release)/" |
     while read rev; do
-        tag_tree=`git --git-dir=$git show -s --format=%t "$rev^{}"`
-        parent_tree=`git --git-dir=$git show -s --format=%t "$rev~1" 2>/dev/null`
+        tag_tree=`git show -s --format=%t "$rev^{}"`
+        parent_tree=`git show -s --format=%t "$rev~1" 2>/dev/null`
         # parent might not exists, like for example for
         # backups/cvs2svn/which@13122 which is a single, lone commit.
         [ -z "$parent_tree" ] && continue

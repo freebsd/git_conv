@@ -27,10 +27,20 @@ git config --global log.date iso
 # non-deterministic ordering of the picks later on.
 # NOTE: non-numeric sort, so we can sort on the ISO timestamp + message, because we have dupes for that :/
 git log --pretty='%H %at %ad %f %t' --reverse refs/notes/commits | sort -k3,6 -s > rebase_list_human
-cat rebase_list_human | awk '{ print "pick "$1 }' > rebase_list
+cat rebase_list_human | awk '{ print "pick "$1 }' > rebase_list_all
 
 (
   cd notes-sort
+  # fix_bogus_tags.sh rewrote some tags/notes and made some notes obsolete. GC them.
+  if [ -r ../rebase_list_notes_blobs ]; then
+      # Need to run git describe <blob> inside a checkout, so that HEAD points
+      # to where we want it to search. Somehow --all doesn't work otherwise in
+      # finding the notes.
+      cat ../rebase_list_notes_blobs | while read blob; do
+          git describe --always --abbrev=40 "$blob" | cut -d: -f1 >> ../rebase_list_notes_commits
+      done
+      fgrep -f ../rebase_list_notes_commits -v ../rebase_list_all > ../rebase_list
+  fi
   # sadly cannot use --committer-date-is-author-date :( and wouldn't be enough anyway
   EDITOR="sed -i.bak -n -e '1r ../rebase_list'" git rebase -i --root --strategy=recursive --strategy-option=ours
   if [ $? = 0 ]; then
