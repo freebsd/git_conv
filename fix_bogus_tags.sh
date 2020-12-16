@@ -21,6 +21,7 @@ rewrite_tag()
     c_msg=`git cat-file tag $tag | sed '1,/^$/d'`
     c_committer=${c_auth%<*}
     c_email=${c_auth#*<}
+    t_date=`git cat-file commit "$target^{commit}" | sed -n '/^committer/s/^committer //p' | egrep -o '[0-9]* [+0-9]*$'`
 
     old_commit=`git show -s --format=%h "$tag^{commit}"`
 
@@ -34,7 +35,7 @@ rewrite_tag()
     # Move the tag up to the ancestor
     GIT_COMMITTER_DATE="$c_date" GIT_COMMITTER_NAME="$c_committer" GIT_COMMITTER_EMAIL="$c_email" GIT_AUTHOR_DATE="$c_date" GIT_AUTHOR_NAME="$c_committer" GIT_AUTHOR_EMAIL="$c_email" git tag -a -f -m "$c_msg" ${tag} ${target}
     # NOTE: convoluted to put only 1 edit into refs/commits/notes that doesn't have the extra newline.
-    GIT_COMMITTER_DATE="$c_date" GIT_COMMITTER_NAME="svn2git <svn2git@FreeBSD.org>" GIT_COMMITTER_EMAIL="$c_email" GIT_AUTHOR_DATE="$c_date" GIT_AUTHOR_NAME="svn2git <svn2git@FreeBSD.org>" GIT_AUTHOR_EMAIL="$c_email" EDITOR="{ printf 'g/^\$/d\n\$a\n'; git notes show $old_commit|tail -1; printf '.\nwq\n'; } | ed -" git notes edit "$tag^{commit}"
+    GIT_COMMITTER_DATE="$t_date" GIT_COMMITTER_NAME="svn2git <svn2git@FreeBSD.org>" GIT_COMMITTER_EMAIL="$c_email" GIT_AUTHOR_DATE="$t_date" GIT_AUTHOR_NAME="svn2git <svn2git@FreeBSD.org>" GIT_AUTHOR_EMAIL="$c_email" EDITOR="{ printf 'g/^\$/d\n\$a\n'; git notes show $old_commit|tail -1; printf '.\nwq\n'; } | ed -" git notes edit "$tag^{commit}"
     # Now we mark the old, now unused, note for deletion when re-sorting all notes.
     # NOTE: There's no easy way to go from blob ID to commit that introduced
     # it. git-describe can do it, but when given a blob it seems to only search

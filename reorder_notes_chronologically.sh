@@ -19,9 +19,27 @@ branch=${2:-refs/notes/commits}
 
 echo "Sorting $branch commits started at" `date +"%F %T"`
 cd $git
-rm -rf notes-sort
+S=$PWD/scratch
+mkdir -p $S
+
+# cleanup previous runs
+oldmd0=`mount -ptufs | awk -vS=$S '$2 = S {print $1; exit}'`
+case "$oldmd0" in
+    /dev/md*)
+        sudo umount -f $S
+        sudo mdconfig -d -u $oldmd0
+        ;;
+esac
+
+set -e
+md0=`sudo mdconfig -a -t swap -s 4G -S 4096 -L svn_git_compare -o compress`
+sudo newfs -b 4096 $md0 >/dev/null
+
+sudo mount -o async,noatime /dev/$md0 $S
+sudo chown $USER $S
+
 git worktree prune
-git worktree add notes-sort refs/notes/commits
+git worktree add scratch/notes-sort refs/notes/commits
 git config --global log.date iso
 # This list can be spot checked for duplicate timestamps, which would result in
 # non-deterministic ordering of the picks later on.
@@ -30,19 +48,19 @@ git log --pretty='%H %at %ad %f %t' --reverse refs/notes/commits | sort -k3,6 -s
 cat rebase_list_human | awk '{ print "pick "$1 }' > rebase_list_all
 
 (
-  cd notes-sort
+  cd scratch/notes-sort
   # fix_bogus_tags.sh rewrote some tags/notes and made some notes obsolete. GC them.
-  if [ -r ../rebase_list_notes_blobs ]; then
+  if [ -r ../../rebase_list_notes_blobs ]; then
       # Need to run git describe <blob> inside a checkout, so that HEAD points
       # to where we want it to search. Somehow --all doesn't work otherwise in
       # finding the notes.
-      cat ../rebase_list_notes_blobs | while read blob; do
-          git describe --always --abbrev=40 "$blob" | cut -d: -f1 >> ../rebase_list_notes_commits
+      cat ../../rebase_list_notes_blobs | while read blob; do
+          git describe --always --abbrev=40 "$blob" | cut -d: -f1 >> ../../rebase_list_notes_commits
       done
-      fgrep -f ../rebase_list_notes_commits -v ../rebase_list_all > ../rebase_list
+      fgrep -f ../../rebase_list_notes_commits -v ../../rebase_list_all > ../../rebase_list
   fi
   # sadly cannot use --committer-date-is-author-date :( and wouldn't be enough anyway
-  EDITOR="sed -i.bak -n -e '1r ../rebase_list'" git rebase -i --root --strategy=recursive --strategy-option=ours
+  EDITOR="sed -i.bak -n -e '1r ../../rebase_list'" git rebase -i --root --strategy=recursive --strategy-option=ours
   if [ $? = 0 ]; then
       env FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch --env-filter 'export GIT_COMMITTER_DATE="$GIT_AUTHOR_DATE" GIT_COMMITTER_NAME="$GIT_AUTHOR_NAME" GIT_COMMITTER_EMAIL="$GIT_AUTHOR_EMAIL"' HEAD
       git update-ref refs/notes/commits HEAD
