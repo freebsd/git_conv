@@ -37,6 +37,6 @@ for t in doc base ports; do
     if [ $# -ge 1 ]; then
         echo "Found bad metadata in $t for revs $*" >&2
 	# And patch them add the remote end. We then need to pull again, of course.
-        ssh -A cgit "cd git_conv/$t && for r in $*; do svnsync copy-revprops -r \$r file:///\$PWD svn+ssh://repo.freebsd.org/$t; done"
+        ssh -A cgit "cd git_conv/$t && sh -c 'for r in $*; do svnsync copy-revprops -r \$r file:///\$PWD svn+ssh://repo.freebsd.org/$t; done'"
     fi
 done
