@@ -122,6 +122,7 @@ case $cmd in
 		git checkout $branch
 
 		for hash in $(git rev-list ${ref}..upstream/${branch} | tail -r); do
+		    committer=$(git show -s --format="%ce" $hash)
 		    author=$(git show -s --format="%ae" $hash)
 		    (
 			echo echo '"'"Git Hash:   $hash"'"' '>> $1'
@@ -132,11 +133,11 @@ case $cmd in
 		    git cherry-pick --edit $hash || exit
 		    git svn dcommit
 		    # Try to set the author in the svn repo, if from a freebsd.org address
-		    case $author in
+		    case $committer in
 			*@FreeBSD.org)
-			    aa=${author%@FreeBSD.org}
+			    cc=${committer%@FreeBSD.org}
 			    r=$(git svn log HEAD^..HEAD | head -2 | tail -1 | awk -F'|' '{print $1;}')
-			    svn propset svn:author "$aa" --revprop -$r $svnurl
+			    svn propset svn:author "$cc" --revprop -$r $svnurl
 			    ;;
 		    esac
 		    old=$(git show-ref --hash $ref)
