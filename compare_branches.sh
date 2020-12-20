@@ -280,6 +280,8 @@ case "$type" in
                         continue
                     fi
                     case "$b$s" in
+                        # compare to pre-flattening of tags
+                        atf/atf-0.16/) diff_it $t/$b$s@240139 $t/$b$s; continue ;;
                         # stripping redundant tags/
                         SGI/tags/) diff_it $t/$b$s/v_2_17 $t/${b}v_2_17; continue ;;
                         # strip redundant prefix
@@ -297,7 +299,7 @@ case "$type" in
                         # git tag dropped the redundant prefix
                         dialog/dialog-1.1*) diff_it $t/$b$s $t/$b${s#dialog-}; continue ;;
                         # NOTE: these are missing the .gitignore, .gitattributes et al, because `git archive` will honor the ignore attribute :/
-                        libarchive/3.2.*/|libarchive/3.3.*/|libarchive/3.4.*/|libarchive/dist/) diff_it -x.github -x.gitignore -x.gitattributes $t/$b${s} $t/$b$s; continue ;;
+                        libarchive/3.2.*/|libarchive/3.3.*/|libarchive/3.4.*/|libarchive/3.5.*/|libarchive/dist/) diff_it -x.github -x.gitignore -x.gitattributes $t/$b${s} $t/$b$s; continue ;;
                         # These have an extra level of depth
                         google/*/|Juniper/libxo/|NetBSD/blacklist/|NetBSD/bmake/|NetBSD/libc-pwcache/|NetBSD/libc-vis/|NetBSD/libedit/|NetBSD/libexecinfo/|NetBSD/lukemftp/|NetBSD/lukemftpd/|NetBSD/mknod/|NetBSD/mtree/|NetBSD/softfloat/|NetBSD/sort/|NetBSD/tests/|NetBSD/unvis/|NetBSD/vis/|NetBSD/xlint/|misc-GNU/awk/|misc-GNU/bc/|misc-GNU/bison/|misc-GNU/cpio/|misc-GNU/cvs/|misc-GNU/texinfo/)
                             for r in `svn ls $SVN/$t/$b$s | grep '/$'`; do
@@ -389,6 +391,8 @@ case "$type" in
                         pppd/dist/) continue ;;
                         # bogus tag
                         pppd/pppstats/) continue ;;
+                        sqlite3/3080702/|sqlite3/3080900/) diff_it $t/$b$s $t/${b}sqlite-$s; continue ;;
+                        sqlite3/sqlite-autoconf-3290000/) diff_it $t/$b$s $t/${b}sqlite-3290000; continue ;;
                         # we splice in cvs2svn/branches/UDEL into ntpd, so we have some extra files.
                         ntpd/dist/) diff_it -r'g/usr.sbin/xntpd/parse/util/Makefile' $t/$b$s; continue ;;
                         ntpd/udel_33Z/) diff_it -r'g/usr.sbin/xntpd/{parse/util/Makefile,Config,Config.sed}' $t/$b$s; continue ;;
