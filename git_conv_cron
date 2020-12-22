@@ -44,6 +44,7 @@ case "$1" in
 	./tag_archived_src.sh >> $LOG 2>&1
 	./fix_bogus_tags.sh >> $LOG 2>&1
 	./squash_and_gc_notes.sh freebsd-$1.git >> $LOG 2>&1
+	./vendor_dance.sh freebsd-$1.git >> $LOG 2>&1
 	(cd freebsd-$1.git && git gc --prune=now >> $LOG 2>&1)
         ;;
     ports|doc)

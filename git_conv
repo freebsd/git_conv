@@ -219,8 +219,11 @@ svn2git()
 		    git config --add remote.freebsd.push '+refs/heads/stable/*:refs/heads/stable/*'
 		    git config --add remote.freebsd.push '+refs/heads/releng/*:refs/heads/releng/*'
 		    git config --add remote.freebsd.push '+refs/tags/release/*:refs/tags/release/*'
+		    git config --add remote.freebsd.push '+refs/heads/vendor/*:refs/heads/vendor/*'
+		    git config --add remote.freebsd.push '+refs/tags/vendor/*:refs/tags/vendor/*'
 		    git config --add remote.freebsd.push '+refs/notes/*:refs/notes/*'
 		    git config --add remote.freebsd.push '+refs/heads/internal/*:refs/internal/*'
+		    git config --add remote.freebsd.push '+refs/replace/*:refs/replace/*'
 
 		    # These are not user visible
 		    git config --add remote.freebsd.push '+refs/tags/backups/*:refs/backups/*'
@@ -230,8 +233,6 @@ svn2git()
 		    git config --add remote.freebsd.push '+refs/tags/projects/*:refs/projects/*'
 		    git config --add remote.freebsd.push '+refs/heads/user/*:refs/user/*'
 		    git config --add remote.freebsd.push '+refs/tags/user/*:refs/user/*'
-		    git config --add remote.freebsd.push '+refs/heads/vendor/*:refs/vendor/*'
-		    git config --add remote.freebsd.push '+refs/tags/vendor/*:refs/vendor/*'
 		    ;;
 		doc)
 		    git config --add remote.freebsd.push '+refs/heads/master:refs/heads/main'
@@ -243,7 +244,6 @@ svn2git()
 		    # These are not user visible
 		    git config --add remote.freebsd.push '+refs/heads/projects/*:refs/projects/*'
 		    git config --add remote.freebsd.push '+refs/heads/user/*:refs/user/*'
-
 		    ;;
 		ports)
 		    git config --add remote.freebsd.push '+refs/heads/master:refs/heads/main'
@@ -282,6 +282,8 @@ svn2git()
 		    # collapse it and fix a latin1 snafu, git expects UTF-8
 		    FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch -f --msg-filter "LC_ALL=C sed -e '1s/^  *\\([^-]\\)/\\1/' -e '/^#   (2) The full name/,/^#   (3) In brief/d' -e 's/Hand Thomas M.stl/Hand Thomas Möstl/'" internal/admin
 		    git update-ref -d refs/heads/internal/admin_cvs
+		    # Fix up the ipfilter-sys history that was missed.
+		    git replace --graft `git rev-list --max-parents=0 vendor/ipfilter-sys/dist` vendor-sys/ipfilter/dist
 		)
 		;;
 	esac
