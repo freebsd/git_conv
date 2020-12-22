@@ -5061,14 +5061,14 @@ end match
 match /(vendor-sys)/(ipfilter)/(dist)(-old)?/
   max revision 72000
   repository freebsd-base.git
-  branch \1/\2/\3
+  branch vendor/\2-sys/\3
   rename sys/contrib /dev/null # old location was sys/netinet
 end match
 match /(vendor-sys)/(ipfilter)/(dist)(-old)?/
   min revision 72001
   max revision 72001
   repository freebsd-base.git
-  branch \1/\2/\3
+  branch vendor/\2-sys/\3
   rename sys/netinet sys/contrib/ipfilter/netinet
 end match
 # 3.4.29 was imported partially into dist-old again and merged into head in
@@ -5077,7 +5077,7 @@ match /(vendor-sys)/(ipfilter)/(dist)(-old)?/
   min revision 102514
   max revision 102514
   repository freebsd-base.git
-  branch \1/\2/\3
+  branch vendor/\2-sys/\3
   rename sys/netinet/ip_h323_pxy.c sys/contrib/ipfilter/netinet/ip_h323_pxy.c
   rename sys/netinet/ip_ipsec_pxy.c sys/contrib/ipfilter/netinet/ip_ipsec_pxy.c
   rename sys/netinet/ip_netbios_pxy.c sys/contrib/ipfilter/netinet/ip_netbios_pxy.c
@@ -5086,7 +5086,7 @@ match /(vendor-sys)/(ipfilter)/(dist)(-old)?/
   min revision 102516
   max revision 102516
   repository freebsd-base.git
-  branch \1/\2/\3
+  branch vendor/\2-sys/\3
   rename sys/netinet/fil.c sys/contrib/ipfilter/netinet/fil.c
   rename sys/netinet/ip_auth.c sys/contrib/ipfilter/netinet/ip_auth.c
   rename sys/netinet/ip_auth.h sys/contrib/ipfilter/netinet/ip_auth.h
@@ -5116,7 +5116,7 @@ end match
 match /(vendor-sys)/(ipfilter)/(dist)(-old)?/
   max revision 253468  # maybe use r102516 instead?
   repository freebsd-base.git
-  branch \1/\2/\3
+  branch vendor/\2-sys/\3
 end match
 # TODO: merge sys and non-sys for ipfilter?
 
