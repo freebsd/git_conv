@@ -6,11 +6,24 @@ result is an acceptable representation of the current SVN repository. Fixing
 some few historical glitches are in scope if the effort is reasonable. Please
 let us know what you find.
 
+## Errata
+
+1. An oversight in the vendor branches resulted in the history of the ipfilter
+   kernel parts being chopped in two. There is `vendor/ipfilter-sys` for the
+   newer commits and `vendor/ipfilter-sys-old` for the older commits. Both of
+   those heads were merged into `main` with commit bfc88dcbf709 or SVN r255332.
+   A `git replace` object was put into place to join these two histories, but
+   you need to fetch `refs/replace/` to make that visible. A fixed ruleset is
+   in the errata_1 branch of this repo, see also
+   https://github.com/freebsd/git_conv/issues
+
 ## Gimme the repo!
 
 ```
-git clone https://cgit-beta.freebsd.org/src.git && cd src
-git config --add remote.origin.fetch '+refs/notes/*:refs/notes/*' && git fetch
+git clone https://cgit.freebsd.org/src.git && cd src
+git config --add remote.origin.fetch '+refs/notes/*:refs/notes/*'
+git config --add remote.origin.fetch '+refs/replace/*:refs/replace/*'
+git fetch
 ```
 
 Same for the `doc` and `ports` repos. You can expect some things to be
@@ -18,14 +31,14 @@ different. Most importantly you should check whether branch and mergepoints
 (especially for vendor branches, but also project branches) are there and make
 sense.
 
-Neither `vendor`, `user` or `projects` branches are "visible" by default.
+Neither `user` or `projects` branches are "visible" by default.
 `backups` refs are deleted branches and `cvs2svn` contains some of the detritus
 left over from the CVS days and the cvs2svn conversion. The `internal`
 namespace for now only has the `access` and `mentors` file, detailing when
-people got their various commit bits.
+people got their various commit bits. We will likely move these to a combined
+repo for doc, src, and ports.
 
 ```
-git config --add remote.origin.fetch '+refs/vendor/*:refs/vendor/*'
 git config --add remote.origin.fetch '+refs/projects/*:refs/projects/*'
 git config --add remote.origin.fetch '+refs/user/*:refs/user/*'
 git config --add remote.origin.fetch '+refs/backups/*:refs/backups/*'
@@ -35,7 +48,7 @@ git fetch
 ```
 
 Note that `internal`, `projects` and `user` branches also exist for the `doc`
-repo and `ports` has `projects` and `releng` as well. vendor, cvs2svn and
+repo and `ports` has `projects` and `releng` as well. cvs2svn and
 backups are exclusive to the `src` repo though.
 
 - `user/` branches are never merged back into `master`
@@ -50,6 +63,7 @@ backups are exclusive to the `src` repo though.
 - various vendor-foo suffixes have been collapsed into 1 vendor namespace,
   except for a few vendors where merging the userland and kernel bits is not
   straightforward due to how they interleave with the merge and branch history.
+  This is what also caused Errata 1.
 - some branches have their history "extended", that is, commits under the
   `cvs2svn` area were properly attached.
 - ... and most of these commits have actually been inlined directly into the
@@ -147,13 +161,12 @@ Re-runs will re-use the previous packfiles and will likely be faster. Currently
 
 ## What you get
 
-- src will have: master, stable/N, releng/N, release/N.M
+- src will have: master, stable/N, releng/N, release/N.M, vendor/\*
 - doc will have: master, release/N.M
 - ports will have: master, branches/YYYYQx
 
-In the future, _project_ branches will be individual forks of the repos. The
-`vendor` area is not visible by default, as it's only relevant for maintainers
-of contrib software.
+In the future, _project_ branches will be individual forks of the repos. Hosted
+either on GitHub, GitLab or our own infrastructure.
 
 Further information and documentation can be found on the Wiki sites at
 https://github.com/freebsd/git_conv/wiki
