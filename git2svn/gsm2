@@ -66,6 +66,7 @@ while getopts "b:hnx" opt; do
 	    ;;
 	x)
 	    set -x
+	    XFLAG=-x
 	    ;;
 	h|*)
 	    usage
@@ -91,7 +92,7 @@ case $cmd in
 	# Run all the mirrors, skip the ones not properly initialized
 	for b in $branches; do
 	    (
-		lockf -t 0 ${mirror_lock}-${b} $0 -b $b mirror-locked || warn "Mirroring of $b prevented by lock file"
+		lockf -t 0 ${mirror_lock}-${b} $0 ${XFLAG} -b $b mirror-locked || warn "Mirroring of $b prevented by lock file"
 	    )
 	done
     ;;
@@ -150,7 +151,7 @@ case $cmd in
     branch-init)
 	for b in $branches; do
 	    (
-		lockf -t 0 ${mirror_lock}-${b} $0 -b $b branch-init-locked || warn "Branch init of $b prevented by lock file"
+		lockf -t 0 ${mirror_lock}-${b} $0 ${XFLAG} -b $b branch-init-locked || warn "Branch init of $b prevented by lock file"
 	    )
 	done
 	;;
@@ -205,7 +206,7 @@ case $cmd in
 	done
 	;;
     clone-init)
-	lockf -t 0 $clone_lock $0 clone-init-locked $* || warn "Clone init lock file prevented cloning"
+	lockf -t 0 $clone_lock $0 ${XFLAG} clone-init-locked $* || warn "Clone init lock file prevented cloning"
 	;;
     clone-init-locked)
 	# Clone the github tree into $gitpath
