@@ -30,7 +30,7 @@ esac
 test `whoami` = $GIT_USER && cd $HOME/git_conv && ./svnmir.sh -1
 
 LOG="$PWD/`date +%Y-%m-%d`_${TYPE}.log"
-git pull --autostash >> $LOG 2>&1
+#git pull --autostash >> $LOG 2>&1
 (cd svn2git && make) >> $LOG 2>&1
 (cd parsecvs && make) >> $LOG 2>&1
 
