@@ -17,6 +17,25 @@ let us know what you find.
    in the errata_1 branch of this repo, see also
    https://github.com/freebsd/git_conv/issues
 
+1. Somewhere along the conversion, the `--identity-domain` flag was dropped,
+   resulting in some author/committer emails ending in "@localhost".
+   Furthermore, a missing author map entry was made non-fatal in the upstream
+   code, and this was missed, resulting in a few commits not having a full name
+   entry as well.
+   This affects 1 commit in the src repo by "davidg" and a bunch of them in the doc repo:
+   ```
+   % git log --all | egrep "^Author: [a-z]" | sort | uniq -c
+     1 Author: bean <bean@localhost>
+     6 Author: davidg <davidg@localhost>
+     3 Author: jmc <jmc@localhost>
+   145 Author: nsj <nsj@localhost>
+     1 Author: skynyrd <skynyrd@localhost>
+     1 Author: svn2git <svn2git@FreeBSD.org>
+     7 Author: viny <viny@localhost>
+    28 Author: www <www@localhost>
+   ```
+
+
 ## Gimme the repo!
 
 ```

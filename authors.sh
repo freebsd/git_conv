@@ -14,6 +14,7 @@ asami = Satoshi Asami <asami@FreeBSD.org>
 ats = Andreas Schulz <ats@FreeBSD.org>
 conklin = J.T. Conklin <jtc@FreeBSD.org>
 cvs2svn = cvs2svn <cvs2svn@FreeBSD.org>
+davidg = David Greenman <davidg@FreeBSD.org>
 dick = Richard Seaman Jr. <dick@FreeBSD.org>
 dillon = Matthew Dillon <dillon@FreeBSD.org>
 dyson = John Dyson <dyson@FreeBSD.org>
