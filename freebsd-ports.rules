@@ -233,7 +233,7 @@ match /tags/RELEASE_11_0_0/
   max revision 421515
 end match
 
-match /tags/RELEASE_([012]+)_([0-4])_0/
+match /tags/RELEASE_([0123]+)_([0-4])_0/
   repository freebsd-ports.git
   branch refs/tags/release/\1.\2.0
   annotated true
