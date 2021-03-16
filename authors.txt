@@ -493,6 +493,7 @@ kettenis = Mark Kettenis <kettenis@FreeBSD.org>
 kevans = Kyle Evans <kevans@FreeBSD.org>
 kevlo = Kevin Lo <kevlo@FreeBSD.org>
 khe = Karlheinz Eckmeier <khe@FreeBSD.org>
+khng = Ka Ho Ng <khng@FreeBSD.org>
 kib = Konstantin Belousov <kib@FreeBSD.org>
 kibab = Ilya Bakulin <kibab@FreeBSD.org>
 kientzle = Tim Kientzle <kientzle@FreeBSD.org>
