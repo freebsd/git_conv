@@ -51,8 +51,8 @@ case "$1" in
 	test -d freebsd-$1.git && find freebsd-$1.git -not -path "*/objects*" -type f -delete || true
 	rm -rf gitlog-freebsd-$1.git log-freebsd-$1.git log-freebsd-$1.git.old log-$1
 	./git_conv $debug "$@" >> $LOG 2>&1
-	# Do this only for the very final ports conversion.
-	#./squash_and_gc_notes.sh freebsd-$1.git >> $LOG 2>&1
+	# Do this only for the very final conversion.
+	./squash_and_gc_notes.sh freebsd-$1.git >> $LOG 2>&1
 	(cd freebsd-$1.git && git gc --prune=now >> $LOG 2>&1)
         ;;
 esac
