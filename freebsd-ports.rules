@@ -245,7 +245,7 @@ end match
 
 match /(branches)/([0-9Q]+)/
   repository freebsd-ports.git
-  branch \1/\2
+  branch \2
 end match
 
 match /(projects)/([^/]+)/
