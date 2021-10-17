@@ -130,8 +130,8 @@ case $cmd in
 			echo echo '"'"Git Author: $author"'"' '>> $1'
 		    ) > $EDITOR
 		    chmod +x $EDITOR
-		    echo git cherry-pick --edit $hash
-		    git cherry-pick --edit $hash || exit
+		    echo git cherry-pick --allow-empty --edit $hash
+		    git cherry-pick --allow-empty --edit $hash || exit
 		    git svn dcommit
 		    # Try to set the author in the svn repo, if from a freebsd.org address
 		    case $committer in
