@@ -122,7 +122,7 @@ case $cmd in
 		git fetch upstream $branch
 		git checkout $branch
 
-		for hash in $(git rev-list ${ref}..upstream/${branch} | tail -r); do
+		for hash in $(git rev-list --first-parent ${ref}..upstream/${branch} | tail -r); do
 		    committer=$(git show -s --format="%ce" $hash)
 		    author=$(git show -s --format="%ae" $hash)
 		    (
@@ -130,8 +130,8 @@ case $cmd in
 			echo echo '"'"Git Author: $author"'"' '>> $1'
 		    ) > $EDITOR
 		    chmod +x $EDITOR
-		    echo git cherry-pick --allow-empty --edit $hash
-		    git cherry-pick --allow-empty --edit $hash || exit
+		    echo git cherry-pick -m 1 --allow-empty --edit $hash
+		    git cherry-pick -m 1 --allow-empty --edit $hash || exit
 		    git svn dcommit
 		    # Try to set the author in the svn repo, if from a freebsd.org address
 		    case $committer in
