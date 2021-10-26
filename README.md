@@ -39,7 +39,7 @@ let us know what you find.
 ## Gimme the repo!
 
 ```
-git clone https://cgit.freebsd.org/src.git && cd src
+git clone https://git.freebsd.org/src.git && cd src
 git config --add remote.origin.fetch '+refs/notes/*:refs/notes/*'
 git config --add remote.origin.fetch '+refs/replace/*:refs/replace/*'
 git fetch
